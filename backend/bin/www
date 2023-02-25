@@ -3,17 +3,18 @@
 /**
  * Module dependencies.
  */
-
-var app = require('../app');
+console.log("Hello");
+var app = require('../build/app');
 var debug = require('debug')('backend:server');
 var http = require('http');
-
+console.log("Hello again");
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
+console.log(port);
 
 /**
  * Create HTTP server.
