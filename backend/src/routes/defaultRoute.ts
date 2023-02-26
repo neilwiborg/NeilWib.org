@@ -2,6 +2,6 @@ import express from 'express';
 export const defaultRoute = express.Router();
 
 /* GET home page. */
-defaultRoute.get('/', function(req, res, next) {
+defaultRoute.get('/', (req, res, next) => {
   res.render('index', { title: 'Express' });
 });

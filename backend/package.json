@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "build": "rm -rf ./build && cp -r ./src/views ./build && cp -r ./src/public ./build && npx tsc"
+    "build": "rm -rf ./build && cp -r ./src/public ./build && npx tsc"
   },
   "dependencies": {
     "cookie-parser": "~1.4.6",
     "debug": "~2.6.9",
+    "dotenv": "^16.0.3",
     "express": "~4.16.4",
     "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
-    "pug": "2.0.0-beta11"
+    "morgan": "~1.9.1"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",
