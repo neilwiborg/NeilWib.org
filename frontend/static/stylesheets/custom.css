@@ -1,0 +1,13 @@
+:root {
+    --primary: green;
+  }
+
+.hero {
+    background-color: darkorange;
+    background: linear-gradient(90deg, darkorange 0%, darkorchid 100%);
+}
+
+.destructive {
+    background-color: red;
+    border-color: red;
+}
