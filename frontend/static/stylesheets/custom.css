@@ -1,13 +1,34 @@
 :root {
-    --primary: green;
-  }
+	--primary: green;
+}
 
 .hero {
-    background-color: darkorange;
-    background: linear-gradient(90deg, darkorange 0%, darkorchid 100%);
+	background-color: darkorange;
+	background: linear-gradient(90deg, darkorange 0%, darkorchid 100%);
 }
 
 .destructive {
-    background-color: red;
-    border-color: red;
+	background-color: red;
+	border-color: red;
+}
+
+nav > a {
+	color: white;
+}
+
+nav > details > ul {
+	color: white;
+}
+
+h1 > a {
+	text-decoration: none;
+	color: white;
+}
+
+h1 > a:active {
+	background-color: transparent;
+}
+
+hgroup > h2 {
+	color: white;
 }

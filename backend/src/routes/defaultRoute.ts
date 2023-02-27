@@ -3,5 +3,5 @@ export const defaultRoute = express.Router();
 
 /* GET home page. */
 defaultRoute.get('/', (req, res, next) => {
-  res.render('index', { title: 'Express' });
+	res.send('Welcome to Express!');
 });
