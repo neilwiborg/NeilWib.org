@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"start": "node ./bin/www",
-		"build": "rm -rf ./build && cp -r ./src/public ./build && pnpx tsc",
+		"build": "rm -rf ./build && cp -r ./src/public ./build && npx tsc",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write ."
 	},

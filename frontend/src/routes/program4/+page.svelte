@@ -1,5 +1,4 @@
 <script>
-	require('dotenv').config();
 	let firstName = '';
 	let lastName = '';
 	let resultsText = '';
