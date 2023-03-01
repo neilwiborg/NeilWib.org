@@ -74,9 +74,11 @@
 				</label>
 			</div>
 			<small>At least one field must be entered</small>
-			<button type="submit" on:click={onSubmit}
-			aria-busy={queryLoading ? "true" : "false"}
-			>Query</button>
+			{#if queryLoading}
+			<button type="submit" aria-busy={queryLoading ? "true" : "false"}></button>
+			{:else}
+			<button type="submit" on:click={onSubmit}>Query</button>
+			{/if}
 		</fieldset>
 		<output>
 			{#if resultsText.length > 0}
