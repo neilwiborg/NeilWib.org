@@ -88,9 +88,9 @@
 							{user.firstName} {user.lastName}
 						</summary>
 						<ul>
-							{#each user as attr}
+							{#each Object.entries(user) as [attr, val]}
 								{#if attr !== "firstName" && attr !== "lastName"}
-									<li>{attr}: {user[attr]}</li>
+									<li>{attr}: {val}</li>
 								{/if}
 							{/each}
 						</ul>
