@@ -6,6 +6,8 @@
 	let lastName = '';
 	let errorText = '';
 	let resultsText = '';
+	let loadDataLoading = false;
+	let clearDataLoading = false;
 	let queryLoading = false;
 	// keep clear button disabled if data is not loaded
 	let clearDisabled = true;
@@ -54,13 +56,21 @@
 </svelte:head>
 
 <main class="container">
-	<h1>CSS 436 Program 4</h1>
+	<h2>CSS 436 Program 4</h2>
 	<form>
 		<div class="grid">
-			<button type="button" class="secondary" on:click={onLoad}>Load Data</button>
-			<button type="reset" class="destructive" disabled={clearDisabled} on:click={onClear}
-				>Clear Data</button
-			>
+			{#if loadDataLoading}
+			<button type="button" class="secondary" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
+			{:else}
+			<button type="button" class="secondary" on:click={onLoad}
+			disabled={(loadDataLoading || clearDataLoading || queryLoading) ? true : false}>Load Data</button>
+			{/if}
+			{#if clearDataLoading}
+			<button type="reset" class="destructive" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
+			{:else}
+				<button type="reset" class="destructive" disabled={clearDisabled} on:click={onClear}
+					>Clear Data</button>
+			{/if}
 		</div>
 		<fieldset>
 			<div class="grid">
@@ -75,30 +85,33 @@
 			</div>
 			<small>At least one field must be entered</small>
 			{#if queryLoading}
-			<button type="submit" aria-busy={queryLoading ? "true" : "false"}></button>
+			<button type="submit" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
 			{:else}
-			<button type="submit" on:click={onSubmit}>Query</button>
+			<button type="submit" on:click={onSubmit} disabled={(loadDataLoading || clearDataLoading || queryLoading) ? true : false}>Query</button>
 			{/if}
 		</fieldset>
-		<output>
-			{#if resultsText.length > 0}
-				{#each JSON.parse(resultsText).users as user}
-					<details>
-						<summary>
-							{user.firstName} {user.lastName}
-						</summary>
-						<ul>
-							{#each Object.entries(user) as [attr, val]}
-								{#if attr !== "firstName" && attr !== "lastName"}
-									<li>{attr}: {val}</li>
-								{/if}
-							{/each}
-						</ul>
-					</details>
-				{/each}
-			{:else}
-				<p>resultsText</p>
-			{/if}
-		</output>
+		<div class="container">
+			<h3>Results</h3>
+			<output>
+				{#if resultsText.length > 0}
+					{#each JSON.parse(resultsText).users as user}
+						<details>
+							<summary>
+								{user.firstName} {user.lastName}
+							</summary>
+							<ul>
+								{#each Object.entries(user) as [attr, val]}
+									{#if attr !== "firstName" && attr !== "lastName"}
+										<li>{attr}: {val}</li>
+									{/if}
+								{/each}
+							</ul>
+						</details>
+					{/each}
+				{:else}
+					<p>{resultsText}</p>
+				{/if}
+			</output>
+		</div>
 	</form>
 </main>

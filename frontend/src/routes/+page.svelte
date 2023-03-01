@@ -12,7 +12,10 @@
 				Visit <a href="/sst">Safwaan Standard Time here</a>, or
 				<a data-sveltekit-reload href="/program4">click here for CSS 436 Program 4</a>
 			</p>
-			<img src="https://source.unsplash.com/JEicDFy5Cd8" alt="Seattle, WA" />
+			<figure>
+				<img src="https://source.unsplash.com/JEicDFy5Cd8" alt="Seattle, WA" />
+				<figcaption>Image from <a href="https://unsplash.com/photos/JEicDFy5Cd8">unsplash.com</a></figcaption>
+			</figure>
 		</article>
 	</main>
 </div>

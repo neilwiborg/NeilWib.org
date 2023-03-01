@@ -12,10 +12,6 @@
 	border-color: red;
 }
 
-nav > a {
-	color: white;
-}
-
 nav > details > ul {
 	color: white;
 }
@@ -23,10 +19,6 @@ nav > details > ul {
 h1 > a {
 	text-decoration: none;
 	color: white;
-}
-
-h1 > a:active {
-	background-color: transparent;
 }
 
 hgroup > h2 {
