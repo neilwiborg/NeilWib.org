@@ -12,12 +12,10 @@
 	let queryLoading = false;
 	// keep clear button disabled if data is not loaded
 	let clearDisabled = true;
-	// only let one button operation run at a time
-	let operationRunning = false;
 
 	const onLoad = () => {
 		loadDataLoading = true;
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data", {method: 'PUT'})
 		.then((response) => response.text()
 		.then((data) => {
 			clearDisabled = false;
@@ -33,7 +31,7 @@
 		firstName = '';
 		lastName = '';
 		resultsText = '';
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/clearData")
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data", {method: 'DELETE'})
 		.then((response) => response.text()
 		.then((data) => {
 			dataLoaded = false;
@@ -61,7 +59,7 @@
 				errorText = 'Results for ' + lastName + ':';
 			}
 		}
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data", {method: 'GET'})
 		.then((response) => response.text()
 		.then((data) => {
 			resultsText = data;
