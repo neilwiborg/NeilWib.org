@@ -111,9 +111,9 @@
 				{/if}
 			</fieldset>
 			<div class="container">
-				<h3>Results</h3>
-				<output>
-					{#if resultsText.length > 0}
+				{#if resultsText != ""}
+					<h3>Results</h3>
+					<output>
 						{#each JSON.parse(resultsText).users as user}
 							<details>
 								<summary>
@@ -128,10 +128,11 @@
 								</ul>
 							</details>
 						{/each}
-					{:else}
-						<p>{resultsText}</p>
-					{/if}
-				</output>
+					</output>
+				{:else}
+					<p></p>
+				{/if}
+				
 			</div>
 		</form>
 	</article>
