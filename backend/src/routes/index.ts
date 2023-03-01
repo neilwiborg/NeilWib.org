@@ -5,4 +5,4 @@ import { loadDataRoute } from './loadDataRoute';
 export const routes = express.Router();
 
 routes.use(defaultRoute);
-routes.use(usersRoute);
+routes.use(loadDataRoute);

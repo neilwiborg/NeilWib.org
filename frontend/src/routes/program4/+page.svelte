@@ -34,7 +34,7 @@
 				resultsText = 'Results for ' + lastName + ':';
 			}
 		}
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME)
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
 		.then((response) => response.text()
 		.then((data) => resultsText = data));
 	};
@@ -67,6 +67,25 @@
 			<small>At least one field must be entered</small>
 			<button type="submit" on:click={onSubmit}>Query</button>
 		</fieldset>
-		<output>{resultsText}</output>
+		<output>
+			{#if resultsText.length > 0}
+				{#each JSON.parse(resultsText).users as user}
+					<details>
+						<summary>
+							{user.firstName} {user.lastName}
+						</summary>
+						<ul>
+						{#each user as attr}
+							{#if attr !== "firstName" && attr !== "lastName"}
+								<li>{attr}: {user[attr]}</li>
+							{/if}
+						{/each}
+						</ul>
+					</details>
+				{/each}
+			{:else}
+				<p>resultsText</p>
+			{/if}
+		</output>
 	</form>
 </main>
