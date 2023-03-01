@@ -1,6 +1,6 @@
 import express from 'express';
 import { defaultRoute } from './defaultRoute';
-import { usersRoute } from './usersRoute';
+import { loadDataRoute } from './loadDataRoute';
 
 export const routes = express.Router();
 

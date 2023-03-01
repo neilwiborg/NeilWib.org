@@ -34,7 +34,9 @@
 				resultsText = 'Results for ' + lastName + ':';
 			}
 		}
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME).then((response) => response.text().then((data) => resultsText = data));
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME)
+		.then((response) => response.text()
+		.then((data) => resultsText = data));
 	};
 </script>
 
