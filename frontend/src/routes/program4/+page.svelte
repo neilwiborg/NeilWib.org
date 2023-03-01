@@ -1,6 +1,10 @@
 <script>
+	import { error } from "@sveltejs/kit";
+
+
 	let firstName = '';
 	let lastName = '';
+	let errorText = '';
 	let resultsText = '';
 	// keep clear button disabled if data is not loaded
 	let clearDisabled = true;
@@ -9,29 +13,29 @@
 
 	const onLoad = () => {
 		clearDisabled = false;
-		resultsText = 'Data loaded successfully!';
+		errorText = 'Data loaded successfully!';
 	};
 
 	const onClear = () => {
 		firstName = '';
 		lastName = '';
 		clearDisabled = true;
-		resultsText = 'Data cleared';
+		errorText = 'Data cleared';
 	};
 
 	const onSubmit = () => {
 		// if the user has not entered either a first or last name
 		if (firstName === '' && lastName === '') {
 			// TODO: change small text color to red
-			resultsText = 'Error: either a first name or last name must be specified';
+			errorText = 'Error: either a first name or last name must be specified';
 		} else {
 			// TODO: change small text color to normal (in case it's still red)
 			if (firstName !== '' && lastName !== '') {
-				resultsText = 'Results for ' + firstName + ' ' + lastName + ':';
+				errorText = 'Results for ' + firstName + ' ' + lastName + ':';
 			} else if (firstName !== '') {
-				resultsText = 'Results for ' + firstName + ':';
+				errorText = 'Results for ' + firstName + ':';
 			} else {
-				resultsText = 'Results for ' + lastName + ':';
+				errorText = 'Results for ' + lastName + ':';
 			}
 		}
 		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
