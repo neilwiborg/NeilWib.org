@@ -96,11 +96,11 @@
 				<div class="grid">
 					<label>
 						First Name
-						<input type="text" placeholder="Enter a first name" bind:value={firstName} disabled={inputDisabled} aria-invalid={inputError ? "true" : "false"} />
+						<input type="text" placeholder="Enter a first name" bind:value={firstName} disabled={inputDisabled} aria-invalid={inputError ? "true" : null} />
 					</label>
 					<label>
 						Last Name
-						<input type="text" placeholder="Enter a last name" bind:value={lastName} disabled={inputDisabled} aria-invalid={inputError ? "true" : "false"} />
+						<input type="text" placeholder="Enter a last name" bind:value={lastName} disabled={inputDisabled} aria-invalid={inputError ? "true" : null} />
 					</label>
 				</div>
 				<small>At least one field must be entered</small>
