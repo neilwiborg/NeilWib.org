@@ -6,6 +6,7 @@
 	let lastName = '';
 	let errorText = '';
 	let resultsText = '';
+	let queryLoading = false;
 	// keep clear button disabled if data is not loaded
 	let clearDisabled = true;
 	// only let one button operation run at a time
@@ -38,9 +39,13 @@
 				errorText = 'Results for ' + lastName + ':';
 			}
 		}
+		queryLoading = true;
 		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
 		.then((response) => response.text()
-		.then((data) => resultsText = data));
+		.then((data) => {
+			resultsText = data;
+			queryLoading = false;
+		}));
 	};
 </script>
 
@@ -69,7 +74,9 @@
 				</label>
 			</div>
 			<small>At least one field must be entered</small>
-			<button type="submit" on:click={onSubmit}>Query</button>
+			<button type="submit" on:click={onSubmit}
+			aria-busy={queryLoading ? "true" : "false"}
+			>Query</button>
 		</fieldset>
 		<output>
 			{#if resultsText.length > 0}
@@ -79,11 +86,11 @@
 							{user.firstName} {user.lastName}
 						</summary>
 						<ul>
-						{#each user as attr}
-							{#if attr !== "firstName" && attr !== "lastName"}
-								<li>{attr}: {user[attr]}</li>
-							{/if}
-						{/each}
+							{#each user as attr}
+								{#if attr !== "firstName" && attr !== "lastName"}
+									<li>{attr}: {user[attr]}</li>
+								{/if}
+							{/each}
 						</ul>
 					</details>
 				{/each}
