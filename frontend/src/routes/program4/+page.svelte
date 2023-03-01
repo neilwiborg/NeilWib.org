@@ -3,6 +3,10 @@
 	let lastName = '';
 	let errorText = '';
 	let resultsText = '';
+	let dataLoaded = false;
+	let inputError = false;
+	$: inputDisabled = !dataLoaded;
+	$: queryDisabled = !dataLoaded;
 	let loadDataLoading = false;
 	let clearDataLoading = false;
 	let queryLoading = false;
@@ -19,16 +23,20 @@
 			clearDisabled = false;
 			errorText = 'Data loaded successfully!';
 			loadDataLoading = false;
+			dataLoaded = true;
 		}));
 	};
 
 	const onClear = () => {
 		clearDataLoading = true;
+		inputError = false;
 		firstName = '';
 		lastName = '';
+		resultsText = '';
 		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/clearData")
 		.then((response) => response.text()
 		.then((data) => {
+			dataLoaded = false;
 			clearDisabled = true;
 			errorText = 'Data cleared';
 			clearDataLoading = false;
@@ -40,8 +48,10 @@
 		// if the user has not entered either a first or last name
 		if (firstName === '' && lastName === '') {
 			// TODO: change small text color to red
+			inputError = true;
 			errorText = 'Error: either a first name or last name must be specified';
 		} else {
+			inputError = false;
 			// TODO: change small text color to normal (in case it's still red)
 			if (firstName !== '' && lastName !== '') {
 				errorText = 'Results for ' + firstName + ' ' + lastName + ':';
@@ -70,15 +80,15 @@
 		<form>
 			<div class="grid">
 				{#if loadDataLoading}
-				<button type="button" class="secondary" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
+				<button type="button" class="secondary" aria-busy={loadDataLoading ? "true" : "false"}>Please wait...</button>
 				{:else}
 				<button type="button" class="secondary" on:click={onLoad}
-				disabled={(loadDataLoading || clearDataLoading || queryLoading) ? true : false}>Load Data</button>
+				disabled={(clearDataLoading || queryLoading) ? true : false}>Load Data</button>
 				{/if}
 				{#if clearDataLoading}
-				<button type="reset" class="destructive" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
+				<button type="reset" class="destructive" aria-busy={clearDataLoading ? "true" : "false"}>Please wait...</button>
 				{:else}
-					<button type="reset" class="destructive" disabled={clearDisabled} on:click={onClear}
+					<button type="reset" class="destructive" disabled={clearDisabled || ((loadDataLoading || queryLoading) ? true : false)} on:click={onClear}
 						>Clear Data</button>
 				{/if}
 			</div>
@@ -86,18 +96,18 @@
 				<div class="grid">
 					<label>
 						First Name
-						<input type="text" placeholder="Enter a first name" bind:value={firstName} />
+						<input type="text" placeholder="Enter a first name" bind:value={firstName} disabled={inputDisabled} aria-invalid={inputError ? "true" : "false"} />
 					</label>
 					<label>
 						Last Name
-						<input type="text" placeholder="Enter a last name" bind:value={lastName} />
+						<input type="text" placeholder="Enter a last name" bind:value={lastName} disabled={inputDisabled} aria-invalid={inputError ? "true" : "false"} />
 					</label>
 				</div>
 				<small>At least one field must be entered</small>
 				{#if queryLoading}
 				<button type="submit" aria-busy={queryLoading ? "true" : "false"}>Please wait...</button>
 				{:else}
-				<button type="submit" on:click={onSubmit} disabled={(loadDataLoading || clearDataLoading || queryLoading) ? true : false}>Query</button>
+				<button type="submit" on:click={onSubmit} disabled={queryDisabled || ((loadDataLoading || clearDataLoading || queryLoading) ? true : false)}>Query</button>
 				{/if}
 			</fieldset>
 			<div class="container">
