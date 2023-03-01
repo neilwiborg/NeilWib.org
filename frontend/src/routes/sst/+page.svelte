@@ -6,5 +6,7 @@
 </svelte:head>
 
 <main class="container">
-	<h2>Welcome to Safwaan Standard Time</h2>
+	<article>
+		<h2>Welcome to Safwaan Standard Time</h2>
+	</article>
 </main>

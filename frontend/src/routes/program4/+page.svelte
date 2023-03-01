@@ -1,7 +1,4 @@
 <script>
-	import { error } from "@sveltejs/kit";
-
-
 	let firstName = '';
 	let lastName = '';
 	let errorText = '';
@@ -16,18 +13,26 @@
 
 	const onLoad = () => {
 		loadDataLoading = true;
-		clearDisabled = false;
-		errorText = 'Data loaded successfully!';
-		loadDataLoading = false;
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/loadData")
+		.then((response) => response.text()
+		.then((data) => {
+			clearDisabled = false;
+			errorText = 'Data loaded successfully!';
+			loadDataLoading = false;
+		}));
 	};
 
 	const onClear = () => {
 		clearDataLoading = true;
 		firstName = '';
 		lastName = '';
-		clearDisabled = true;
-		errorText = 'Data cleared';
-		clearDataLoading = false;
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/clearData")
+		.then((response) => response.text()
+		.then((data) => {
+			clearDisabled = true;
+			errorText = 'Data cleared';
+			clearDataLoading = false;
+		}));
 	};
 
 	const onSubmit = () => {
