@@ -1,3 +1,4 @@
+import cors from 'cors';
 import createError from 'http-errors';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import path from 'path';
@@ -10,6 +11,7 @@ const app = express();
 
 app.set('trust proxy', true);
 
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
