@@ -1,30 +1,68 @@
 import express from 'express';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import usersData from '../data/ddb_example.json';
 
 const defaultRegion = "us-west-2";
-const bucketName = "neilwwebserver";
-const s3Filename = "userDataText.txt";
-
 const s3Client = new S3Client({ region: defaultRegion });
-const bucketParams = {
-	Bucket: bucketName,
-	Key: s3Filename
-};
-const sourceAddress = "https://s3-us-west-2.amazonaws.com/css490/input.txt";
+
+const getInputFile = async () => {
+	const bucketName = "css490";
+	const s3Filename = "input.txt";
+	const bucketParams = {
+		Bucket: bucketName,
+		Key: s3Filename
+	};
+
+	return await s3Client.send(new GetObjectCommand(bucketParams))
+	.then((data) => {return data.Body?.transformToString()
+	.then((transformedData) => transformedData)})
+	.catch((err) => err);
+}
+
+const uploadUsersData = async (usersData: string) => {
+	const bucketName = "neilwwebserver";
+	const s3Filename = "userDataText.txt";
+	const bucketParams = {
+		Bucket: bucketName,
+		Key: s3Filename,
+		Body: usersData
+	};
+
+	return await s3Client.send(new PutObjectCommand(bucketParams))
+	.then((data) => {data})
+	.catch((err) => {err});
+}
+
+const deleteUsersData = async () => {
+	const bucketName = "neilwwebserver";
+	const s3Filename = "userDataText.txt";
+	const bucketParams = {
+		Bucket: bucketName,
+		Key: s3Filename
+	};
+
+	s3Client.send(new DeleteObjectCommand(bucketParams));
+}
+
+const parseUsersData = (usersData: string) => {
+
+}
 
 export const dataRoute = express.Router();
 
 dataRoute.put('/program4/data', (req, res, next) => {
-	s3Client.send(new GetObjectCommand(bucketParams))
-	.then((data) => data.Body?.transformToString()
-	.then((transformedData) => res.send(transformedData)))
-	.catch((err) => res.send(err));
-	// res.send("Put request fulfilled");
+	getInputFile()
+	.then((data) => {
+		uploadUsersData(data)
+		.then((resp) => {
+			res.send(resp);
+		})
+	});
 });
 
 dataRoute.delete('/program4/data', (req, res, next) => {
+	deleteUsersData();
 	res.send("Delete request fulfilled");
 });
 
