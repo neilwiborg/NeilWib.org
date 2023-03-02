@@ -1,45 +1,27 @@
 import express from 'express';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import usersData from '../data/ddb_example.json';
+
+const defaultRegion = "us-west-2";
+const bucketName = "neilwwebserver";
+const s3Filename = "userDataText.txt";
+
+const s3Client = new S3Client({ region: defaultRegion });
+const bucketParams = {
+	Bucket: bucketName,
+	Key: s3Filename
+};
+const sourceAddress = "https://s3-us-west-2.amazonaws.com/css490/input.txt";
 
 export const dataRoute = express.Router();
 
-// import userData from './data/ddb_example.json';
-let userData = {
-	users: [
-		{
-			lastName: 'Bowie',
-			firstName: 'David',
-			age: 58,
-			id: 8765
-		},
-		{
-			lastName: 'Byrne',
-			firstName: 'David',
-			age: 55,
-			id: 879897
-		},
-		{
-			lastName: 'Cassidy',
-			firstName: 'David',
-			happy: true,
-			id: 765
-		},
-		{
-			lastName: 'Strummer',
-			firstName: 'Joe',
-			age: 'ageless',
-			id: 1
-		},
-		{
-			lastName: 'Costello',
-			firstName: 'Elvis',
-			age: 61,
-			album: 'MyAim'
-		}
-	]
-};
-
 dataRoute.put('/program4/data', (req, res, next) => {
-	res.send("Put request fulfilled");
+	s3Client.send(new GetObjectCommand(bucketParams))
+	.then((data) => data.Body?.transformToString()
+	.then((transformedData) => res.send(transformedData)))
+	.catch((err) => res.send(err));
+	// res.send("Put request fulfilled");
 });
 
 dataRoute.delete('/program4/data', (req, res, next) => {
@@ -47,5 +29,5 @@ dataRoute.delete('/program4/data', (req, res, next) => {
 });
 
 dataRoute.get('/program4/data', (req, res, next) => {
-	res.send(JSON.stringify(userData));
+	res.send(JSON.stringify(usersData));
 });
