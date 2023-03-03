@@ -6,6 +6,16 @@ import usersData from '../data/ddb_example.json';
 const defaultRegion = "us-west-2";
 const s3Client = new S3Client({ region: defaultRegion });
 
+type user = {
+	lastName: string,
+	firstName: string,
+	attributes: Record<string, string>
+}
+
+type data = {
+	users: user[]
+}
+
 const getInputFile = async () => {
 	const bucketName = "css490";
 	const s3Filename = "input.txt";
@@ -46,7 +56,31 @@ const deleteUsersData = async () => {
 }
 
 const parseUsersData = (usersData: string) => {
+	// remove extra whitespace
+	usersData = usersData.replace("/\s+/g",' ').trim();
+	let lines = usersData.split('\n');
 
+	let resultData: data = {
+		users: []
+	}
+
+	lines.forEach((item) => {
+		let words = item.split(' ');
+		let lastName = words[0];
+		let firstName = words[1];
+		resultData.users.push({
+			firstName: firstName,
+			lastName: lastName,
+			attributes: {}
+		});
+
+		for (let i = 2; i < words.length; i++) {
+			let [key, val] = words[i].split('=');
+			resultData.users[resultData.users.length - 1].attributes[key] = val;
+		}
+	});
+
+	return resultData;
 }
 
 export const dataRoute = express.Router();
@@ -54,6 +88,8 @@ export const dataRoute = express.Router();
 dataRoute.put('/program4/data', (req, res, next) => {
 	getInputFile()
 	.then((data) => {
+		let users = parseUsersData(data);
+		console.log(users);
 		uploadUsersData(data)
 		.then((resp) => {
 			res.send(resp);
