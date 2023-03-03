@@ -46,12 +46,11 @@ const uploadUsersFileToS3 = async (usersData: string) => {
 }
 
 const uploadUsersDataToDDb = async (usersData: data) => {
-	const params: PutItemCommandInput = {
-		TableName: "webserverUsersData",
-		Item: {}
-	};
-
-	usersData.users.forEach((item) => {
+	usersData.users.forEach(async (item) => {
+		const params: PutItemCommandInput = {
+			TableName: "webserverUsersData",
+			Item: {}
+		};
 		let itemProperties: Record<string, AttributeValue> = {
 			lastName: {S: item.lastName },
 			firstName: {S: item.firstName }
@@ -62,7 +61,7 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 		}
 
 		params.Item = itemProperties;
-		ddbClient.send(new PutItemCommand(params));
+		await ddbClient.send(new PutItemCommand(params));
 	});
 }
 
