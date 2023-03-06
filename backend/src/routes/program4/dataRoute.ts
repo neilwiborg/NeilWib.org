@@ -1,6 +1,6 @@
 import express from 'express';
 import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { type AttributeValue, DynamoDBClient, PutItemCommand, type PutItemCommandInput, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand } from "@aws-sdk/client-dynamodb";
 import usersData from '../data/ddb_example.json';
 
 const defaultRegion = "us-west-2";
@@ -93,7 +93,7 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 	}
 }
 
-const deleteUsersData = async () => {
+const deleteUsersDataFromS3 = async () => {
 	const bucketName = "neilwwebserver";
 	const s3Filename = "userDataText.txt";
 	const bucketParams = {
@@ -104,9 +104,50 @@ const deleteUsersData = async () => {
 	s3Client.send(new DeleteObjectCommand(bucketParams));
 }
 
+const deleteDDbTable = async () => {
+	const tableName = "webserverUsersData";
+	const params = {
+		TableName: tableName
+	  };
+
+	return await ddbClient.send(new DeleteTableCommand(params))
+	.then((data) => {data});
+}
+
+const createDDbTable = async () => {
+	const tableName = "webserverUsersData";
+
+	const params = {
+		AttributeDefinitions: [
+			{
+			  AttributeName: "lastName",
+			  AttributeType: "S"
+			},
+			{
+			  AttributeName: "firstName",
+			  AttributeType: "S"
+			},
+		  ],
+		KeySchema: [
+			{
+			  AttributeName: "lastName",
+			  KeyType: "HASH"
+			},
+			{
+			  AttributeName: "firstName",
+			  KeyType: "RANGE"
+			}
+		  ],
+		TableName: tableName
+	}
+
+	return await ddbClient.send(new CreateTableCommand(params))
+	.then((data) => {data});
+}
+
 const parseUsersData = (usersData: string) => {
 	// remove extra whitespace
-	usersData = usersData.replace("/\s+/g",' ').trim();
+	usersData = usersData.replace(/  +/g,' ').trim();
 	// split into array of lines
 	let lines = usersData.split("\r\n");
 
@@ -149,7 +190,6 @@ dataRoute.put('/program4/data', (req, res, next) => {
 	getInputFile()
 	.then((data) => {
 		let usersData = parseUsersData(data);
-		console.log(usersData);
 		uploadUsersDataToDDb(usersData);
 		uploadUsersFileToS3(data)
 		.then((resp) => {
@@ -159,8 +199,16 @@ dataRoute.put('/program4/data', (req, res, next) => {
 });
 
 dataRoute.delete('/program4/data', (req, res, next) => {
-	deleteUsersData();
-	res.send("Delete request fulfilled");
+	deleteUsersDataFromS3()
+	.then((s3DeleteResp) => {
+		deleteDDbTable()
+		.then((ddbDeleteResp) => {
+			createDDbTable()
+			.then((ddbCreateResp) => {
+				res.send("Delete request fulfilled");
+			})
+		})
+	})
 });
 
 dataRoute.get('/program4/data', (req, res, next) => {
