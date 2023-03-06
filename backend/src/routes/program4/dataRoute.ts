@@ -1,6 +1,6 @@
 import express from 'express';
 import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { type AttributeValue, DynamoDBClient, PutItemCommand, type PutItemCommandInput, type BatchWriteItemCommandInput, BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
+import { type AttributeValue, DynamoDBClient, PutItemCommand, type PutItemCommandInput, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest } from "@aws-sdk/client-dynamodb";
 import usersData from '../data/ddb_example.json';
 
 const defaultRegion = "us-west-2";
@@ -54,16 +54,20 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 		}
 	}
 	usersData.users.forEach(async (item) => {
-		let itemProperties: Record<string, AttributeValue> = {
-			lastName: {S: item.lastName },
-			firstName: {S: item.firstName }
+		const itemProps: WriteRequest = {
+			PutRequest: {
+				Item: {
+					lastName: {S: item.lastName },
+					firstName: {S: item.firstName }
+				}
+			}
 		}
 
 		for (let key in item.attributes) {
-			itemProperties[key] = {S: item.attributes[key]}
+			itemProps.PutRequest!.Item![key] = {S: item.attributes[key]}
 		}
 
-		params.RequestItems!.tableName.push(itemProperties);
+		params.RequestItems![tableName].push(itemProps);
 
 		batchCount++;
 
@@ -73,7 +77,7 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 			await ddbClient.send(new BatchWriteItemCommand(params));
 
 			// clear items and reset count
-			params.RequestItems!.tableName = [];
+			params.RequestItems![tableName] = [];
 			batchCount = 0;
 		}
 	});
@@ -84,7 +88,7 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 		await ddbClient.send(new BatchWriteItemCommand(params));
 
 		// clear items and reset count
-		params.RequestItems!.tableName = [];
+		params.RequestItems![tableName] = [];
 		batchCount = 0;
 	}
 }
