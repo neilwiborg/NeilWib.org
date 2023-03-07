@@ -1,6 +1,6 @@
 import express from 'express';
 import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand, DynamoDB, waitUntilTableNotExists } from "@aws-sdk/client-dynamodb";
 import usersData from '../data/ddb_example.json';
 
 const defaultRegion = "us-west-2";
@@ -111,7 +111,17 @@ const deleteDDbTable = async () => {
 	  };
 
 	return await ddbClient.send(new DeleteTableCommand(params))
-	.then((data) => {data});
+	.then((data) => {
+		const waiterParams = {
+			client: ddbClient,
+			maxWaitTime: 120
+		};
+		const params = {
+			TableName: tableName
+		};
+		waitUntilTableNotExists(waiterParams, params)
+		.then((waitResp) => waitResp)
+	});
 }
 
 const createDDbTable = async () => {
@@ -138,6 +148,10 @@ const createDDbTable = async () => {
 			  KeyType: "RANGE"
 			}
 		  ],
+		  ProvisionedThroughput: {
+			ReadCapacityUnits: 1,
+			WriteCapacityUnits: 1,
+		  },
 		TableName: tableName
 	}
 
@@ -147,7 +161,7 @@ const createDDbTable = async () => {
 
 const parseUsersData = (usersData: string) => {
 	// remove extra whitespace
-	usersData = usersData.replace(/  +/g,' ').trim();
+	usersData = usersData.replace(/  +/g, ' ').trim();
 	// split into array of lines
 	let lines = usersData.split("\r\n");
 
