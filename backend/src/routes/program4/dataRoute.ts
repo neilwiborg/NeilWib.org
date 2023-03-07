@@ -104,6 +104,19 @@ const deleteUsersDataFromS3 = async () => {
 	s3Client.send(new DeleteObjectCommand(bucketParams));
 }
 
+const waitUntilTableDeleted = async () => {
+	const tableName = "webserverUsersData";
+	const waiterParams = {
+		client: ddbClient,
+		maxWaitTime: 120
+	};
+	const params = {
+		TableName: tableName
+	};
+	return await waitUntilTableNotExists(waiterParams, params)
+	.then((resp) => {resp});
+}
+
 const deleteDDbTable = async () => {
 	const tableName = "webserverUsersData";
 	const params = {
@@ -112,14 +125,7 @@ const deleteDDbTable = async () => {
 
 	return await ddbClient.send(new DeleteTableCommand(params))
 	.then((data) => {
-		const waiterParams = {
-			client: ddbClient,
-			maxWaitTime: 120
-		};
-		const params = {
-			TableName: tableName
-		};
-		waitUntilTableNotExists(waiterParams, params)
+		waitUntilTableDeleted()
 		.then((waitResp) => waitResp)
 	});
 }
