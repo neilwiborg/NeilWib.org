@@ -1,6 +1,6 @@
 import express from 'express';
 import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand, DynamoDB, waitUntilTableNotExists } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand, waitUntilTableNotExists, waitUntilTableExists } from "@aws-sdk/client-dynamodb";
 import usersData from '../data/ddb_example.json';
 
 const defaultRegion = "us-west-2";
@@ -117,6 +117,19 @@ const waitUntilTableDeleted = async () => {
 	.then((resp) => {resp});
 }
 
+const waitUntilTableCreated = async () => {
+	const tableName = "webserverUsersData";
+	const waiterParams = {
+		client: ddbClient,
+		maxWaitTime: 120
+	};
+	const params = {
+		TableName: tableName
+	};
+	return await waitUntilTableExists(waiterParams, params)
+	.then((resp) => {resp});
+}
+
 const deleteDDbTable = async () => {
 	const tableName = "webserverUsersData";
 	const params = {
@@ -125,8 +138,7 @@ const deleteDDbTable = async () => {
 
 	return await ddbClient.send(new DeleteTableCommand(params))
 	.then((data) => {
-		waitUntilTableDeleted()
-		.then((waitResp) => waitResp)
+		return data;
 	});
 }
 
@@ -223,9 +235,15 @@ dataRoute.delete('/program4/data', (req, res, next) => {
 	.then((s3DeleteResp) => {
 		deleteDDbTable()
 		.then((ddbDeleteResp) => {
-			createDDbTable()
-			.then((ddbCreateResp) => {
-				res.send("Delete request fulfilled");
+			waitUntilTableDeleted()
+			.then((waitDeletedResp) => {
+				createDDbTable()
+				.then((ddbCreateResp) => {
+					waitUntilTableCreated()
+					.then((waitCreatedResp) => {
+						res.send("Delete request fulfilled");
+					})
+				})
 			})
 		})
 	})
