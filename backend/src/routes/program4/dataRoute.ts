@@ -53,7 +53,7 @@ const uploadUsersFileToS3 = async (usersData: string) => {
 	const bucketName = 'neilwwebserver';
 	const s3Filename = 'userDataText.txt';
 	const bucketParams = {
-		ACL:'public-read',
+		ACL: 'public-read',
 		Bucket: bucketName,
 		Key: s3Filename,
 		Body: usersData
@@ -243,45 +243,42 @@ const parseUsersData = (usersData: string) => {
 };
 
 const queryUsersData = async (firstName: string, lastName: string) => {
-	if (firstName != "" && lastName != "") {
+	if (firstName != '' && lastName != '') {
 		const params = {
-			KeyConditionExpression: "lastName = :lastName AND firstName = :firstName",
+			KeyConditionExpression: 'lastName = :lastName AND firstName = :firstName',
 			ExpressionAttributeValues: {
-				":lastName": { "S": lastName },
-				":firstName": { "S": firstName }
+				':lastName': { S: lastName },
+				':firstName': { S: firstName }
 			},
-			TableName: "webserverUsersData"
-		}
-	
-		return await ddbClient.send(new QueryCommand(params)).then((data => {
-			return data;
-		}));
-	} else if (firstName != "") {
+			TableName: 'webserverUsersData'
+		};
+
+		let data = await ddbClient.send(new QueryCommand(params));
+		return data;
+	} else if (firstName != '') {
 		const params = {
-			FilterExpression: "firstName = :firstName",
+			FilterExpression: 'firstName = :firstName',
 			ExpressionAttributeValues: {
-				":firstName": { "S": firstName }
+				':firstName': { S: firstName }
 			},
-			TableName: "webserverUsersData"
-		}
-	
-		return await ddbClient.send(new ScanCommand(params)).then((data => {
-			return data;
-		}));
+			TableName: 'webserverUsersData'
+		};
+
+		let data = await ddbClient.send(new ScanCommand(params));
+		return data;
 	} else {
 		const params = {
-			KeyConditionExpression: "lastName = :lastName",
+			KeyConditionExpression: 'lastName = :lastName',
 			ExpressionAttributeValues: {
-				":lastName": { "S": lastName }
+				':lastName': { S: lastName }
 			},
-			TableName: "webserverUsersData"
-		}
-	
-		return await ddbClient.send(new QueryCommand(params)).then((data => {
-			return data;
-		}));
+			TableName: 'webserverUsersData'
+		};
+
+		let data = await ddbClient.send(new QueryCommand(params));
+		return data;
 	}
-}
+};
 
 export const dataRoute = express.Router();
 
@@ -309,11 +306,10 @@ dataRoute.delete('/program4/data', (req, res, next) => {
 	});
 });
 
-dataRoute.get('/program4/data', (req, res, next) => {
+dataRoute.get('/program4/data', async (req, res, next) => {
 	let firstName = req.query.firstName as string;
 	let lastName = req.query.lastName as string;
 	// res.send(JSON.stringify(usersData));
-	queryUsersData(firstName, lastName).then((queryResp) => {
-		res.send(JSON.stringify(queryResp));
-	})
+	let queryResponse = await queryUsersData(firstName, lastName);
+	res.send(JSON.stringify(queryResponse));
 });
