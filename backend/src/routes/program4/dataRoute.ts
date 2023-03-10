@@ -311,5 +311,8 @@ dataRoute.get('/program4/data', async (req, res, next) => {
 	let lastName = req.query.lastName as string;
 	// res.send(JSON.stringify(usersData));
 	let queryResponse = await queryUsersData(firstName, lastName);
-	res.send(JSON.stringify(queryResponse));
+	let formattedResponse = {
+		users: queryResponse["Items"]
+	}
+	res.send(JSON.stringify(formattedResponse));
 });

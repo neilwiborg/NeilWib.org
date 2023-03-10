@@ -42,13 +42,13 @@
 	};
 
 	const onSubmit = () => {
-		queryLoading = true;
 		// if the user has not entered either a first or last name
 		if (firstName === '' && lastName === '') {
 			// TODO: change small text color to red
 			inputError = true;
 			errorText = 'Error: either a first name or last name must be specified';
 		} else {
+			queryLoading = true;
 			inputError = false;
 			// TODO: change small text color to normal (in case it's still red)
 			if (firstName !== '' && lastName !== '') {
@@ -58,17 +58,18 @@
 			} else {
 				errorText = 'Results for ' + lastName + ':';
 			}
+
+			fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data?" +
+			new URLSearchParams({
+				firstName: firstName,
+				lastName: lastName
+			}), {method: 'GET'})
+			.then((response) => response.text()
+			.then((data) => {
+				resultsText = data;
+				queryLoading = false;
+			}));
 		}
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data?" +
-		new URLSearchParams({
-			firstName: firstName,
-			lastName: lastName
-		}), {method: 'GET'})
-		.then((response) => response.text()
-		.then((data) => {
-			resultsText = data;
-			queryLoading = false;
-		}));
 	};
 </script>
 
