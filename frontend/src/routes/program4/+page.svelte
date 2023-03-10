@@ -59,7 +59,11 @@
 				errorText = 'Results for ' + lastName + ':';
 			}
 		}
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data", {method: 'GET'})
+		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/program4/data?" +
+		new URLSearchParams({
+			firstName: firstName,
+			lastName: lastName
+		}), {method: 'GET'})
 		.then((response) => response.text()
 		.then((data) => {
 			resultsText = data;
