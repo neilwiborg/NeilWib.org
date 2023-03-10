@@ -1,70 +1,94 @@
 import express from 'express';
-import { S3Client, DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { DynamoDBClient, type BatchWriteItemCommandInput, BatchWriteItemCommand, WriteRequest, DeleteTableCommand, CreateTableCommand, waitUntilTableNotExists, waitUntilTableExists } from "@aws-sdk/client-dynamodb";
+import {
+	S3Client,
+	DeleteObjectCommand,
+	GetObjectCommand,
+	PutObjectCommand
+} from '@aws-sdk/client-s3';
+import {
+	DynamoDBClient,
+	type BatchWriteItemCommandInput,
+	BatchWriteItemCommand,
+	WriteRequest,
+	DeleteTableCommand,
+	CreateTableCommand,
+	waitUntilTableNotExists,
+	waitUntilTableExists,
+	QueryCommand,
+	ScanCommand
+} from '@aws-sdk/client-dynamodb';
 import usersData from '../data/ddb_example.json';
 
-const defaultRegion = "us-west-2";
+const defaultRegion = 'us-west-2';
 const s3Client = new S3Client({ region: defaultRegion });
-const ddbClient = new DynamoDBClient({ region : defaultRegion });
+const ddbClient = new DynamoDBClient({ region: defaultRegion });
 
 type user = {
-	lastName: string,
-	firstName: string,
-	attributes: Record<string, string>
-}
+	lastName: string;
+	firstName: string;
+	attributes: Record<string, string>;
+};
 
 type data = {
-	users: user[]
-}
+	users: user[];
+};
 
 const getInputFile = async () => {
-	const bucketName = "css490";
-	const s3Filename = "input.txt";
+	const bucketName = 'css490';
+	const s3Filename = 'input.txt';
 	const bucketParams = {
 		Bucket: bucketName,
 		Key: s3Filename
 	};
 
-	return await s3Client.send(new GetObjectCommand(bucketParams))
-	.then((data) => {return data.Body?.transformToString()
-	.then((transformedData) => transformedData)})
-	.catch((err) => err);
-}
+	return await s3Client
+		.send(new GetObjectCommand(bucketParams))
+		.then((data) => {
+			return data.Body?.transformToString().then((transformedData) => transformedData);
+		})
+		.catch((err) => err);
+};
 
 const uploadUsersFileToS3 = async (usersData: string) => {
-	const bucketName = "neilwwebserver";
-	const s3Filename = "userDataText.txt";
+	const bucketName = 'neilwwebserver';
+	const s3Filename = 'userDataText.txt';
 	const bucketParams = {
+		ACL:'public-read',
 		Bucket: bucketName,
 		Key: s3Filename,
 		Body: usersData
 	};
 
-	return await s3Client.send(new PutObjectCommand(bucketParams))
-	.then((data) => {data})
-	.catch((err) => {err});
-}
+	return await s3Client
+		.send(new PutObjectCommand(bucketParams))
+		.then((data) => {
+			data;
+		})
+		.catch((err) => {
+			err;
+		});
+};
 
 const uploadUsersDataToDDb = async (usersData: data) => {
-	const tableName = "webserverUsersData";
+	const tableName = 'webserverUsersData';
 	let batchCount = 0;
 	const params: BatchWriteItemCommandInput = {
 		RequestItems: {
 			[tableName]: []
 		}
-	}
+	};
 	usersData.users.forEach(async (item) => {
 		const itemProps: WriteRequest = {
 			PutRequest: {
 				Item: {
-					lastName: {S: item.lastName },
-					firstName: {S: item.firstName }
+					lastName: { S: item.lastName },
+					firstName: { S: item.firstName }
 				}
 			}
-		}
+		};
 
 		for (let key in item.attributes) {
-			itemProps.PutRequest!.Item![key] = {S: item.attributes[key]}
+			itemProps.PutRequest!.Item![key] = { S: item.attributes[key] };
 		}
 
 		params.RequestItems![tableName].push(itemProps);
@@ -91,21 +115,21 @@ const uploadUsersDataToDDb = async (usersData: data) => {
 		params.RequestItems![tableName] = [];
 		batchCount = 0;
 	}
-}
+};
 
 const deleteUsersDataFromS3 = async () => {
-	const bucketName = "neilwwebserver";
-	const s3Filename = "userDataText.txt";
+	const bucketName = 'neilwwebserver';
+	const s3Filename = 'userDataText.txt';
 	const bucketParams = {
 		Bucket: bucketName,
 		Key: s3Filename
 	};
 
 	s3Client.send(new DeleteObjectCommand(bucketParams));
-}
+};
 
 const waitUntilTableDeleted = async () => {
-	const tableName = "webserverUsersData";
+	const tableName = 'webserverUsersData';
 	const waiterParams = {
 		client: ddbClient,
 		maxWaitTime: 120
@@ -113,12 +137,13 @@ const waitUntilTableDeleted = async () => {
 	const params = {
 		TableName: tableName
 	};
-	return await waitUntilTableNotExists(waiterParams, params)
-	.then((resp) => {resp});
-}
+	return await waitUntilTableNotExists(waiterParams, params).then((resp) => {
+		resp;
+	});
+};
 
 const waitUntilTableCreated = async () => {
-	const tableName = "webserverUsersData";
+	const tableName = 'webserverUsersData';
 	const waiterParams = {
 		client: ddbClient,
 		maxWaitTime: 120
@@ -126,67 +151,68 @@ const waitUntilTableCreated = async () => {
 	const params = {
 		TableName: tableName
 	};
-	return await waitUntilTableExists(waiterParams, params)
-	.then((resp) => {resp});
-}
+	return await waitUntilTableExists(waiterParams, params).then((resp) => {
+		resp;
+	});
+};
 
 const deleteDDbTable = async () => {
-	const tableName = "webserverUsersData";
+	const tableName = 'webserverUsersData';
 	const params = {
 		TableName: tableName
-	  };
+	};
 
-	return await ddbClient.send(new DeleteTableCommand(params))
-	.then((data) => {
+	return await ddbClient.send(new DeleteTableCommand(params)).then((data) => {
 		return data;
 	});
-}
+};
 
 const createDDbTable = async () => {
-	const tableName = "webserverUsersData";
+	const tableName = 'webserverUsersData';
 
 	const params = {
 		AttributeDefinitions: [
 			{
-			  AttributeName: "lastName",
-			  AttributeType: "S"
+				AttributeName: 'lastName',
+				AttributeType: 'S'
 			},
 			{
-			  AttributeName: "firstName",
-			  AttributeType: "S"
-			},
-		  ],
+				AttributeName: 'firstName',
+				AttributeType: 'S'
+			}
+		],
 		KeySchema: [
 			{
-			  AttributeName: "lastName",
-			  KeyType: "HASH"
+				AttributeName: 'lastName',
+				KeyType: 'HASH'
 			},
 			{
-			  AttributeName: "firstName",
-			  KeyType: "RANGE"
+				AttributeName: 'firstName',
+				KeyType: 'RANGE'
 			}
-		  ],
-		  ProvisionedThroughput: {
+		],
+		ProvisionedThroughput: {
 			ReadCapacityUnits: 1,
-			WriteCapacityUnits: 1,
-		  },
+			WriteCapacityUnits: 1
+		},
 		TableName: tableName
-	}
+	};
 
-	return await ddbClient.send(new CreateTableCommand(params))
-	.then((data) => {data});
-}
+	return await ddbClient.send(new CreateTableCommand(params)).then((data) => {
+		data;
+	});
+};
 
 const parseUsersData = (usersData: string) => {
 	// remove extra whitespace
-	usersData = usersData.replace(/  +/g, ' ').trim();
+	usersData = usersData.replace(/\t/g, ' ').replace(/  +/g, ' ').trim();
 	// split into array of lines
-	let lines = usersData.split("\r\n");
+	let lines = usersData.split('\r\n');
 
 	// hold the parsed data
 	let resultData: data = {
 		users: []
-	}
+	};
 
 	// iterate over each line
 	lines.forEach((item) => {
@@ -214,41 +240,80 @@ const parseUsersData = (usersData: string) => {
 	});
 
 	return resultData;
+};
+
+const queryUsersData = async (firstName: string, lastName: string) => {
+	if (firstName != "" && lastName != "") {
+		const params = {
+			KeyConditionExpression: "lastName = :lastName AND firstName = :firstName",
+			ExpressionAttributeValues: {
+				":lastName": { "S": lastName },
+				":firstName": { "S": firstName }
+			},
+			TableName: "webserverUsersData"
+		}
+	
+		return await ddbClient.send(new QueryCommand(params)).then((data => {
+			return data;
+		}));
+	} else if (firstName != "") {
+		const params = {
+			FilterExpression: "firstName = :firstName",
+			ExpressionAttributeValues: {
+				":firstName": { "S": firstName }
+			},
+			TableName: "webserverUsersData"
+		}
+	
+		return await ddbClient.send(new ScanCommand(params)).then((data => {
+			return data;
+		}));
+	} else {
+		const params = {
+			KeyConditionExpression: "lastName = :lastName",
+			ExpressionAttributeValues: {
+				":lastName": { "S": lastName }
+			},
+			TableName: "webserverUsersData"
+		}
+	
+		return await ddbClient.send(new QueryCommand(params)).then((data => {
+			return data;
+		}));
+	}
 }
 
 export const dataRoute = express.Router();
 
 dataRoute.put('/program4/data', (req, res, next) => {
-	getInputFile()
-	.then((data) => {
+	getInputFile().then((data) => {
 		let usersData = parseUsersData(data);
 		uploadUsersDataToDDb(usersData);
-		uploadUsersFileToS3(data)
-		.then((resp) => {
+		uploadUsersFileToS3(data).then((resp) => {
 			res.send(resp);
-		})
+		});
 	});
 });
 
 dataRoute.delete('/program4/data', (req, res, next) => {
-	deleteUsersDataFromS3()
-	.then((s3DeleteResp) => {
-		deleteDDbTable()
-		.then((ddbDeleteResp) => {
-			waitUntilTableDeleted()
-			.then((waitDeletedResp) => {
-				createDDbTable()
-				.then((ddbCreateResp) => {
-					waitUntilTableCreated()
-					.then((waitCreatedResp) => {
-						res.send("Delete request fulfilled");
-					})
-				})
-			})
-		})
-	})
+	deleteUsersDataFromS3().then((s3DeleteResp) => {
+		deleteDDbTable().then((ddbDeleteResp) => {
+			waitUntilTableDeleted().then((waitDeletedResp) => {
+				createDDbTable().then((ddbCreateResp) => {
+					waitUntilTableCreated().then((waitCreatedResp) => {
+						res.send('Delete request fulfilled');
+					});
+				});
+			});
+		});
+	});
 });
 
 dataRoute.get('/program4/data', (req, res, next) => {
-	res.send(JSON.stringify(usersData));
+	let firstName = req.query.firstName as string;
+	let lastName = req.query.lastName as string;
+	// res.send(JSON.stringify(usersData));
+	queryUsersData(firstName, lastName).then((queryResp) => {
+		res.send(JSON.stringify(queryResp));
+	})
 });
