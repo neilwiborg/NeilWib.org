@@ -33,6 +33,10 @@ type data = {
 	users: user[];
 };
 
+type formattedOutput = {
+	users: Record<string, string>[];
+};
+
 const getInputFile = async () => {
 	const bucketName = 'css490';
 	const s3Filename = 'input.txt';
@@ -311,8 +315,15 @@ dataRoute.get('/program4/data', async (req, res, next) => {
 	let lastName = req.query.lastName as string;
 	// res.send(JSON.stringify(usersData));
 	let queryResponse = await queryUsersData(firstName, lastName);
-	let formattedResponse = {
-		users: queryResponse["Items"]
+	let formattedResponse: formattedOutput = {
+		users: []
 	}
+	queryResponse.Items?.forEach((entry) => {
+		let user: Record<string, string> = {}
+		for (const [key, value] of Object.entries(entry)) {
+			user[key] = value["S"] ?? "";
+		}
+		formattedResponse.users.push(user);
+	});
 	res.send(JSON.stringify(formattedResponse));
 });
