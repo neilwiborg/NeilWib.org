@@ -279,6 +279,7 @@ dataRoute.put('/program4/data', async (req, res, next) => {
 	let usersData = parseUsersData(inputFile);
 	await uploadUsersFileToS3(inputFile);
 	await uploadUsersDataToDDb(usersData);
+	res.send("Data loaded");
 });
 
 dataRoute.delete('/program4/data', async (req, res, next) => {
