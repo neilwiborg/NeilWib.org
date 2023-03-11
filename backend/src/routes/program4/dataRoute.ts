@@ -17,7 +17,6 @@ import {
 	QueryCommand,
 	ScanCommand
 } from '@aws-sdk/client-dynamodb';
-import usersData from '../data/ddb_example.json';
 
 const defaultRegion = 'us-west-2';
 const s3Client = new S3Client({ region: defaultRegion });
@@ -45,12 +44,9 @@ const getInputFile = async () => {
 		Key: s3Filename
 	};
 
-	return await s3Client
-		.send(new GetObjectCommand(bucketParams))
-		.then((data) => {
-			return data.Body?.transformToString().then((transformedData) => transformedData);
-		})
-		.catch((err) => err);
+	let resp = await s3Client.send(new GetObjectCommand(bucketParams));
+	let data = await resp.Body!.transformToString();
+	return data;
 };
 
 const uploadUsersFileToS3 = async (usersData: string) => {
@@ -64,14 +60,8 @@ const uploadUsersFileToS3 = async (usersData: string) => {
 		Body: usersData
 	};
 
-	return await s3Client
-		.send(new PutObjectCommand(bucketParams))
-		.then((data) => {
-			data;
-		})
-		.catch((err) => {
-			err;
-		});
+	let resp = await s3Client.send(new PutObjectCommand(bucketParams));
+	return resp;
 };
 
 const uploadUsersDataToDDb = async (usersData: data) => {
@@ -130,7 +120,8 @@ const deleteUsersDataFromS3 = async () => {
 		Key: s3Filename
 	};
 
-	s3Client.send(new DeleteObjectCommand(bucketParams));
+	let resp = await s3Client.send(new DeleteObjectCommand(bucketParams));
+	return resp;
 };
 
 const waitUntilTableDeleted = async () => {
@@ -142,9 +133,8 @@ const waitUntilTableDeleted = async () => {
 	const params = {
 		TableName: tableName
 	};
-	return await waitUntilTableNotExists(waiterParams, params).then((resp) => {
-		resp;
-	});
+	let resp = await waitUntilTableNotExists(waiterParams, params);
+	return resp;
 };
 
 const waitUntilTableCreated = async () => {
@@ -156,9 +146,8 @@ const waitUntilTableCreated = async () => {
 	const params = {
 		TableName: tableName
 	};
-	return await waitUntilTableExists(waiterParams, params).then((resp) => {
-		resp;
-	});
+	let resp =  await waitUntilTableExists(waiterParams, params);
+	return resp;
 };
 
 const deleteDDbTable = async () => {
@@ -167,9 +156,8 @@ const deleteDDbTable = async () => {
 		TableName: tableName
 	};
 
-	return await ddbClient.send(new DeleteTableCommand(params)).then((data) => {
-		return data;
-	});
+	let resp = await ddbClient.send(new DeleteTableCommand(params));
+	return resp;
 };
 
 const createDDbTable = async () => {
@@ -203,9 +191,8 @@ const createDDbTable = async () => {
 		TableName: tableName
 	};
 
-	return await ddbClient.send(new CreateTableCommand(params)).then((data) => {
-		data;
-	});
+	let resp = await ddbClient.send(new CreateTableCommand(params));
+	return resp;
 };
 
 const parseUsersData = (usersData: string) => {
@@ -287,34 +274,25 @@ const queryUsersData = async (firstName: string, lastName: string) => {
 
 export const dataRoute = express.Router();
 
-dataRoute.put('/program4/data', (req, res, next) => {
-	getInputFile().then((data) => {
-		let usersData = parseUsersData(data);
-		uploadUsersDataToDDb(usersData);
-		uploadUsersFileToS3(data).then((resp) => {
-			res.send(resp);
-		});
-	});
+dataRoute.put('/program4/data', async (req, res, next) => {
+	let inputFile = await getInputFile();
+	let usersData = parseUsersData(inputFile);
+	await uploadUsersFileToS3(inputFile);
+	await uploadUsersDataToDDb(usersData);
 });
 
-dataRoute.delete('/program4/data', (req, res, next) => {
-	deleteUsersDataFromS3().then((s3DeleteResp) => {
-		deleteDDbTable().then((ddbDeleteResp) => {
-			waitUntilTableDeleted().then((waitDeletedResp) => {
-				createDDbTable().then((ddbCreateResp) => {
-					waitUntilTableCreated().then((waitCreatedResp) => {
-						res.send('Delete request fulfilled');
-					});
-				});
-			});
-		});
-	});
+dataRoute.delete('/program4/data', async (req, res, next) => {
+	await deleteUsersDataFromS3();
+	await deleteDDbTable();
+	await waitUntilTableDeleted();
+	await createDDbTable();
+	await waitUntilTableCreated();
+	res.send('Delete request fulfilled');
 });
 
 dataRoute.get('/program4/data', async (req, res, next) => {
 	let firstName = req.query.firstName as string;
 	let lastName = req.query.lastName as string;
-	// res.send(JSON.stringify(usersData));
 	let queryResponse = await queryUsersData(firstName, lastName);
 	let formattedResponse: formattedOutput = {
 		users: []
