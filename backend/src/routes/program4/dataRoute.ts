@@ -58,6 +58,7 @@ const uploadUsersFileToS3 = async (usersData: string) => {
 	const s3Filename = 'userDataText.txt';
 	const bucketParams = {
 		ACL: 'public-read',
+		ContentType: 'text/plain',
 		Bucket: bucketName,
 		Key: s3Filename,
 		Body: usersData
