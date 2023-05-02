@@ -6,6 +6,7 @@
 			<ul role="listbox">
 				<li><a href="/sst">Safwaan Standard Time</a></li>
 				<li><a data-sveltekit-reload href="/program4">CSS 436 Program 4</a></li>
+				<li><a href="/PeerReviews">CSS 490 Peer Reviews</a></li>
 			</ul>
 		</details>
 	</nav>
