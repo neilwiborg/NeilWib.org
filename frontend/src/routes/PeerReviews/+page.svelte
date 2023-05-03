@@ -79,7 +79,7 @@
 				<h3>You should review:</h3>
 				<h4>{firstReviewee}</h4>
 				<h4>{secondReviewee}</h4>
-		</output>
+			</output>
 		{/if}
 	</article>
 </main>
