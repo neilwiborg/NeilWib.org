@@ -17,6 +17,5 @@
 		</hgroup>
 	</header>
 </div>
-<br>
 
 <slot />
