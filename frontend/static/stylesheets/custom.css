@@ -2,6 +2,25 @@
 	--primary: green;
 }
 
+/* Nav */
+summary[role="link"].contrast:is([aria-current], :hover, :active, :focus) {
+	background-color: transparent;
+	color: var(--contrast-hover);
+}
+
+header hgroup> h1> a {
+	background-color: transparent;
+	text-decoration: none;
+}
+
+header :last-child {
+	padding-bottom: 1rem;
+}
+
+header hgroup> :last-child {
+	color: var(--h3-color);
+}
+
 .hero {
 	background-color: darkorange;
 	background: linear-gradient(90deg, darkorange 0%, darkorchid 100%);

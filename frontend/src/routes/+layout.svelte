@@ -15,7 +15,6 @@
 			<h1><a href="/" class="contrast">Neil Wiborg</a></h1>
 			<h2 class="contrast">The home of projects made by the software engineer and computer science student Neil Wiborg</h2>
 		</hgroup>
-		<br>
 	</header>
 </div>
 <br>
