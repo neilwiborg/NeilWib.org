@@ -12,12 +12,12 @@ const getPeers = async () => {
 	};
 	let data = await ddbClient.send(new ScanCommand(params));
 	let formatted = data.Items?.map((entry) => {
-		let peer: Record<string, string> = {}
+		let peer: Record<string, string | number> = {}
 		for (const [key, value] of Object.entries(entry)) {
 			if (value.hasOwnProperty("S")) {
 				peer[key] = value["S"]!;
 			} else if (value.hasOwnProperty("N")) {
-				peer[key] = value["N"]!;
+				peer[key] = parseInt(value["N"]!);
 			} else {
 				peer[key] = "";
 			}
@@ -33,12 +33,12 @@ const getProjects = async () => {
 	};
 	let data = await ddbClient.send(new ScanCommand(params));
 	let formatted = data.Items?.map((entry) => {
-		let project: Record<string, string> = {}
+		let project: Record<string, string | number> = {}
 		for (const [key, value] of Object.entries(entry)) {
 			if (value.hasOwnProperty("S")) {
 				project[key] = value["S"]!;
 			} else if (value.hasOwnProperty("N")) {
-				project[key] = value["N"]!;
+				project[key] = parseInt(value["N"]!);
 			} else {
 				project[key] = "";
 			}
