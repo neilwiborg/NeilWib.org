@@ -1,32 +1,45 @@
 <script lang="ts">
-	let students = ["Dongin Cho", "Joseph Matthew Collora", "James Andrew Day", "Rachel Ann Ferrer Graham", "Filo Henein", "Mehak Kambo", "Safwaan Taher", "Cheuk-Hang Tse", "Neil Wiborg", "David Woo"];
-	let projects = {
-		"Project 1": 1,
-		"Project 2": 2,
-		"Project 3": 3
+	import { onMount } from 'svelte';
+
+	type student = {
+		name: string;
+		studentNumber: number;
 	};
+	type project = {
+		name: string;
+		increment: number;
+	};
+	let students: student[] = [];
+	let projects: project[] = [];
+	let loading = true;
 	let badInput = false;
 	let selectedStudent = -1;
 	let selectedProject = -1;
 	let firstReviewee = "";
 	let secondReviewee = "";
 
+	onMount(async () => {
+		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/peerreviews");
+		({peers: students, projects} = await res.json());
+		loading = false;
+	});
+
 	const getFirstReviewee = (studentNumber: number, increment: number) => {
 		studentNumber += -1 + increment;
 		if (studentNumber < students.length) {
-			return students[studentNumber];
+			return students[studentNumber].name;
 		}
 		studentNumber -= students.length;
-		return students[studentNumber];
+		return students[studentNumber].name;
 	}
 
 	const getSecondReviewee = (studentNumber: number, increment: number) => {
 		studentNumber += increment;
 		if (studentNumber < students.length) {
-			return students[studentNumber];
+			return students[studentNumber].name;
 		}
 		studentNumber -= students.length;
-		return students[studentNumber];
+		return students[studentNumber].name;
 	}
 
 	const setReviewees = (studentNumber: number, increment: number) => {
@@ -57,19 +70,31 @@
 			<div class="grid">
 				<label>
 					Select yourself:
-					<select name="studentsList" id="studentsList" bind:value={selectedStudent} aria-invalid={badInput ? "true" : null} on:change={resetReviewees}>
-						{#each students as student, i}
-							<option value={i + 1}>{student}</option>
-						{/each}
-					</select>
+					{#if loading}
+						<select value="Fetching..." disabled>
+							<option value="Fetching...">Fetching...</option>
+						</select>
+					{:else}
+						<select name="studentsList" id="studentsList" bind:value={selectedStudent} aria-invalid={badInput ? "true" : null} on:change={resetReviewees} aria-busy={loading}>
+							{#each students as {name, studentNumber}}
+								<option value={studentNumber}>{name}</option>
+							{/each}
+						</select>
+					{/if}
 				</label>
 				<label>
 					Select a project:
-					<select name="projectsList" id="projectsList" bind:value={selectedProject} aria-invalid={badInput ? "true" : null} on:change={resetReviewees}>
-						{#each Object.entries(projects) as [project, offset]}
-							<option value={offset}>{project}</option>
-						{/each}
-					</select>
+					{#if loading}
+						<select value="Fetching..." disabled>
+							<option value="Fetching...">Fetching...</option>
+						</select>
+					{:else}
+						<select name="projectsList" id="projectsList" bind:value={selectedProject} aria-invalid={badInput ? "true" : null} on:change={resetReviewees} aria-busy={loading}>
+							{#each [...projects].reverse() as {name, increment}}
+								<option value={increment}>{name}</option>
+							{/each}
+						</select>
+					{/if}
 				</label>
 			</div>
 			<button type="submit" on:click|preventDefault={() => setReviewees(selectedStudent, selectedProject)}>Find Reviewees</button>
