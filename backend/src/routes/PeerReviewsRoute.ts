@@ -14,7 +14,13 @@ const getPeers = async () => {
 	let formatted = data.Items?.map((entry) => {
 		let peer: Record<string, string> = {}
 		for (const [key, value] of Object.entries(entry)) {
-			peer[key] = value["S"] ?? "";
+			if (value.hasOwnProperty("S")) {
+				peer[key] = value["S"]!;
+			} else if (value.hasOwnProperty("N")) {
+				peer[key] = value["N"]!;
+			} else {
+				peer[key] = "";
+			}
 		}
 		return peer;
 	});
@@ -29,7 +35,13 @@ const getProjects = async () => {
 	let formatted = data.Items?.map((entry) => {
 		let project: Record<string, string> = {}
 		for (const [key, value] of Object.entries(entry)) {
-			project[key] = value["S"] ?? "";
+			if (value.hasOwnProperty("S")) {
+				project[key] = value["S"]!;
+			} else if (value.hasOwnProperty("N")) {
+				project[key] = value["N"]!;
+			} else {
+				project[key] = "";
+			}
 		}
 		return project;
 	});
