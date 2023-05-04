@@ -21,6 +21,14 @@
 	onMount(async () => {
 		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/peerreviews");
 		({peers: students, projects} = await res.json());
+		students.sort((a, b) => {
+			return (a.studentNumber < b.studentNumber) ? -1 : 1;
+		});
+		projects.sort((a, b) => {
+			return (a.name < b.name) ? -1 : 1;
+		});
+		console.log(students);
+		console.log(projects);
 		loading = false;
 	});
 

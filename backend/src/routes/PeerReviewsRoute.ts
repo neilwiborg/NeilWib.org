@@ -1,69 +1,43 @@
+import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import express from 'express';
+
+const defaultRegion = 'us-west-2';
+const ddbClient = new DynamoDBClient({ region: defaultRegion });
 
 export const PeerReviewsRoute = express.Router();
 
-const peers = [
-	{
-		"name": "Dongin Cho",
-		"studentNumber": 1
-	},
-	{
-		"name": "Joseph Matthew Collora",
-		"studentNumber": 2
-	},
-	{
-		"name": "James Andrew Day",
-		"studentNumber": 3
-	},
-	{
-		"name": "Rachel Ann Ferrer Graham",
-		"studentNumber": 4
-	},
-	{
-		"name": "Filo Henein",
-		"studentNumber": 5
-	},
-	{
-		"name": "Mehak Kambo",
-		"studentNumber": 6
-	},
-	{
-		"name": "Safwaan Taher",
-		"studentNumber": 7
-	},
-	{
-		"name": "Cheuk-Hang Tse",
-		"studentNumber": 8
-	},
-	{
-		"name": "Neil Wiborg",
-		"studentNumber": 9
-	},
-	{
-		"name": "David Woo",
-		"studentNumber": 10
-	}
-];
+const getPeers = async () => {
+	const params = {
+		TableName: 'peers'
+	};
+	let data = await ddbClient.send(new ScanCommand(params));
+	let formatted = data.Items?.map((entry) => {
+		let peer: Record<string, string> = {}
+		for (const [key, value] of Object.entries(entry)) {
+			peer[key] = value["S"] ?? "";
+		}
+		return peer;
+	});
+	return formatted;
+};
 
-const projects = [
-	{
-		"name": "Project 1",
-		"increment": 1
-	},
-	{
-		"name": "Project 2",
-		"increment": 2
-	},
-	{
-		"name": "Project 3",
-		"increment": 3
-	},
-	{
-		"name": "Project 4",
-		"increment": 4
-	}
-];
+const getProjects = async () => {
+	const params = {
+		TableName: 'css490projects'
+	};
+	let data = await ddbClient.send(new ScanCommand(params));
+	let formatted = data.Items?.map((entry) => {
+		let project: Record<string, string> = {}
+		for (const [key, value] of Object.entries(entry)) {
+			project[key] = value["S"] ?? "";
+		}
+		return project;
+	});
+	return formatted;
+};
 
-PeerReviewsRoute.get('/peerreviews', (req, res, next) => {
+PeerReviewsRoute.get('/peerreviews', async (req, res, next) => {
+	let peers = await getPeers();
+	let projects = await getProjects();
 	res.json({"peers": peers, "projects": projects});
 });
