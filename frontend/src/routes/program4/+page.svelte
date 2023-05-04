@@ -117,20 +117,24 @@
 				{#if resultsText != ""}
 					<h3>Results</h3>
 					<output>
-						{#each JSON.parse(resultsText).users as user}
-							<details>
-								<summary>
-									{user.firstName} {user.lastName}
-								</summary>
-								<ul>
-									{#each Object.entries(user) as [attr, val]}
-										{#if attr !== "firstName" && attr !== "lastName"}
-											<li>{attr}: {val}</li>
-										{/if}
-									{/each}
-								</ul>
-							</details>
-						{/each}
+						{#if JSON.parse(resultsText).users.length > 0}
+							{#each JSON.parse(resultsText).users as user}
+								<details>
+									<summary>
+										{user.firstName} {user.lastName}
+									</summary>
+									<ul>
+										{#each Object.entries(user) as [attr, val]}
+											{#if attr !== "firstName" && attr !== "lastName"}
+												<li>{attr}: {val}</li>
+											{/if}
+										{/each}
+									</ul>
+								</details>
+							{/each}
+						{:else}
+							<p style="color: red;">No results found</p>
+						{/if}
 					</output>
 				{:else}
 					<p></p>
