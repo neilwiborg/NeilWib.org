@@ -19,11 +19,14 @@
 			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
 			templateFabricCanvas.selection = false;
 			fabric.Image.fromURL(URL.createObjectURL(background), function(oImg) {
-				oImg.set("selectable", false);
-				templateFabricCanvas!.add(oImg);
-				templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-				templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-				downloadURL = templateFabricCanvas!.toDataURL({format: "jpeg"});
+				// oImg.set("selectable", false);
+				templateFabricCanvas!.setBackgroundImage(oImg, () => {
+					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
+					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
+					templateFabricCanvas!.renderAll();
+					downloadURL = templateFabricCanvas!.toDataURL({format: "jpeg"});
+				});
+			// templateFabricCanvas!.add(oImg);
 			});
 			// const ctx = templateCanvas!.getContext('2d')!;
 			// const templateBackground = new Image();
