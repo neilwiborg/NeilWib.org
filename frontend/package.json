@@ -13,11 +13,13 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"dotenv": "^16.0.3"
+		"dotenv": "^16.0.3",
+		"fabric": "^5.3.0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^1.2.0",
 		"@sveltejs/kit": "^1.8.7",
+		"@types/fabric": "^5.3.4",
 		"@typescript-eslint/eslint-plugin": "^5.54.0",
 		"@typescript-eslint/parser": "^5.54.0",
 		"eslint": "^8.35.0",
