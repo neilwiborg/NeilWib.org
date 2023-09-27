@@ -1,4 +1,5 @@
 import express from 'express';
+import { URLSearchParams } from 'url';
 
 export const memesRoute = express.Router();
 
@@ -23,7 +24,14 @@ const getImgflipMeme = async (url: string) => {
 
 const top100Memes = async () => {
         let res = await fetch("https://api.imgflip.com/get_memes");
-        return res.json();
+		let resJson: memeResponse = await res.json();
+		for (const m of resJson.data.memes) {
+			let urlParam = encodeURIComponent(m.url);
+			m.url = "https://api.neilwib.org/mememaker/meme" + new URLSearchParams({
+				url: urlParam
+			});
+		}
+        return resJson;
 };
 
 const searchMemes = async (query: string) => {
@@ -39,9 +47,11 @@ const searchMemes = async (query: string) => {
 };
 
 memesRoute.get('/mememaker/meme', async (req, res, next) => {
-	let url = req.query.url as string;
+	let url = decodeURIComponent(req.query.url as string);
 	let resp = await getImgflipMeme(url);
-	res.send(resp);
+
+	res.set('Content-Type', 'image/jpeg');
+	res.send(Buffer.from(await resp.arrayBuffer()));
 });
 
 memesRoute.get('/mememaker/top100', async (req, res, next) => {
