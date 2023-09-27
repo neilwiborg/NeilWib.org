@@ -27,7 +27,7 @@ const top100Memes = async () => {
 		let resJson: memeResponse = await res.json();
 		for (const m of resJson.data.memes) {
 			let urlParam = encodeURIComponent(m.url);
-			m.url = "https://api.neilwib.org/mememaker/meme" + new URLSearchParams({
+			m.url = "https://api.neilwib.org/mememaker/meme?" + new URLSearchParams({
 				url: urlParam
 			});
 		}
