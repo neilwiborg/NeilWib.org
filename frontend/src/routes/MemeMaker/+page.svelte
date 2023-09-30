@@ -79,7 +79,7 @@
 			<form>
 				<input type="file" id="template" name="template" accept="image/*" bind:files={templates}>
 			</form>
-			<p>Please upload a meme template.</p>
+			<p>Please upload a meme template, or <a href="/MemeMaker/templates">click here to browse templates.</a></p>
 		{/if}
 		<div class="grid">
 			<canvas bind:this={templateCanvas} width=0 height=0 hidden={!templates}/>
