@@ -49,7 +49,7 @@
 			<button type="submit" on:click={onSearch}>Search Templates</button>
 		</form>
 		{#if loading}
-		<p>Loading...</p>
+		<p aria-busy="true">Loading results...</p>
 		{:else}
 			{#each memeResults as meme}
 				<article>
