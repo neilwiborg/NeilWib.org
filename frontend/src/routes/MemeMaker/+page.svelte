@@ -16,6 +16,7 @@
 		textboxes: []
 	}
 	let fontSize = 20;
+	let fontColor = "#FFFFFF";
 	let downloadURL =  "";
 
 	onMount(() => {
@@ -43,7 +44,7 @@
 		let textbox = new fabric.Textbox("Enter text", {
 			fontFamily: 'Impact',
 			fontSize: fontSize,
-			fill: "white",
+			fill: fontColor,
 			stroke: "black",
 			width: 100,
 			editable: true
@@ -53,11 +54,13 @@
 		templateFabricCanvas!.add(textbox);
 	};
 
-	const changeFontSize = () => {
+	const changeFontProperties = () => {
+		console.log("event fired");
 		fabricObjects.textboxes.forEach((item, index) => {
 			item.fontSize = fontSize;
+			item.set("fill", fontColor);
 		});
-		templateFabricCanvas?.renderAll();
+		templateFabricCanvas!.renderAll();
 	}
 
 	$: if (templates) {
@@ -85,7 +88,11 @@
 					<form>
 						<label>
 							Font size
-							<input type="text" bind:value={fontSize} on:input={changeFontSize} />
+							<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
+						</label>
+						<label>
+							Text color
+							<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
 						</label>
 						<button>Add image</button>
 						<button on:click={() => addTextbox()}>Add textbox</button>
