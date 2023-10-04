@@ -37,6 +37,16 @@
 	};
 </script>
 
+<style>
+	img {
+		max-width: 150px;
+		max-height: 150px;
+		width: auto;
+		height: auto;
+	}
+
+</style>
+
 <svelte:head>
 	<title>Meme Maker Templates</title>
 </svelte:head>
@@ -53,12 +63,12 @@
 		{:else}
 			{#each memeResults as meme}
 				<article>
-					<a href={"/MemeMaker?" + new URLSearchParams({
+					<a href={"/MemeMaker/template/" + new URLSearchParams({
 						templateUrl: encodeURIComponent(meme.url)
 					})}><img src={meme.url} alt={meme.name}></a>
-					<a href={"/MemeMaker?" + new URLSearchParams({
+					<p><a href={"/MemeMaker/template/" + new URLSearchParams({
 						templateUrl: encodeURIComponent(meme.url)
-					})}><h3>{meme.name}</h3></a>
+					})}>{meme.name}</a></p>
 				</article>
 			{/each}
 		{/if}
