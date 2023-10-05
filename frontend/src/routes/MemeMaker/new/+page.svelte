@@ -17,7 +17,6 @@
 	}
 	let fontSize = 20;
 	let fontColor = "#FFFFFF";
-	let downloadURL =  "";
 
 	onMount(() => {
 		mounted = true;
@@ -27,9 +26,6 @@
 		if (mounted && templateFabricCanvas === undefined) {
 			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
 			templateFabricCanvas.selection = false;
-			// templateFabricCanvas.on("after:render", (e) => {
-			// 	downloadURL = templateFabricCanvas!.toDataURL({format: "jpeg"});
-			// });
 			fabric.Image.fromURL(URL.createObjectURL(background), function(oImg) {
 				templateFabricCanvas!.setBackgroundImage(oImg, () => {
 					templateFabricCanvas!.setWidth(oImg.getScaledWidth());

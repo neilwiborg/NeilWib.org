@@ -1,51 +1,58 @@
 <script lang="ts">
-	import { fabric } from "fabric";
-	import { onMount } from "svelte";
+	import { fabric } from 'fabric';
+	import { onMount } from 'svelte';
+
+	export let data: paramsData;
+
+	type paramsData = {
+		params: params;
+	};
+
+	type params = {
+		name: string;
+		imageURL: string;
+	};
 
 	type canvasObjects = {
-		images: fabric.Image[],
-		textboxes: fabric.Textbox[]
-	}
+		images: fabric.Image[];
+		textboxes: fabric.Textbox[];
+	};
 
 	let mounted = false;
-	let templates: FileList | undefined = undefined;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
 	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
-	}
-	let fontSize = 20;
-	let fontColor = "#FFFFFF";
-	let downloadURL =  "";
+	};
+	let fontSize = 50;
+	let fontColor = '#FFFFFF';
 
 	onMount(() => {
 		mounted = true;
+		loadBackground();
 	});
 
-	const loadBackground = (background: File) => {
+	const loadBackground = () => {
 		if (mounted && templateFabricCanvas === undefined) {
 			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
 			templateFabricCanvas.selection = false;
-			// templateFabricCanvas.on("after:render", (e) => {
-			// 	downloadURL = templateFabricCanvas!.toDataURL({format: "jpeg"});
-			// });
-			fabric.Image.fromURL(URL.createObjectURL(background), function(oImg) {
+			fabric.Image.fromURL(decodeURIComponent(data.params.imageURL), function (oImg) {
 				templateFabricCanvas!.setBackgroundImage(oImg, () => {
 					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
 					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
 					templateFabricCanvas!.renderAll();
-				});
+				}, {crossOrigin: "anonymous"});
 			});
 		}
 	};
 
 	const addTextbox = () => {
-		let textbox = new fabric.Textbox("Enter text", {
+		let textbox = new fabric.Textbox('Enter text', {
 			fontFamily: 'Impact',
 			fontSize: fontSize,
 			fill: fontColor,
-			stroke: "black",
+			stroke: 'black',
 			width: 100,
 			editable: true
 		});
@@ -57,42 +64,44 @@
 	const changeFontProperties = () => {
 		fabricObjects.textboxes.forEach((item, index) => {
 			item.fontSize = fontSize;
-			item.set("fill", fontColor);
+			item.set('fill', fontColor);
 		});
 		templateFabricCanvas!.renderAll();
-	}
+	};
 
-	$: if (templates) {
-		loadBackground(templates[0]);
-	}
+	const downloadMeme = () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let link = document.createElement('a');
+		link.download = 'image.jpeg';
+		link.href = downloadURL;
+		link.click();
+	};
 </script>
 
 <svelte:head>
-	<title>Meme Maker - [Template Name here]</title>
+	<title>Meme Maker - {data.params.name}</title>
 </svelte:head>
 
 <main class="container">
 	<article>
-		<h2>[Template Name here]</h2>
-		<div class="grid">
-			<canvas bind:this={templateCanvas} width=0 height=0 hidden={!templates}/>
-			{#if templates}
-				<div>
-					<form>
-						<label>
-							Font size
-							<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
-						</label>
-						<label>
-							Text color
-							<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
-						</label>
-						<button>Add image</button>
-						<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
-						<a role="button" href={downloadURL} download="image.jpeg">Download meme</a>
-					</form>
+		<h2>Meme Template: {data.params.name}</h2>
+			<form>
+				<div class="grid">
+					<label>
+						Font size
+						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
+					</label>
+					<label>
+						Text color
+						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+					</label>
 				</div>
-			{/if}
-		</div>
+				<div class="grid">
+					<button>Add image</button>
+					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
+					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
+				</div>
+			</form>
+			<canvas bind:this={templateCanvas} width="0" height="0" />
 	</article>
 </main>
