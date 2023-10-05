@@ -35,14 +35,21 @@
 
 	const loadBackground = () => {
 		if (mounted && templateFabricCanvas === undefined) {
-			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
-			templateFabricCanvas.selection = false;
-			fabric.Image.fromURL(decodeURIComponent(data.params.imageURL), function (oImg) {
-				templateFabricCanvas!.setBackgroundImage(oImg, () => {
-					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-					templateFabricCanvas!.renderAll();
-				}, {crossOrigin: "anonymous"});
+			fetch(decodeURIComponent(data.params.imageURL))
+			.then((res) => {
+				res.blob()
+				.then((blob: Blob) => {
+					templateFabricCanvas = new fabric.Canvas(templateCanvas!);
+					templateFabricCanvas.selection = false;
+					fabric.Image.fromURL(URL.createObjectURL(blob), function (oImg) {
+						// oImg.set("crossOrigin", 'anonymous');
+						templateFabricCanvas!.setBackgroundImage(oImg, () => {
+							templateFabricCanvas!.setWidth(oImg.getScaledWidth());
+							templateFabricCanvas!.setHeight(oImg.getScaledHeight());
+							templateFabricCanvas!.renderAll();
+						});
+					});
+				});
 			});
 		}
 	};
