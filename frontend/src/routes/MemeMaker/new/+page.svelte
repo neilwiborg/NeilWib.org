@@ -16,6 +16,8 @@
 		textboxes: []
 	};
 	let fontSize = 50;
+	let strokeWidth = 3.0;
+	let shadowBlur = 30;
 	let fontColor = '#FFFFFF';
 
 	onMount(() => {
@@ -37,12 +39,18 @@
 	};
 
 	const addTextbox = () => {
+		let shadow = new fabric.Shadow({
+			color: "black",
+			blur: shadowBlur
+		});
 		let textbox = new fabric.Textbox('Enter text', {
 			fontFamily: 'Impact',
 			fontSize: fontSize,
 			fill: fontColor,
 			stroke: 'black',
+			strokeWidth: strokeWidth,
 			width: 100,
+			shadow: shadow,
 			editable: true
 		});
 		fabricObjects.textboxes.push(textbox);
@@ -54,6 +62,11 @@
 		fabricObjects.textboxes.forEach((item, index) => {
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
+			item.strokeWidth = strokeWidth;
+			item.shadow = new fabric.Shadow({
+				color: "black",
+				blur: shadowBlur
+			});
 		});
 		templateFabricCanvas!.renderAll();
 	};
@@ -94,6 +107,16 @@
 					<label>
 						Text color
 						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+					</label>
+				</div>
+				<div class="grid">
+					<label>
+						Outline width: {strokeWidth}
+						<input type="range" min="0.5" max="10" step="0.5" bind:value={strokeWidth} on:input={changeFontProperties} />
+					</label>
+					<label>
+						Shadow strength: {shadowBlur}
+						<input type="range" min="0" max="50" step="1" bind:value={shadowBlur} on:input={changeFontProperties} />
 					</label>
 				</div>
 				<div class="grid">
