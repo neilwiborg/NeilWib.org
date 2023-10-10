@@ -82,6 +82,16 @@
 		link.href = downloadURL;
 		link.click();
 	};
+
+	const copyToClipboard = () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
+		fetch(downloadURL)
+		.then((res) => res.blob())
+		.then((blob) => {
+			const item = new ClipboardItem({ "image/png": blob });
+    		navigator.clipboard.write([item]); 
+		});
+	};
 </script>
 
 <svelte:head>
@@ -123,6 +133,7 @@
 					<button>Add image</button>
 					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
 					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
+					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
 				</div>
 			</form>
 		{/if}

@@ -44,7 +44,6 @@
 					templateFabricCanvas = new fabric.Canvas(templateCanvas!);
 					templateFabricCanvas.selection = false;
 					fabric.Image.fromURL(URL.createObjectURL(blob), function (oImg) {
-						// oImg.set("crossOrigin", 'anonymous');
 						templateFabricCanvas!.setBackgroundImage(oImg, () => {
 							templateFabricCanvas!.setWidth(oImg.getScaledWidth());
 							templateFabricCanvas!.setHeight(oImg.getScaledHeight());
@@ -76,6 +75,10 @@
 		templateFabricCanvas!.add(textbox);
 	};
 
+	const convertToCaps = (text: string) => {
+		return text.toUpperCase();
+	};
+
 	const changeFontProperties = () => {
 		fabricObjects.textboxes.forEach((item, index) => {
 			item.fontSize = fontSize;
@@ -85,6 +88,7 @@
 				color: "black",
 				blur: shadowBlur
 			});
+			item.text = convertToCaps(item.text!);
 		});
 		templateFabricCanvas!.renderAll();
 	};
@@ -95,6 +99,16 @@
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
 		link.click();
+	};
+
+	const copyToClipboard = () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
+		fetch(downloadURL)
+		.then((res) => res.blob())
+		.then((blob) => {
+			const item = new ClipboardItem({ "image/png": blob });
+    		navigator.clipboard.write([item]); 
+		});
 	};
 </script>
 
@@ -130,6 +144,7 @@
 					<button>Add image</button>
 					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
 					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
+					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
 				</div>
 			</form>
 			<canvas bind:this={templateCanvas} width="0" height="0" />
