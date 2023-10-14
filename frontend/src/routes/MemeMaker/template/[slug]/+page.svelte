@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { text } from '@sveltejs/kit';
 	import { fabric } from 'fabric';
 	import { onMount } from 'svelte';
 
@@ -18,6 +19,12 @@
 		textboxes: fabric.Textbox[];
 	};
 
+	const textAlignments = [
+		"center",
+		"left",
+		"right"
+	];
+
 	let mounted = false;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
 	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
@@ -29,6 +36,7 @@
 	let strokeWidth = 3.0;
 	let shadowBlur = 30;
 	let fontColor = '#FFFFFF';
+	let textAlignment = textAlignments[0];
 
 	onMount(() => {
 		mounted = true;
@@ -61,6 +69,7 @@
 			blur: shadowBlur
 		});
 		let textbox = new fabric.Textbox('Enter text', {
+			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
 			fill: fontColor,
@@ -81,6 +90,7 @@
 
 	const changeFontProperties = () => {
 		fabricObjects.textboxes.forEach((item, index) => {
+			item.set('textAlign', textAlignment);
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
@@ -88,7 +98,6 @@
 				color: "black",
 				blur: shadowBlur
 			});
-			item.text = convertToCaps(item.text!);
 		});
 		templateFabricCanvas!.renderAll();
 	};
@@ -122,12 +131,20 @@
 			<form>
 				<div class="grid">
 					<label>
-						Font size
+						Text size
 						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
 					</label>
 					<label>
 						Text color
 						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+					</label>
+					<label>
+						Text alignment
+						<select bind:value={textAlignment} on:change={changeFontProperties}>
+							{#each textAlignments as align}
+								<option value={align}>{align}</option>
+							{/each}
+						</select>
 					</label>
 				</div>
 				<div class="grid">
