@@ -4,7 +4,6 @@
 		<details role="list" dir="rtl">
 			<summary aria-haspopup="listbox" role="link" class="contrast">Projects</summary>
 			<ul role="listbox">
-				<li><a data-sveltekit-reload href="/program4">CSS 436 Program 4</a></li>
 				<li><a href="/PeerReviews">CSS 490 Peer Reviews</a></li>
 				<li><a href="/MemeMaker">Meme Maker</a></li>
 			</ul>

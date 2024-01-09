@@ -10,8 +10,7 @@
 		<h2>Hi, I'm Neil</h2>
 		<div class="grid">
 			<p>
-				Visit <a href="/MemeMaker">Meme Maker here</a>, or
-				<a data-sveltekit-reload href="/program4">click here for CSS 436 Program 4</a>
+				Visit <a href="/MemeMaker">Meme Maker here</a>
 			</p>
 			<figure>
 				<img src="https://source.unsplash.com/JEicDFy5Cd8" alt="Seattle, WA" />
