@@ -4,7 +4,6 @@
 		<details role="list" dir="rtl">
 			<summary aria-haspopup="listbox" role="link" class="contrast">Projects</summary>
 			<ul role="listbox">
-				<li><a href="/PeerReviews">CSS 490 Peer Reviews</a></li>
 				<li><a href="/MemeMaker">Meme Maker</a></li>
 			</ul>
 		</details>
