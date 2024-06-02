@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { text } from '@sveltejs/kit';
 	import { fabric } from 'fabric';
 	import { onMount } from 'svelte';
 
@@ -37,6 +36,7 @@
 	let shadowBlur = 30;
 	let fontColor = '#FFFFFF';
 	let textAlignment = textAlignments[0];
+	let uploadImage: FileList | undefined = undefined;
 
 	onMount(() => {
 		mounted = true;
@@ -59,6 +59,21 @@
 						});
 					});
 				});
+			});
+		}
+	};
+
+	const openFileDialog = () => {
+		let fileInput = document.getElementById("fileInput");
+		fileInput!.click();
+	};
+
+	const addImage = () => {
+		console.log("change");
+		if (uploadImage) {
+			fabric.Image.fromURL(URL.createObjectURL(uploadImage[0]), (image) => {
+				fabricObjects.images.push(image);
+				templateFabricCanvas!.add(image);
 			});
 		}
 	};
@@ -123,6 +138,7 @@
 
 <svelte:head>
 	<title>Meme Maker - {data.params.name}</title>
+	<meta name="robots" content="noindex">
 </svelte:head>
 
 <main class="container">
@@ -158,7 +174,7 @@
 					</label>
 				</div>
 				<div class="grid">
-					<button>Add image</button>
+					<button on:click|preventDefault={() => openFileDialog()} on:input={() => addImage()}>Add image</button>
 					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
 					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
 					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
@@ -167,3 +183,5 @@
 			<canvas bind:this={templateCanvas} width="0" height="0" />
 	</article>
 </main>
+
+<input name="fileInput" id="fileInput" type="file" accept="image/*" bind:files={uploadImage} hidden/>
