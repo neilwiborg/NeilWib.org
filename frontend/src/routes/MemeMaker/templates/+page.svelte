@@ -37,26 +37,25 @@
 		loading = false;
 	});
 
-	const onSearch = () => {
+	const onSearch = async () => {
 		loading = true;
-		fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/mememaker/searchmemes?" + new URLSearchParams({
+		let response = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/mememaker/searchmemes?" + new URLSearchParams({
 			searchterm: searchQuery
-		})).then((response) => response.json()
-		.then((responseData: memeResponse) => {
-			let response = responseData.data.memes;
-			memeResults = [[]];
-			let rowCount = 0;
-			for (let i = 0; i < response.length; i++) {
-				if (rowCount >= MEMES_PER_ROW) {
-					memeResults.push([]);
-					rowCount = 0;
-				}
-
-				memeResults[memeResults.length - 1].push(response[i]);
-				++rowCount;
-			}
-			loading = false;
 		}));
+		let responseData: memeResponse = await response.json();
+		let memes = responseData.data.memes;
+		memeResults = [[]];
+		let rowCount = 0;
+		for (let i = 0; i < memes.length; i++) {
+			if (rowCount >= MEMES_PER_ROW) {
+				memeResults.push([]);
+				rowCount = 0;
+			}
+
+			memeResults[memeResults.length - 1].push(memes[i]);
+			++rowCount;
+		}
+		loading = false;
 	};
 </script>
 
@@ -79,7 +78,7 @@
 		<h2>Meme Maker Templates</h2>
 		<form>
 			<input type="search" placeholder="Search templates..." bind:value={searchQuery} />
-			<button type="submit" on:click={onSearch}>Search Templates</button>
+			<button type="submit" on:click={async () => await onSearch()}>Search Templates</button>
 		</form>
 		{#if loading}
 		<p aria-busy="true">Loading results...</p>

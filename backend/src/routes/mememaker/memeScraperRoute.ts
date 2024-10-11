@@ -1,7 +1,9 @@
 import { randomUUID } from 'crypto';
 import express from 'express';
 import { JSDOM } from 'jsdom';
-import { AttributeValue, DynamoDBClient, PutItemCommand, PutItemCommandInput, ScanCommand } from '@aws-sdk/client-dynamodb';
+import { AttributeValue, DynamoDBClient, ExportTableToPointInTimeCommand, PutItemCommand, type PutItemCommandInput, ScanCommand, type ExportTableToPointInTimeCommandInput } from '@aws-sdk/client-dynamodb';
+import http2 from 'http2';
+import app from '../../app.js';
 
 export const memeScraperRoute = express.Router();
 
@@ -16,10 +18,15 @@ type scrapedImgflipData = {
         "description": string,
 };
 
-const sanitizeInputURL = (imgflipUrl: string) => {
+const sanitizeInputURL = (imgflipUrl: URL) => {
+        // handle URL from Google search result
+        if (imgflipUrl.hostname === "www.google.com" && imgflipUrl.searchParams.has("url")) {
+                imgflipUrl = new URL(decodeURIComponent(imgflipUrl.searchParams.get("url")!));
+        }
+
         const regex = /https:\/\/imgflip.com\/(?:meme(?:template|generator)?)\/(.*)/;
 
-        let regexMatches = imgflipUrl.match(regex);
+        let regexMatches = imgflipUrl.toString().match(regex);
         if (regexMatches === null || regexMatches.length < 2) {
                 return "";
         }
@@ -88,6 +95,8 @@ const scrapeMeme = async (imgflipUrl: string) => {
 
 const addToDB = async (imgflipData: scrapedImgflipData) => {
         const tablename = "mememaker-templates";
+        const tableARN = "arn:aws:dynamodb:us-west-2:799734292782:table/" + tablename;
+        const bucketname = "neilwwebserver";
         let id = randomUUID();
 
         let item: Record<string, AttributeValue> = {
@@ -96,9 +105,11 @@ const addToDB = async (imgflipData: scrapedImgflipData) => {
                 "templateURL": {"S": imgflipData.templateURL},
                 "imgflipID": {"N": imgflipData.imgflipID.toString()},
                 "description": {"S": imgflipData.description},
-                "_aka": {"SS": imgflipData.aka},
                 "_searchTitle": {"S": imgflipData.title.toLowerCase()} // TODO: remove punctuation
         };
+        if (imgflipData.aka.length != 0) {
+                item["_aka"] = {"SS": imgflipData.aka};
+        }
 
         const params: PutItemCommandInput = {
                 "TableName": tablename,
@@ -115,22 +126,40 @@ const addToDB = async (imgflipData: scrapedImgflipData) => {
         }
         let scanResp = await ddbClient.send(new ScanCommand(scanParams));
         if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
+                console.log("ErrorAddingMeme1");
                 return {"message": "ErrorAddingMeme"};
         }
         if (scanResp.Items?.length > 0) {
+                console.log("AlreadyExists");
                 return {"message": "AlreadyExists",
                         "id": scanResp.Items[0].id["S"]};
         }
 
         let resp = await ddbClient.send(new PutItemCommand(params));
-        return resp;
+        if (resp.$metadata.httpStatusCode! != http2.constants.HTTP_STATUS_OK) {
+                return {"message": "ErrorAddingMeme"};
+        }
+
+        const exportParams: ExportTableToPointInTimeCommandInput = {
+                TableArn: tableARN,
+                S3Bucket: bucketname,
+                S3Prefix: tablename + "/exports",
+                ExportFormat: "DYNAMODB_JSON",
+                ExportType: "FULL_EXPORT"
+        };
+        resp = await ddbClient.send(new ExportTableToPointInTimeCommand(exportParams));
+        app.locals.memesExportIsLatest = false;
+        console.log(resp);
+        return {"message": "AddedMeme",
+                "id": id};
 };
 
-memeScraperRoute.get('/mememaker/addmeme', async (req, res, next) => {
+memeScraperRoute.put('/mememaker/addmeme', async (req, res, next) => {
+        // TODO: figure out correct way to handle errors (return, call next(), ...)
         if (req.query.url === undefined) {
                 res.status(400).send("No URL provided");
         }
-        let url = decodeURIComponent(req.query.url as string);
+        let url = new URL(decodeURIComponent(req.query.url as string));
         // validate url
         let sanitizedUrl = sanitizeInputURL(url);
         if (sanitizedUrl === "") {

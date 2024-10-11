@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
-const app = require('../build/app');
-const debug = require('debug')('backend:server');
-const http = require('http');
+import app from '../build/app.js';
+import debugLib from 'debug';
+import http from 'http';
+import { config } from 'dotenv';
+
+const debug = debugLib('backend:server');
 
 // load environment variables
-require('dotenv').config();
+config();
 
 /**
  * Normalize a port into a number, string, or false.

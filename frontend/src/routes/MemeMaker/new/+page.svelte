@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { fabric } from 'fabric';
+	import { Canvas, Textbox, Shadow, FabricImage } from 'fabric';
 	import { onMount } from 'svelte';
 
 	type canvasObjects = {
-		images: fabric.Image[];
-		textboxes: fabric.Textbox[];
+		images: FabricImage[];
+		textboxes: Textbox[];
 	};
 
 	const textAlignments = [
@@ -16,7 +16,7 @@
 	let mounted = false;
 	let templates: FileList | undefined = undefined;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
-	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
+	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
@@ -31,26 +31,26 @@
 		mounted = true;
 	});
 
-	const loadBackground = (background: File) => {
+	const loadBackground = async (background: File) => {
 		if (mounted && templateFabricCanvas === undefined) {
-			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
+			templateFabricCanvas = new Canvas(templateCanvas!);
 			templateFabricCanvas.selection = false;
-			fabric.Image.fromURL(URL.createObjectURL(background), function (oImg) {
-				templateFabricCanvas!.setBackgroundImage(oImg, () => {
-					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-					templateFabricCanvas!.renderAll();
-				});
+			let oImage = await FabricImage.fromURL(URL.createObjectURL(background));
+			templateFabricCanvas!.set("backgroundImage", oImage);
+			templateFabricCanvas!.setDimensions({
+				width: oImage.getScaledWidth(),
+				height: oImage.getScaledHeight()
 			});
+			templateFabricCanvas!.renderAll();
 		}
 	};
 
 	const addTextbox = () => {
-		let shadow = new fabric.Shadow({
+		let shadow = new Shadow({
 			color: "black",
 			blur: shadowBlur
 		});
-		let textbox = new fabric.Textbox('Enter text', {
+		let textbox = new Textbox('Enter text', {
 			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
@@ -72,7 +72,7 @@
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
-			item.shadow = new fabric.Shadow({
+			item.shadow = new Shadow({
 				color: "black",
 				blur: shadowBlur
 			});
@@ -81,11 +81,12 @@
 	};
 
 	$: if (templates) {
-		loadBackground(templates[0]);
+		loadBackground(templates[0])
+		.then(() => {});
 	}
 
 	const downloadMeme = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ multiplier: 1, format: 'jpeg' });
 		let link = document.createElement('a');
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
@@ -93,11 +94,11 @@
 	};
 
 	const copyToClipboard = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ multiplier: 1, format: 'png' });
 		fetch(downloadURL)
 		.then((res) => res.blob())
 		.then((blob) => {
-			const item = new ClipboardItem({ "image/png": blob });
+			const item = new ClipboardItem({ [blob.type]: blob });
     		navigator.clipboard.write([item]); 
 		});
 	};

@@ -1,21 +1,18 @@
 <script lang="ts">
-	import { fabric } from 'fabric';
+	import { Canvas, Textbox, Shadow, FabricImage } from 'fabric';
 	import { onMount } from 'svelte';
-
-	export let data: paramsData;
-
-	type paramsData = {
-		params: params;
-	};
-
-	type params = {
-		name: string;
-		imageURL: string;
-	};
+	import { page } from "$app/stores";
 
 	type canvasObjects = {
-		images: fabric.Image[];
-		textboxes: fabric.Textbox[];
+		images: FabricImage[];
+		textboxes: Textbox[];
+	};
+
+	type templateDataType = {
+		id: string;
+		templateURL: string;
+		imgflipID: number;
+		title: string;
 	};
 
 	const textAlignments = [
@@ -24,9 +21,11 @@
 		"right"
 	];
 
+	let templateData: templateDataType | null = null;
+
 	let mounted = false;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
-	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
+	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
@@ -38,28 +37,32 @@
 	let textAlignment = textAlignments[0];
 	let uploadImage: FileList | undefined = undefined;
 
-	onMount(() => {
+	onMount(async () => {
+		await getTemplateData();
 		mounted = true;
-		loadBackground();
+		await loadBackground();
 	});
 
-	const loadBackground = () => {
+	const getTemplateData = async () => {
+      const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/mememaker/meme?" + new URLSearchParams({
+        id: $page.params.slug
+      }));
+      templateData = (await res.json())[0];
+    }
+
+	const loadBackground = async () => {
 		if (mounted && templateFabricCanvas === undefined) {
-			fetch(decodeURIComponent(data.params.imageURL))
-			.then((res) => {
-				res.blob()
-				.then((blob: Blob) => {
-					templateFabricCanvas = new fabric.Canvas(templateCanvas!);
-					templateFabricCanvas.selection = false;
-					fabric.Image.fromURL(URL.createObjectURL(blob), function (oImg) {
-						templateFabricCanvas!.setBackgroundImage(oImg, () => {
-							templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-							templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-							templateFabricCanvas!.renderAll();
-						});
-					});
-				});
+			let res = await fetch(templateData!.templateURL);
+			let blob = await res.blob();
+			templateFabricCanvas = new Canvas(templateCanvas!);
+			templateFabricCanvas.selection = false;
+			let oImage = await FabricImage.fromURL(URL.createObjectURL(blob));
+			templateFabricCanvas!.set("backgroundImage", oImage);
+			templateFabricCanvas!.setDimensions({
+				width: oImage.getScaledWidth(),
+				height: oImage.getScaledHeight()
 			});
+			templateFabricCanvas!.renderAll();
 		}
 	};
 
@@ -68,22 +71,21 @@
 		fileInput!.click();
 	};
 
-	const addImage = () => {
+	const addImage = async () => {
 		console.log("change");
 		if (uploadImage) {
-			fabric.Image.fromURL(URL.createObjectURL(uploadImage[0]), (image) => {
-				fabricObjects.images.push(image);
-				templateFabricCanvas!.add(image);
-			});
+			let image = await FabricImage.fromURL(URL.createObjectURL(uploadImage[0]));
+			fabricObjects.images.push(image);
+			templateFabricCanvas!.add(image);
 		}
 	};
 
 	const addTextbox = () => {
-		let shadow = new fabric.Shadow({
+		let shadow = new Shadow({
 			color: "black",
 			blur: shadowBlur
 		});
-		let textbox = new fabric.Textbox('Enter text', {
+		let textbox = new Textbox('Enter text', {
 			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
@@ -94,6 +96,7 @@
 			shadow: shadow,
 			editable: true
 		});
+		textbox.set
 		fabricObjects.textboxes.push(textbox);
 
 		templateFabricCanvas!.add(textbox);
@@ -109,7 +112,7 @@
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
-			item.shadow = new fabric.Shadow({
+			item.shadow = new Shadow({
 				color: "black",
 				blur: shadowBlur
 			});
@@ -118,32 +121,35 @@
 	};
 
 	const downloadMeme = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ multiplier: 1, format: 'jpeg' });
 		let link = document.createElement('a');
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
 		link.click();
 	};
 
-	const copyToClipboard = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
-		fetch(downloadURL)
-		.then((res) => res.blob())
-		.then((blob) => {
-			const item = new ClipboardItem({ "image/png": blob });
-    		navigator.clipboard.write([item]); 
-		});
+	const copyToClipboard = async () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ multiplier: 1, format: 'jpeg' });
+		let res = await fetch(downloadURL);
+		let blob = await res.blob();
+		const item = new ClipboardItem({ "image/png": blob });
+		navigator.clipboard.write([item]);
 	};
 </script>
 
 <svelte:head>
-	<title>Meme Maker - {data.params.name}</title>
+	{#if templateData}
+		<title>Meme Maker - {templateData.title}</title>
+	{:else}
+	<title>Meme Maker - loading template...</title>
+	{/if}
 	<meta name="robots" content="noindex">
 </svelte:head>
 
 <main class="container">
 	<article>
-		<h2>Meme Template: {data.params.name}</h2>
+		{#if templateData}
+		<h2>Meme Template: {templateData.title}</h2>
 			<form>
 				<div class="grid">
 					<label>
@@ -174,13 +180,16 @@
 					</label>
 				</div>
 				<div class="grid">
-					<button on:click|preventDefault={() => openFileDialog()} on:input={() => addImage()}>Add image</button>
+					<button on:click|preventDefault={() => openFileDialog()} on:input={async () => await addImage()}>Add image</button>
 					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
 					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
-					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
+					<button on:click|preventDefault={async () => await copyToClipboard()}>Copy meme to clipboard</button>
 				</div>
 			</form>
-			<canvas bind:this={templateCanvas} width="0" height="0" />
+			<canvas bind:this={templateCanvas} width=0 height=0 />
+	{:else}
+		<h2 aria-busy="true">Loading template...</h2>
+	{/if}
 	</article>
 </main>
 

@@ -4,8 +4,9 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
-
-import { routes } from './routes';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { routes } from './routes/index.js';
 
 const app = express();
 
@@ -16,6 +17,9 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
@@ -36,4 +40,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 	res.send('error');
 });
 
-module.exports = app;
+app.locals.memesExportIsLatest = false;
+app.locals.templates = null;
+
+export default app;
