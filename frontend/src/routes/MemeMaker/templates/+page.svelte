@@ -17,9 +17,9 @@
 
 	const MEMES_PER_ROW = 5;
 
-	let loading = true;
-	let searchQuery = '';
-	let memeResults: meme[][] = [[]];
+	let loading = $state(true);
+	let searchQuery = $state('');
+	let memeResults: meme[][] = $state([[]]);
 
 	onMount(async () => {
 		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + '/mememaker/top100');
@@ -74,7 +74,7 @@
 		<h2>Meme Maker Templates</h2>
 		<form>
 			<input type="search" placeholder="Search templates..." bind:value={searchQuery} />
-			<button type="submit" on:click={onSearch}>Search Templates</button>
+			<button type="submit" onclick={onSearch}>Search Templates</button>
 		</form>
 		{#if loading}
 			<p aria-busy="true">Loading results...</p>

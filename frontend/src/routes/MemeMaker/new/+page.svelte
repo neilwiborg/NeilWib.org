@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, preventDefault } from 'svelte/legacy';
+
 	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
 
@@ -10,18 +12,18 @@
 	const textAlignments = ['center', 'left', 'right'];
 
 	let mounted = false;
-	let templates: FileList | undefined = undefined;
-	let templateCanvas: HTMLCanvasElement | undefined = undefined;
+	let templates: FileList | undefined = $state(undefined);
+	let templateCanvas: HTMLCanvasElement | undefined = $state(undefined);
 	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
 	};
-	let fontSize = 50;
-	let strokeWidth = 3.0;
-	let shadowBlur = 30;
-	let fontColor = '#FFFFFF';
-	let textAlignment = textAlignments[0];
+	let fontSize = $state(50);
+	let strokeWidth = $state(3.0);
+	let shadowBlur = $state(30);
+	let fontColor = $state('#FFFFFF');
+	let textAlignment = $state(textAlignments[0]);
 
 	onMount(() => {
 		mounted = true;
@@ -74,9 +76,11 @@
 		templateFabricCanvas!.renderAll();
 	};
 
-	$: if (templates) {
-		loadBackground(templates[0]);
-	}
+	run(() => {
+		if (templates) {
+			loadBackground(templates[0]);
+		}
+	});
 
 	const downloadMeme = () => {
 		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg', multiplier: 1 });
@@ -113,15 +117,15 @@
 				<div class="grid">
 					<label>
 						Text size
-						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
+						<input type="text" bind:value={fontSize} oninput={changeFontProperties} />
 					</label>
 					<label>
 						Text color
-						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+						<input type="color" bind:value={fontColor} oninput={changeFontProperties} />
 					</label>
 					<label>
 						Text alignment
-						<select bind:value={textAlignment} on:change={changeFontProperties}>
+						<select bind:value={textAlignment} onchange={changeFontProperties}>
 							{#each textAlignments as align}
 								<option value={align}>{align}</option>
 							{/each}
@@ -137,7 +141,7 @@
 							max="10"
 							step="0.5"
 							bind:value={strokeWidth}
-							on:input={changeFontProperties}
+							oninput={changeFontProperties}
 						/>
 					</label>
 					<label>
@@ -148,15 +152,15 @@
 							max="50"
 							step="1"
 							bind:value={shadowBlur}
-							on:input={changeFontProperties}
+							oninput={changeFontProperties}
 						/>
 					</label>
 				</div>
 				<div class="grid">
 					<button>Add image</button>
-					<button on:click|preventDefault={addTextbox}>Add textbox</button>
-					<button on:click|preventDefault={downloadMeme}>Download meme</button>
-					<button on:click|preventDefault={copyToClipboard}>Copy meme to clipboard</button>
+					<button onclick={preventDefault(addTextbox)}>Add textbox</button>
+					<button onclick={preventDefault(downloadMeme)}>Download meme</button>
+					<button onclick={preventDefault(copyToClipboard)}>Copy meme to clipboard</button>
 				</div>
 			</form>
 		{/if}

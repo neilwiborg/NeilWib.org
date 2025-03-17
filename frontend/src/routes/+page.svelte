@@ -15,7 +15,7 @@
 		author: photoAuthor;
 	};
 
-	let seattlePhoto: photoResponse | null = null;
+	let seattlePhoto: photoResponse | null = $state(null);
 
 	onMount(async () => {
 		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + '/photos/seattle');
