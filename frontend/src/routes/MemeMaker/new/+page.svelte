@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { fabric } from 'fabric';
+	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
 
 	type canvasObjects = {
-		images: fabric.Image[];
-		textboxes: fabric.Textbox[];
+		images: FabricImage[];
+		textboxes: Textbox[];
 	};
 
 	const textAlignments = [
@@ -16,7 +16,7 @@
 	let mounted = false;
 	let templates: FileList | undefined = undefined;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
-	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
+	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
@@ -31,26 +31,24 @@
 		mounted = true;
 	});
 
-	const loadBackground = (background: File) => {
+	const loadBackground = async (background: File) => {
 		if (mounted && templateFabricCanvas === undefined) {
-			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
-			templateFabricCanvas.selection = false;
-			fabric.Image.fromURL(URL.createObjectURL(background), function (oImg) {
-				templateFabricCanvas!.setBackgroundImage(oImg, () => {
-					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-					templateFabricCanvas!.renderAll();
-				});
-			});
+			const fImage = await FabricImage.fromURL(URL.createObjectURL(background));
+			templateCanvas!.width = fImage.getScaledWidth();
+			templateCanvas!.height = fImage.getScaledHeight();
+
+			templateFabricCanvas = new Canvas(templateCanvas!);
+			templateFabricCanvas.backgroundImage = fImage;
+			templateFabricCanvas.renderAll();
 		}
 	};
 
 	const addTextbox = () => {
-		let shadow = new fabric.Shadow({
+		let shadow = new Shadow({
 			color: "black",
 			blur: shadowBlur
 		});
-		let textbox = new fabric.Textbox('Enter text', {
+		let textbox = new Textbox('Enter text', {
 			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
@@ -72,7 +70,7 @@
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
-			item.shadow = new fabric.Shadow({
+			item.shadow = new Shadow({
 				color: "black",
 				blur: shadowBlur
 			});
@@ -81,25 +79,23 @@
 	};
 
 	$: if (templates) {
-		loadBackground(templates[0]);
+      	loadBackground(templates[0]);
 	}
 
 	const downloadMeme = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg', multiplier: 1 });
 		let link = document.createElement('a');
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
 		link.click();
 	};
 
-	const copyToClipboard = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
-		fetch(downloadURL)
-		.then((res) => res.blob())
-		.then((blob) => {
-			const item = new ClipboardItem({ "image/png": blob });
-    		navigator.clipboard.write([item]); 
-		});
+	const copyToClipboard = async () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png', multiplier: 1 });
+		const image = await fetch(downloadURL);
+		const imageBlob = await image.blob();
+		const item = new ClipboardItem({ "image/png": imageBlob });
+    	navigator.clipboard.write([item]);
 	};
 </script>
 
@@ -148,9 +144,9 @@
 				</div>
 				<div class="grid">
 					<button>Add image</button>
-					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
-					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
-					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
+					<button on:click|preventDefault={addTextbox}>Add textbox</button>
+					<button on:click|preventDefault={downloadMeme}>Download meme</button>
+					<button on:click|preventDefault={copyToClipboard}>Copy meme to clipboard</button>
 				</div>
 			</form>
 		{/if}
