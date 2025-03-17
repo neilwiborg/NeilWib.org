@@ -1,8 +1,14 @@
 <script lang="ts">
-	import { fabric } from 'fabric';
+	import { preventDefault } from 'svelte/legacy';
+
+	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
 
-	export let data: paramsData;
+	interface Props {
+		data: paramsData;
+	}
+
+	let { data }: Props = $props();
 
 	type paramsData = {
 		params: params;
@@ -14,76 +20,66 @@
 	};
 
 	type canvasObjects = {
-		images: fabric.Image[];
-		textboxes: fabric.Textbox[];
+		images: FabricImage[];
+		textboxes: Textbox[];
 	};
 
-	const textAlignments = [
-		"center",
-		"left",
-		"right"
-	];
+	const textAlignments = ['center', 'left', 'right'];
 
 	let mounted = false;
-	let templateCanvas: HTMLCanvasElement | undefined = undefined;
-	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
+	let templateCanvas: HTMLCanvasElement | undefined = $state(undefined);
+	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
 	};
-	let fontSize = 50;
-	let strokeWidth = 3.0;
-	let shadowBlur = 30;
-	let fontColor = '#FFFFFF';
-	let textAlignment = textAlignments[0];
-	let uploadImage: FileList | undefined = undefined;
+	let fontSize = $state(50);
+	let strokeWidth = $state(3.0);
+	let shadowBlur = $state(30);
+	let fontColor = $state('#FFFFFF');
+	let textAlignment = $state(textAlignments[0]);
+	let uploadImage: FileList | undefined = $state(undefined);
 
 	onMount(() => {
 		mounted = true;
 		loadBackground();
 	});
 
-	const loadBackground = () => {
+	const loadBackground = async () => {
 		if (mounted && templateFabricCanvas === undefined) {
-			fetch(decodeURIComponent(data.params.imageURL))
-			.then((res) => {
-				res.blob()
-				.then((blob: Blob) => {
-					templateFabricCanvas = new fabric.Canvas(templateCanvas!);
-					templateFabricCanvas.selection = false;
-					fabric.Image.fromURL(URL.createObjectURL(blob), function (oImg) {
-						templateFabricCanvas!.setBackgroundImage(oImg, () => {
-							templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-							templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-							templateFabricCanvas!.renderAll();
-						});
-					});
-				});
-			});
+			const image = await fetch(decodeURIComponent(data.params.imageURL));
+			const imageBlob = await image.blob();
+
+			const fImage = await FabricImage.fromURL(URL.createObjectURL(imageBlob));
+			templateCanvas!.width = fImage.getScaledWidth();
+			templateCanvas!.height = fImage.getScaledHeight();
+
+			templateFabricCanvas = new Canvas(templateCanvas!);
+			templateFabricCanvas.backgroundImage = fImage;
+			templateFabricCanvas.renderAll();
 		}
 	};
 
 	const openFileDialog = () => {
-		let fileInput = document.getElementById("fileInput");
+		let fileInput = document.getElementById('fileInput');
 		fileInput!.click();
 	};
 
-	const addImage = () => {
-		console.log("change");
+	const addImage = async () => {
+		console.log('change');
 		if (uploadImage) {
-			fabric.Image.fromURL(URL.createObjectURL(uploadImage[0]), (image) => {
-				fabricObjects.images.push(image);
-				templateFabricCanvas!.add(image);
-			});
+			const image = await FabricImage.fromURL(URL.createObjectURL(uploadImage[0]));
+			fabricObjects.images.push(image);
+			templateFabricCanvas!.add(image);
 		}
 	};
 
 	const addTextbox = () => {
-		let shadow = new fabric.Shadow({
-			color: "black",
+		let shadow = new Shadow({
+			color: 'black',
 			blur: shadowBlur
 		});
-		let textbox = new fabric.Textbox('Enter text', {
+		let textbox = new Textbox('Enter text', {
 			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
@@ -109,8 +105,8 @@
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
-			item.shadow = new fabric.Shadow({
-				color: "black",
+			item.shadow = new Shadow({
+				color: 'black',
 				blur: shadowBlur
 			});
 		});
@@ -118,70 +114,89 @@
 	};
 
 	const downloadMeme = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg', multiplier: 1 });
 		let link = document.createElement('a');
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
 		link.click();
 	};
 
-	const copyToClipboard = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
-		fetch(downloadURL)
-		.then((res) => res.blob())
-		.then((blob) => {
-			const item = new ClipboardItem({ "image/png": blob });
-    		navigator.clipboard.write([item]); 
-		});
+	const copyToClipboard = async () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png', multiplier: 1 });
+		const image = await fetch(downloadURL);
+		const imageBlob = await image.blob();
+		const item = new ClipboardItem({ 'image/png': imageBlob });
+		navigator.clipboard.write([item]);
 	};
 </script>
 
 <svelte:head>
 	<title>Meme Maker - {data.params.name}</title>
-	<meta name="robots" content="noindex">
+	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <main class="container">
 	<article>
 		<h2>Meme Template: {data.params.name}</h2>
-			<form>
-				<div class="grid">
-					<label>
-						Text size
-						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Text color
-						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Text alignment
-						<select bind:value={textAlignment} on:change={changeFontProperties}>
-							{#each textAlignments as align}
-								<option value={align}>{align}</option>
-							{/each}
-						</select>
-					</label>
-				</div>
-				<div class="grid">
-					<label>
-						Outline width: {strokeWidth}
-						<input type="range" min="0.5" max="10" step="0.5" bind:value={strokeWidth} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Shadow strength: {shadowBlur}
-						<input type="range" min="0" max="50" step="1" bind:value={shadowBlur} on:input={changeFontProperties} />
-					</label>
-				</div>
-				<div class="grid">
-					<button on:click|preventDefault={() => openFileDialog()} on:input={() => addImage()}>Add image</button>
-					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
-					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
-					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
-				</div>
-			</form>
-			<canvas bind:this={templateCanvas} width="0" height="0" />
+		<form>
+			<div class="grid">
+				<label>
+					Text size
+					<input type="text" bind:value={fontSize} oninput={changeFontProperties} />
+				</label>
+				<label>
+					Text color
+					<input type="color" bind:value={fontColor} oninput={changeFontProperties} />
+				</label>
+				<label>
+					Text alignment
+					<select bind:value={textAlignment} onchange={changeFontProperties}>
+						{#each textAlignments as align}
+							<option value={align}>{align}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+			<div class="grid">
+				<label>
+					Outline width: {strokeWidth}
+					<input
+						type="range"
+						min="0.5"
+						max="10"
+						step="0.5"
+						bind:value={strokeWidth}
+						oninput={changeFontProperties}
+					/>
+				</label>
+				<label>
+					Shadow strength: {shadowBlur}
+					<input
+						type="range"
+						min="0"
+						max="50"
+						step="1"
+						bind:value={shadowBlur}
+						oninput={changeFontProperties}
+					/>
+				</label>
+			</div>
+			<div class="grid">
+				<button onclick={preventDefault(openFileDialog)} oninput={addImage}>Add image</button>
+				<button onclick={preventDefault(addTextbox)}>Add textbox</button>
+				<button onclick={preventDefault(downloadMeme)}>Download meme</button>
+				<button onclick={preventDefault(copyToClipboard)}>Copy meme to clipboard</button>
+			</div>
+		</form>
+		<canvas bind:this={templateCanvas} width="0" height="0"></canvas>
 	</article>
 </main>
 
-<input name="fileInput" id="fileInput" type="file" accept="image/*" bind:files={uploadImage} hidden/>
+<input
+	name="fileInput"
+	id="fileInput"
+	type="file"
+	accept="image/*"
+	bind:files={uploadImage}
+	hidden
+/>

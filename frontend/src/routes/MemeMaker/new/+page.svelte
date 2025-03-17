@@ -1,56 +1,52 @@
 <script lang="ts">
-	import { fabric } from 'fabric';
+	import { run, preventDefault } from 'svelte/legacy';
+
+	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
 
 	type canvasObjects = {
-		images: fabric.Image[];
-		textboxes: fabric.Textbox[];
+		images: FabricImage[];
+		textboxes: Textbox[];
 	};
 
-	const textAlignments = [
-		"center",
-		"left",
-		"right"
-	];
+	const textAlignments = ['center', 'left', 'right'];
 
 	let mounted = false;
-	let templates: FileList | undefined = undefined;
-	let templateCanvas: HTMLCanvasElement | undefined = undefined;
-	let templateFabricCanvas: fabric.Canvas | undefined = undefined;
+	let templates: FileList | undefined = $state(undefined);
+	let templateCanvas: HTMLCanvasElement | undefined = $state(undefined);
+	let templateFabricCanvas: Canvas | undefined = undefined;
 	let fabricObjects: canvasObjects = {
 		images: [],
 		textboxes: []
 	};
-	let fontSize = 50;
-	let strokeWidth = 3.0;
-	let shadowBlur = 30;
-	let fontColor = '#FFFFFF';
-	let textAlignment = textAlignments[0];
+	let fontSize = $state(50);
+	let strokeWidth = $state(3.0);
+	let shadowBlur = $state(30);
+	let fontColor = $state('#FFFFFF');
+	let textAlignment = $state(textAlignments[0]);
 
 	onMount(() => {
 		mounted = true;
 	});
 
-	const loadBackground = (background: File) => {
+	const loadBackground = async (background: File) => {
 		if (mounted && templateFabricCanvas === undefined) {
-			templateFabricCanvas = new fabric.Canvas(templateCanvas!);
-			templateFabricCanvas.selection = false;
-			fabric.Image.fromURL(URL.createObjectURL(background), function (oImg) {
-				templateFabricCanvas!.setBackgroundImage(oImg, () => {
-					templateFabricCanvas!.setWidth(oImg.getScaledWidth());
-					templateFabricCanvas!.setHeight(oImg.getScaledHeight());
-					templateFabricCanvas!.renderAll();
-				});
-			});
+			const fImage = await FabricImage.fromURL(URL.createObjectURL(background));
+			templateCanvas!.width = fImage.getScaledWidth();
+			templateCanvas!.height = fImage.getScaledHeight();
+
+			templateFabricCanvas = new Canvas(templateCanvas!);
+			templateFabricCanvas.backgroundImage = fImage;
+			templateFabricCanvas.renderAll();
 		}
 	};
 
 	const addTextbox = () => {
-		let shadow = new fabric.Shadow({
-			color: "black",
+		let shadow = new Shadow({
+			color: 'black',
 			blur: shadowBlur
 		});
-		let textbox = new fabric.Textbox('Enter text', {
+		let textbox = new Textbox('Enter text', {
 			textAlign: textAlignment,
 			fontFamily: 'Impact',
 			fontSize: fontSize,
@@ -72,34 +68,34 @@
 			item.fontSize = fontSize;
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
-			item.shadow = new fabric.Shadow({
-				color: "black",
+			item.shadow = new Shadow({
+				color: 'black',
 				blur: shadowBlur
 			});
 		});
 		templateFabricCanvas!.renderAll();
 	};
 
-	$: if (templates) {
-		loadBackground(templates[0]);
-	}
+	run(() => {
+		if (templates) {
+			loadBackground(templates[0]);
+		}
+	});
 
 	const downloadMeme = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg' });
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'jpeg', multiplier: 1 });
 		let link = document.createElement('a');
 		link.download = 'image.jpeg';
 		link.href = downloadURL;
 		link.click();
 	};
 
-	const copyToClipboard = () => {
-		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png' });
-		fetch(downloadURL)
-		.then((res) => res.blob())
-		.then((blob) => {
-			const item = new ClipboardItem({ "image/png": blob });
-    		navigator.clipboard.write([item]); 
-		});
+	const copyToClipboard = async () => {
+		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png', multiplier: 1 });
+		const image = await fetch(downloadURL);
+		const imageBlob = await image.blob();
+		const item = new ClipboardItem({ 'image/png': imageBlob });
+		navigator.clipboard.write([item]);
 	};
 </script>
 
@@ -121,15 +117,15 @@
 				<div class="grid">
 					<label>
 						Text size
-						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
+						<input type="text" bind:value={fontSize} oninput={changeFontProperties} />
 					</label>
 					<label>
 						Text color
-						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+						<input type="color" bind:value={fontColor} oninput={changeFontProperties} />
 					</label>
 					<label>
 						Text alignment
-						<select bind:value={textAlignment} on:change={changeFontProperties}>
+						<select bind:value={textAlignment} onchange={changeFontProperties}>
 							{#each textAlignments as align}
 								<option value={align}>{align}</option>
 							{/each}
@@ -139,21 +135,35 @@
 				<div class="grid">
 					<label>
 						Outline width: {strokeWidth}
-						<input type="range" min="0.5" max="10" step="0.5" bind:value={strokeWidth} on:input={changeFontProperties} />
+						<input
+							type="range"
+							min="0.5"
+							max="10"
+							step="0.5"
+							bind:value={strokeWidth}
+							oninput={changeFontProperties}
+						/>
 					</label>
 					<label>
 						Shadow strength: {shadowBlur}
-						<input type="range" min="0" max="50" step="1" bind:value={shadowBlur} on:input={changeFontProperties} />
+						<input
+							type="range"
+							min="0"
+							max="50"
+							step="1"
+							bind:value={shadowBlur}
+							oninput={changeFontProperties}
+						/>
 					</label>
 				</div>
 				<div class="grid">
 					<button>Add image</button>
-					<button on:click|preventDefault={() => addTextbox()}>Add textbox</button>
-					<button on:click|preventDefault={() => downloadMeme()}>Download meme</button>
-					<button on:click|preventDefault={() => copyToClipboard()}>Copy meme to clipboard</button>
+					<button onclick={preventDefault(addTextbox)}>Add textbox</button>
+					<button onclick={preventDefault(downloadMeme)}>Download meme</button>
+					<button onclick={preventDefault(copyToClipboard)}>Copy meme to clipboard</button>
 				</div>
 			</form>
 		{/if}
-		<canvas bind:this={templateCanvas} width="0" height="0" hidden={!templates} />
+		<canvas bind:this={templateCanvas} width="0" height="0" hidden={!templates}></canvas>
 	</article>
 </main>

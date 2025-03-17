@@ -3,12 +3,12 @@
 }
 
 /* Nav */
-summary[role="link"].contrast:is([aria-current], :hover, :active, :focus) {
+summary[role='link'].contrast:is([aria-current], :hover, :active, :focus) {
 	background-color: transparent;
 	color: var(--contrast-hover);
 }
 
-header hgroup> h1> a {
+header hgroup > h1 > a {
 	background-color: transparent;
 	text-decoration: none;
 }
@@ -17,7 +17,7 @@ header :last-child {
 	padding-bottom: 1rem;
 }
 
-header hgroup> :last-child {
+header hgroup > :last-child {
 	color: var(--h3-color);
 }
 
@@ -33,38 +33,38 @@ header hgroup> :last-child {
 
 /* Orange Light scheme (Default) */
 /* Can be forced with data-theme="light" */
-[data-theme="light"],
-:root:not([data-theme="dark"]) {
-  --primary: #fb8c00;
-  --primary-hover: #f57c00;
-  --primary-focus: rgba(251, 140, 0, 0.125);
-  --primary-inverse: #FFF;
+[data-theme='light'],
+:root:not([data-theme='dark']) {
+	--primary: #fb8c00;
+	--primary-hover: #f57c00;
+	--primary-focus: rgba(251, 140, 0, 0.125);
+	--primary-inverse: #fff;
 }
 
 /* Orange Dark scheme (Auto) */
 /* Automatically enabled if user has Dark mode enabled */
 @media only screen and (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --primary: #fb8c00;
-    --primary-hover: #ff9800;
-    --primary-focus: rgba(251, 140, 0, 0.25);
-    --primary-inverse: #FFF;
-  }
+	:root:not([data-theme]) {
+		--primary: #fb8c00;
+		--primary-hover: #ff9800;
+		--primary-focus: rgba(251, 140, 0, 0.25);
+		--primary-inverse: #fff;
+	}
 }
 
 /* Orange Dark scheme (Forced) */
 /* Enabled if forced with data-theme="dark" */
-[data-theme="dark"] {
-  --primary: #fb8c00;
-  --primary-hover: #ff9800;
-  --primary-focus: rgba(251, 140, 0, 0.25);
-  --primary-inverse: #FFF;
+[data-theme='dark'] {
+	--primary: #fb8c00;
+	--primary-hover: #ff9800;
+	--primary-focus: rgba(251, 140, 0, 0.25);
+	--primary-inverse: #fff;
 }
 
 /* Orange (Common styles) */
 :root {
-  --form-element-active-border-color: var(--primary);
-  --form-element-focus-color: var(--primary-focus);
-  --switch-color: var(--primary-inverse);
-  --switch-checked-background-color: var(--primary);
+	--form-element-active-border-color: var(--primary);
+	--form-element-focus-color: var(--primary-focus);
+	--switch-color: var(--primary-inverse);
+	--switch-checked-background-color: var(--primary);
 }

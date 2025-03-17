@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
 
 export function load() {
-	throw redirect(303, '/MemeMaker/templates');
+	redirect(303, '/MemeMaker/templates');
 }
