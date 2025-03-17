@@ -18,11 +18,7 @@
 		textboxes: Textbox[];
 	};
 
-	const textAlignments = [
-		"center",
-		"left",
-		"right"
-	];
+	const textAlignments = ['center', 'left', 'right'];
 
 	let mounted = false;
 	let templateCanvas: HTMLCanvasElement | undefined = undefined;
@@ -59,12 +55,12 @@
 	};
 
 	const openFileDialog = () => {
-		let fileInput = document.getElementById("fileInput");
+		let fileInput = document.getElementById('fileInput');
 		fileInput!.click();
 	};
 
 	const addImage = async () => {
-		console.log("change");
+		console.log('change');
 		if (uploadImage) {
 			const image = await FabricImage.fromURL(URL.createObjectURL(uploadImage[0]));
 			fabricObjects.images.push(image);
@@ -74,7 +70,7 @@
 
 	const addTextbox = () => {
 		let shadow = new Shadow({
-			color: "black",
+			color: 'black',
 			blur: shadowBlur
 		});
 		let textbox = new Textbox('Enter text', {
@@ -104,7 +100,7 @@
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
 			item.shadow = new Shadow({
-				color: "black",
+				color: 'black',
 				blur: shadowBlur
 			});
 		});
@@ -123,57 +119,78 @@
 		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png', multiplier: 1 });
 		const image = await fetch(downloadURL);
 		const imageBlob = await image.blob();
-		const item = new ClipboardItem({ "image/png": imageBlob });
-    	navigator.clipboard.write([item]);
+		const item = new ClipboardItem({ 'image/png': imageBlob });
+		navigator.clipboard.write([item]);
 	};
 </script>
 
 <svelte:head>
 	<title>Meme Maker - {data.params.name}</title>
-	<meta name="robots" content="noindex">
+	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <main class="container">
 	<article>
 		<h2>Meme Template: {data.params.name}</h2>
-			<form>
-				<div class="grid">
-					<label>
-						Text size
-						<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Text color
-						<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Text alignment
-						<select bind:value={textAlignment} on:change={changeFontProperties}>
-							{#each textAlignments as align}
-								<option value={align}>{align}</option>
-							{/each}
-						</select>
-					</label>
-				</div>
-				<div class="grid">
-					<label>
-						Outline width: {strokeWidth}
-						<input type="range" min="0.5" max="10" step="0.5" bind:value={strokeWidth} on:input={changeFontProperties} />
-					</label>
-					<label>
-						Shadow strength: {shadowBlur}
-						<input type="range" min="0" max="50" step="1" bind:value={shadowBlur} on:input={changeFontProperties} />
-					</label>
-				</div>
-				<div class="grid">
-					<button on:click|preventDefault={openFileDialog} on:input={addImage}>Add image</button>
-					<button on:click|preventDefault={addTextbox}>Add textbox</button>
-					<button on:click|preventDefault={downloadMeme}>Download meme</button>
-					<button on:click|preventDefault={copyToClipboard}>Copy meme to clipboard</button>
-				</div>
-			</form>
-			<canvas bind:this={templateCanvas} width="0" height="0" />
+		<form>
+			<div class="grid">
+				<label>
+					Text size
+					<input type="text" bind:value={fontSize} on:input={changeFontProperties} />
+				</label>
+				<label>
+					Text color
+					<input type="color" bind:value={fontColor} on:input={changeFontProperties} />
+				</label>
+				<label>
+					Text alignment
+					<select bind:value={textAlignment} on:change={changeFontProperties}>
+						{#each textAlignments as align}
+							<option value={align}>{align}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+			<div class="grid">
+				<label>
+					Outline width: {strokeWidth}
+					<input
+						type="range"
+						min="0.5"
+						max="10"
+						step="0.5"
+						bind:value={strokeWidth}
+						on:input={changeFontProperties}
+					/>
+				</label>
+				<label>
+					Shadow strength: {shadowBlur}
+					<input
+						type="range"
+						min="0"
+						max="50"
+						step="1"
+						bind:value={shadowBlur}
+						on:input={changeFontProperties}
+					/>
+				</label>
+			</div>
+			<div class="grid">
+				<button on:click|preventDefault={openFileDialog} on:input={addImage}>Add image</button>
+				<button on:click|preventDefault={addTextbox}>Add textbox</button>
+				<button on:click|preventDefault={downloadMeme}>Download meme</button>
+				<button on:click|preventDefault={copyToClipboard}>Copy meme to clipboard</button>
+			</div>
+		</form>
+		<canvas bind:this={templateCanvas} width="0" height="0" />
 	</article>
 </main>
 
-<input name="fileInput" id="fileInput" type="file" accept="image/*" bind:files={uploadImage} hidden/>
+<input
+	name="fileInput"
+	id="fileInput"
+	type="file"
+	accept="image/*"
+	bind:files={uploadImage}
+	hidden
+/>

@@ -1,12 +1,12 @@
-import type { PageLoad } from "../../$types";
+import type { PageLoad } from '../../$types';
 
 export const load = ({ url }) => {
-    let memeName = url.searchParams.get('name');
-    let memeImageURL = url.searchParams.get('templateUrl');
+	let memeName = url.searchParams.get('name');
+	let memeImageURL = url.searchParams.get('templateUrl');
 	return {
 		params: {
-            name: memeName,
-            imageURL: memeImageURL
-        }
+			name: memeName,
+			imageURL: memeImageURL
+		}
 	};
 };

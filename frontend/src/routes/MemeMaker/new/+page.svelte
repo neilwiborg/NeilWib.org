@@ -7,11 +7,7 @@
 		textboxes: Textbox[];
 	};
 
-	const textAlignments = [
-		"center",
-		"left",
-		"right"
-	];
+	const textAlignments = ['center', 'left', 'right'];
 
 	let mounted = false;
 	let templates: FileList | undefined = undefined;
@@ -45,7 +41,7 @@
 
 	const addTextbox = () => {
 		let shadow = new Shadow({
-			color: "black",
+			color: 'black',
 			blur: shadowBlur
 		});
 		let textbox = new Textbox('Enter text', {
@@ -71,7 +67,7 @@
 			item.set('fill', fontColor);
 			item.strokeWidth = strokeWidth;
 			item.shadow = new Shadow({
-				color: "black",
+				color: 'black',
 				blur: shadowBlur
 			});
 		});
@@ -79,7 +75,7 @@
 	};
 
 	$: if (templates) {
-      	loadBackground(templates[0]);
+		loadBackground(templates[0]);
 	}
 
 	const downloadMeme = () => {
@@ -94,8 +90,8 @@
 		let downloadURL = templateFabricCanvas!.toDataURL({ format: 'png', multiplier: 1 });
 		const image = await fetch(downloadURL);
 		const imageBlob = await image.blob();
-		const item = new ClipboardItem({ "image/png": imageBlob });
-    	navigator.clipboard.write([item]);
+		const item = new ClipboardItem({ 'image/png': imageBlob });
+		navigator.clipboard.write([item]);
 	};
 </script>
 
@@ -135,11 +131,25 @@
 				<div class="grid">
 					<label>
 						Outline width: {strokeWidth}
-						<input type="range" min="0.5" max="10" step="0.5" bind:value={strokeWidth} on:input={changeFontProperties} />
+						<input
+							type="range"
+							min="0.5"
+							max="10"
+							step="0.5"
+							bind:value={strokeWidth}
+							on:input={changeFontProperties}
+						/>
 					</label>
 					<label>
 						Shadow strength: {shadowBlur}
-						<input type="range" min="0" max="50" step="1" bind:value={shadowBlur} on:input={changeFontProperties} />
+						<input
+							type="range"
+							min="0"
+							max="50"
+							step="1"
+							bind:value={shadowBlur}
+							on:input={changeFontProperties}
+						/>
 					</label>
 				</div>
 				<div class="grid">

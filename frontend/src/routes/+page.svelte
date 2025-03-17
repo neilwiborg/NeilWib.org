@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onMount } from 'svelte';
 
 	type photoAuthor = {
 		firstName: string;
@@ -18,8 +18,8 @@
 	let seattlePhoto: photoResponse | null = null;
 
 	onMount(async () => {
-		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + "/photos/seattle");
-		seattlePhoto = (await res.json() as photoResponse);
+		const res = await fetch(import.meta.env.VITE_BACKEND_HOSTNAME + '/photos/seattle');
+		seattlePhoto = (await res.json()) as photoResponse;
 	});
 </script>
 
@@ -36,7 +36,12 @@
 			</p>
 			<figure>
 				<img src={seattlePhoto?.imageURL} alt="Seattle, WA" />
-				<figcaption>Photo by <a href={seattlePhoto?.author.profileURL}>{seattlePhoto?.author.firstName} {seattlePhoto?.author.lastName}</a> on <a href={seattlePhoto?.sourceURL}>{seattlePhoto?.sourceName}</a></figcaption>
+				<figcaption>
+					Photo by <a href={seattlePhoto?.author.profileURL}
+						>{seattlePhoto?.author.firstName} {seattlePhoto?.author.lastName}</a
+					>
+					on <a href={seattlePhoto?.sourceURL}>{seattlePhoto?.sourceName}</a>
+				</figcaption>
 			</figure>
 		</div>
 	</article>
