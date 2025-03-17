@@ -160,6 +160,6 @@
 				</div>
 			</form>
 		{/if}
-		<canvas bind:this={templateCanvas} width="0" height="0" hidden={!templates} />
+		<canvas bind:this={templateCanvas} width="0" height="0" hidden={!templates}></canvas>
 	</article>
 </main>

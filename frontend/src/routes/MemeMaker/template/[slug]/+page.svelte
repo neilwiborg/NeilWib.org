@@ -182,7 +182,7 @@
 				<button on:click|preventDefault={copyToClipboard}>Copy meme to clipboard</button>
 			</div>
 		</form>
-		<canvas bind:this={templateCanvas} width="0" height="0" />
+		<canvas bind:this={templateCanvas} width="0" height="0"></canvas>
 	</article>
 </main>
 
