@@ -3,9 +3,9 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "tsx watch ./bin/www",
+		"dev": "tsx watch ./src/server.ts",
 		"build": "rm -rf ./build && npx tsc",
-		"start": "node ./bin/www",
+		"start": "node ./build/server.js",
 		"lint": "prettier . --check . && eslint .",
 		"format": "prettier . --write ."
 	},
