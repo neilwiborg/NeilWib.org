@@ -1,11 +1,13 @@
 {
   "name": "root",
   "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
-  "devDependencies": {
-    "lerna": "^8.2.1"
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
   }
 }
