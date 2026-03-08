@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { MemeEditor } from "../../../components/MemeEditor";
+import { MemeEditor } from "../../../components/MemeEditor/MemeEditor";
 
 export const TemplateEditorRoute = () => {
 	const [searchParams] = useSearchParams();

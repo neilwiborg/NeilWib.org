@@ -1,5 +1,5 @@
 import { type ChangeEvent, useState } from "react";
-import { MemeEditor } from "../../../components/MemeEditor";
+import { MemeEditor } from "../../../components/MemeEditor/MemeEditor";
 
 export const NewTemplateRoute = () => {
 	const [templateFile, setTemplateFile] = useState<File | null>(null);
