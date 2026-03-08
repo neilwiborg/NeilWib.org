@@ -1,16 +1,5 @@
 import type Konva from "konva";
 
-export type TextAlignment = "center" | "left" | "right";
-
-export type Point = {
-	x: number;
-	y: number;
-};
-
-export type BackgroundSource =
-	| { kind: "file"; file: File }
-	| { kind: "url"; url: string };
-
 export const DEFAULT_TEXT = "Enter text";
 export const DEFAULT_X_OFFSET = -100;
 export const DEFAULT_Y_OFFSET = 0;
@@ -21,13 +10,33 @@ export const DEFAULT_FONT_SIZE = 50;
 export const DEFAULT_STROKE_WIDTH = 3;
 export const DEFAULT_PRIMARY_TEXT_COLOR = "#FFFFFF";
 export const DEFAULT_SECONDARY_TEXT_COLOR = "#000000";
+export const DEFAULT_SHADOW_BLUR = 30;
 
-export type Textbox = Point & {
+export type BackgroundSource =
+	| { kind: "file"; file: File }
+	| { kind: "url"; url: string };
+
+export type Point = {
+	x: number;
+	y: number;
+};
+
+export type TextAlignment = "center" | "left" | "right";
+
+export type TextStyle = {
+	fontSize: number;
+	fill: string;
+	textAlign: TextAlignment;
+	strokeWidth: number;
+	shadowBlur: number;
+};
+
+export type Textbox = Point &
+	TextStyle & {
 	id: string;
 	text: string;
 	rotation: number;
 	width: number;
-	fontSize: number;
 };
 
 export type TextboxHandlers = {

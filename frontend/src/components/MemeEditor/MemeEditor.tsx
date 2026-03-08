@@ -3,12 +3,11 @@ import {
 	type MouseEvent,
 	useEffect,
 	useRef,
-	useState,
 } from "react";
 import { Canvas } from "./Canvas";
 import { useMemeEditorStore } from "./store";
 import { createTextbox, getCanvasMiddlePosition } from "./translation";
-import { DEFAULT_FONT_SIZE, DEFAULT_PRIMARY_TEXT_COLOR, DEFAULT_STROKE_WIDTH, DEFAULT_TEXT_ALIGNMENT, type BackgroundSource, type TextAlignment } from "./types";
+import type { BackgroundSource, TextAlignment } from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
@@ -25,7 +24,8 @@ const loadImage = (url: string) =>
 	});
 
 const TextSizeInput = () => {
-	const [value, setValue] = useState<number>(DEFAULT_FONT_SIZE);
+	const value = useMemeEditorStore((state) => state.textStyle.fontSize);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 
 	return (
 		<label>
@@ -33,14 +33,17 @@ const TextSizeInput = () => {
 			<input
 				type="number"
 				value={value}
-				onChange={(event) => setValue(Number(event.target.value))}
+				onChange={(event) =>
+					setTextStyle("fontSize", Math.round(Number(event.target.value)))
+				}
 			/>
 		</label>
 	);
 };
 
 const TextColorInput = () => {
-	const [value, setValue] = useState<string>(DEFAULT_PRIMARY_TEXT_COLOR);
+	const value = useMemeEditorStore((state) => state.textStyle.fill);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 
 	return (
 		<label>
@@ -48,21 +51,24 @@ const TextColorInput = () => {
 			<input
 				type="color"
 				value={value}
-				onChange={(event) => setValue(event.target.value)}
+				onChange={(event) => setTextStyle("fill", event.target.value)}
 			/>
 		</label>
 	);
 };
 
 const TextAlignmentInput = () => {
-	const [value, setValue] = useState<TextAlignment>(DEFAULT_TEXT_ALIGNMENT);
+	const value = useMemeEditorStore((state) => state.textStyle.textAlign);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 
 	return (
 		<label>
 			Text alignment
 			<select
 				value={value}
-				onChange={(event) => setValue(event.target.value as TextAlignment)}
+				onChange={(event) =>
+					setTextStyle("textAlign", event.target.value as TextAlignment)
+				}
 			>
 				{textAlignments.map((alignment) => (
 					<option value={alignment} key={alignment}>
@@ -75,7 +81,8 @@ const TextAlignmentInput = () => {
 };
 
 const OutlineWidthInput = () => {
-	const [value, setValue] = useState<number>(DEFAULT_STROKE_WIDTH);
+	const value = useMemeEditorStore((state) => state.textStyle.strokeWidth);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 
 	return (
 		<label>
@@ -86,14 +93,17 @@ const OutlineWidthInput = () => {
 				max="10"
 				step="0.5"
 				value={value}
-				onChange={(event) => setValue(Number(event.target.value))}
+				onChange={(event) =>
+					setTextStyle("strokeWidth", Number(event.target.value))
+				}
 			/>
 		</label>
 	);
 };
 
 const ShadowStrengthInput = () => {
-	const [value, setValue] = useState<number>(30);
+	const value = useMemeEditorStore((state) => state.textStyle.shadowBlur);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 
 	return (
 		<label>
@@ -104,7 +114,9 @@ const ShadowStrengthInput = () => {
 				max="50"
 				step="1"
 				value={value}
-				onChange={(event) => setValue(Number(event.target.value))}
+				onChange={(event) =>
+					setTextStyle("shadowBlur", Number(event.target.value))
+				}
 			/>
 		</label>
 	);
@@ -114,6 +126,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
 	const backgroundImage = useMemeEditorStore((state) => state.backgroundImage);
+	const textStyle = useMemeEditorStore((state) => state.textStyle);
 	const setBackgroundImage = useMemeEditorStore(
 		(state) => state.setBackgroundImage,
 	);
@@ -131,7 +144,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		}
 
 		const middlePosition = getCanvasMiddlePosition(backgroundImage);
-		addTextboxToStore(createTextbox(middlePosition));
+		addTextboxToStore(createTextbox(middlePosition, textStyle));
 	};
 
 	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {

@@ -7,14 +7,12 @@ import {
 	DEFAULT_TEXT,
 	DEFAULT_X_OFFSET,
 	DEFAULT_Y_OFFSET,
+	DEFAULT_FONT_FAMILY,
+	DEFAULT_SECONDARY_TEXT_COLOR,
 	type Point,
+	type TextStyle,
 	type TextboxHandlers,
 	type Textbox,
-	DEFAULT_STROKE_WIDTH,
-	DEFAULT_PRIMARY_TEXT_COLOR,
-	DEFAULT_SECONDARY_TEXT_COLOR,
-	DEFAULT_FONT_SIZE,
-	DEFAULT_FONT_FAMILY,
 } from "./types";
 
 const DEFAULT_TEXTBOX_WIDTH = 200;
@@ -48,18 +46,25 @@ const onTransformTextboxEnd = (
 		y: node.y(),
 		rotation: node.rotation(),
 		width: Math.max(MIN_TEXTBOX_WIDTH, textbox.width * scaleX),
-		fontSize: Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY),
+		fontSize: Math.round(Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY)),
 	});
 };
 
-export const createTextbox = (initialPosition: Point): Textbox => ({
+export const createTextbox = (
+	initialPosition: Point,
+	textStyle: TextStyle,
+): Textbox => ({
 	id: randomID(),
 	text: DEFAULT_TEXT,
 	x: initialPosition.x,
 	y: initialPosition.y,
 	rotation: DEFAULT_ROTATION,
 	width: DEFAULT_TEXTBOX_WIDTH,
-	fontSize: DEFAULT_FONT_SIZE,
+	fontSize: textStyle.fontSize,
+	fill: textStyle.fill,
+	textAlign: textStyle.textAlign,
+	strokeWidth: textStyle.strokeWidth,
+	shadowBlur: textStyle.shadowBlur,
 });
 
 export const getCanvasMiddlePosition = (
@@ -84,9 +89,12 @@ export const textboxesToKonvaText = (
 			text={textbox.text}
 			fontFamily={DEFAULT_FONT_FAMILY}
 			fontSize={textbox.fontSize}
-			fill={DEFAULT_PRIMARY_TEXT_COLOR}
+			fill={textbox.fill}
+			align={textbox.textAlign}
 			stroke={DEFAULT_SECONDARY_TEXT_COLOR}
-			strokeWidth={DEFAULT_STROKE_WIDTH}
+			strokeWidth={textbox.strokeWidth}
+			shadowColor={DEFAULT_SECONDARY_TEXT_COLOR}
+			shadowBlur={textbox.shadowBlur}
 			draggable
 			onClick={() => handlers.onSelectTextbox(textbox.id)}
 			onTap={() => handlers.onSelectTextbox(textbox.id)}
