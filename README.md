@@ -2,7 +2,7 @@
 
 TypeScript monorepo with:
 
-- `frontend` (SvelteKit + Vite)
+- `frontend` (React + Vite)
 - `backend` (Node + TypeScript)
 
 ## New Machine Setup

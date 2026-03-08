@@ -2,12 +2,6 @@
 	--font-family: "Noto Sans", sans-serif;
 }
 
-/* Nav */
-summary[role="link"].contrast:is([aria-current], :hover, :active, :focus) {
-	background-color: transparent;
-	color: var(--contrast-hover);
-}
-
 header hgroup > h1 > a {
 	background-color: transparent;
 	text-decoration: none;
@@ -24,11 +18,6 @@ header hgroup > :last-child {
 .hero {
 	background-color: darkorange;
 	background: linear-gradient(90deg, darkorange 0%, darkorchid 100%);
-}
-
-.destructive {
-	background-color: red;
-	border-color: red;
 }
 
 /* Orange Light scheme (Default) */
