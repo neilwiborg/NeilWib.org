@@ -1,6 +1,6 @@
-import type { PageLoad } from '../../$types';
+import type { PageLoad } from './$types';
 
-export const load = ({ url }) => {
+export const load: PageLoad = ({ url }) => {
 	let memeName = url.searchParams.get('name');
 	let memeImageURL = url.searchParams.get('templateUrl');
 	return {
