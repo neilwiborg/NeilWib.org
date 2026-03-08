@@ -1,13 +1,13 @@
+import {
+	type AttributeValue,
+	DynamoDBClient,
+	PutItemCommand,
+	type PutItemCommandInput,
+	ScanCommand,
+} from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
 import express from "express";
 import { JSDOM } from "jsdom";
-import {
-	AttributeValue,
-	DynamoDBClient,
-	PutItemCommand,
-	PutItemCommandInput,
-	ScanCommand,
-} from "@aws-sdk/client-dynamodb";
 
 export const memeScraperRoute = express.Router();
 
@@ -25,21 +25,21 @@ type scrapedImgflipData = {
 const sanitizeInputURL = (imgflipUrl: string) => {
 	const regex = /https:\/\/imgflip.com\/(?:meme(?:template|generator)?)\/(.*)/;
 
-	let regexMatches = imgflipUrl.match(regex);
+	const regexMatches = imgflipUrl.match(regex);
 	if (regexMatches === null || regexMatches.length < 2) {
 		return "";
 	}
 
-	let sanitizedPath = "https://imgflip.com/memetemplate/" + regexMatches[1];
+	const sanitizedPath = "https://imgflip.com/memetemplate/" + regexMatches[1];
 	return sanitizedPath;
 };
 
 const scrapeMeme = async (imgflipUrl: string) => {
-	let page = await fetch(imgflipUrl);
+	const page = await fetch(imgflipUrl);
 	if (!page.ok) {
 		return null;
 	}
-	let pageContents = await page.text();
+	const pageContents = await page.text();
 	const dom = new JSDOM(pageContents);
 	// /meme/X querySelectors
 	// let title = dom.window.document.querySelector("a.meme-link")?.getAttribute("title");
@@ -64,12 +64,12 @@ const scrapeMeme = async (imgflipUrl: string) => {
 	}
 	let subtitle =
 		dom.window.document.querySelector("#mtm-subtitle")?.textContent;
-	let aka = [];
+	const aka = [];
 	if (subtitle !== null && subtitle !== undefined) {
 		subtitle = subtitle.replace("also called: ", "");
 		let window = "";
 		for (let i = 0; i < subtitle.length; i++) {
-			let c = subtitle[i];
+			const c = subtitle[i];
 			if (c === ",") {
 				aka.push(window.trimStart().toLowerCase());
 				window = "";
@@ -79,13 +79,13 @@ const scrapeMeme = async (imgflipUrl: string) => {
 		}
 		aka.push(window.trimStart().toLowerCase());
 	}
-	let description =
+	const description =
 		dom.window.document.querySelector("#mtm-description")?.textContent ?? "";
-	let properties = dom.window.document.querySelectorAll("#mtm-info > p");
+	const properties = dom.window.document.querySelectorAll("#mtm-info > p");
 	let imgflipID = -1;
 	properties.forEach((tag) => {
 		if (tag.textContent?.startsWith("Template ID")) {
-			imgflipID = parseInt(tag.textContent.replace("Template ID: ", ""));
+			imgflipID = parseInt(tag.textContent.replace("Template ID: ", ""), 10);
 		}
 	});
 	if (
@@ -108,9 +108,9 @@ const scrapeMeme = async (imgflipUrl: string) => {
 
 const addToDB = async (imgflipData: scrapedImgflipData) => {
 	const tablename = "mememaker-templates";
-	let id = randomUUID();
+	const id = randomUUID();
 
-	let item: Record<string, AttributeValue> = {
+	const item: Record<string, AttributeValue> = {
 		id: { S: id },
 		title: { S: imgflipData.title },
 		templateURL: { S: imgflipData.templateURL },
@@ -133,15 +133,15 @@ const addToDB = async (imgflipData: scrapedImgflipData) => {
 		},
 		TableName: tablename,
 	};
-	let scanResp = await ddbClient.send(new ScanCommand(scanParams));
+	const scanResp = await ddbClient.send(new ScanCommand(scanParams));
 	if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
 		return { message: "ErrorAddingMeme" };
 	}
 	if (scanResp.Items?.length > 0) {
-		return { message: "AlreadyExists", id: scanResp.Items[0].id["S"] };
+		return { message: "AlreadyExists", id: scanResp.Items[0].id.S };
 	}
 
-	let resp = await ddbClient.send(new PutItemCommand(params));
+	const resp = await ddbClient.send(new PutItemCommand(params));
 	return resp;
 };
 
@@ -149,16 +149,16 @@ memeScraperRoute.get("/mememaker/addmeme", async (req, res, next) => {
 	if (req.query.url === undefined) {
 		res.status(400).send("No URL provided");
 	}
-	let url = decodeURIComponent(req.query.url as string);
+	const url = decodeURIComponent(req.query.url as string);
 	// validate url
-	let sanitizedUrl = sanitizeInputURL(url);
+	const sanitizedUrl = sanitizeInputURL(url);
 	if (sanitizedUrl === "") {
 		res.status(400).send("Invalid URL");
 	}
-	let imgflipData: scrapedImgflipData | null = await scrapeMeme(sanitizedUrl);
+	const imgflipData: scrapedImgflipData | null = await scrapeMeme(sanitizedUrl);
 	if (imgflipData === null) {
 		res.status(400).send("Invalid URL");
 	}
-	let dbResp = await addToDB(imgflipData!);
+	const dbResp = await addToDB(imgflipData!);
 	res.send(dbResp);
 });

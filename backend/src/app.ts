@@ -1,13 +1,13 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
-import createError from "http-errors";
 import express, {
+	type NextFunction,
 	type Request,
 	type Response,
-	type NextFunction,
 } from "express";
-import path from "path";
-import cookieParser from "cookie-parser";
+import createError from "http-errors";
 import logger from "morgan";
+import path from "path";
 
 import { routes } from "./routes";
 

@@ -1,6 +1,6 @@
+import dotenv from "dotenv";
 import express from "express";
 import { createApi } from "unsplash-js";
-import dotenv from "dotenv";
 
 dotenv.config();
 

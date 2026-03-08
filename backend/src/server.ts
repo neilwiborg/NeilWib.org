@@ -1,6 +1,6 @@
+import dotenv from "dotenv";
 import http from "http";
 import app from "./app";
-import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
@@ -10,7 +10,7 @@ dotenv.config();
  */
 const normalizePort = (val: string) => {
 	const port = parseInt(val, 10);
-	return isNaN(port) ? val : port >= 0 ? port : false;
+	return Number.isNaN(port) ? val : port >= 0 ? port : false;
 };
 
 const port = normalizePort(process.env.PORT || "3000");

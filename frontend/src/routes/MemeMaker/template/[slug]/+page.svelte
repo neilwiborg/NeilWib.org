@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { preventDefault } from 'svelte/legacy';
-
 	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
+	import { preventDefault } from 'svelte/legacy';
 
 	interface Props {
 		data: paramsData;
