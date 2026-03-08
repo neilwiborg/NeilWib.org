@@ -1,5 +1,5 @@
-import express from 'express';
-import { URLSearchParams } from 'url';
+import express from "express";
+import { URLSearchParams } from "url";
 
 export const memesRoute = express.Router();
 
@@ -18,27 +18,27 @@ type memeResponse = {
 };
 
 const getImgflipMeme = async (url: string) => {
-	let res = await fetch(url);
+	const res = await fetch(url);
 	return res.blob();
 };
 
 const top100Memes = async () => {
-	let res = await fetch('https://api.imgflip.com/get_memes');
-	let resJson: memeResponse = await res.json();
+	const res = await fetch("https://api.imgflip.com/get_memes");
+	const resJson: memeResponse = await res.json();
 	for (const m of resJson.data.memes) {
-		let urlParam = encodeURIComponent(m.url);
+		const urlParam = encodeURIComponent(m.url);
 		m.url =
-			'https://api.neilwib.org/mememaker/meme?' +
+			"https://api.neilwib.org/mememaker/meme?" +
 			new URLSearchParams({
-				url: urlParam
+				url: urlParam,
 			});
 	}
 	return resJson;
 };
 
 const searchMemes = async (query: string) => {
-	let topMemes = await top100Memes();
-	let res: memeResponse = { data: { memes: [] } };
+	const topMemes = await top100Memes();
+	const res: memeResponse = { data: { memes: [] } };
 
 	for (const m of topMemes.data.memes) {
 		if (m.name.toLowerCase().includes(query.toLowerCase())) {
@@ -48,21 +48,21 @@ const searchMemes = async (query: string) => {
 	return res;
 };
 
-memesRoute.get('/mememaker/meme', async (req, res, next) => {
-	let url = decodeURIComponent(req.query.url as string);
-	let resp = await getImgflipMeme(url);
+memesRoute.get("/mememaker/meme", async (req, res, next) => {
+	const url = decodeURIComponent(req.query.url as string);
+	const resp = await getImgflipMeme(url);
 
-	res.set('Content-Type', 'image/jpeg');
+	res.set("Content-Type", "image/jpeg");
 	res.send(Buffer.from(await resp.arrayBuffer()));
 });
 
-memesRoute.get('/mememaker/top100', async (req, res, next) => {
-	let resp = await top100Memes();
+memesRoute.get("/mememaker/top100", async (req, res, next) => {
+	const resp = await top100Memes();
 	res.send(resp);
 });
 
-memesRoute.get('/mememaker/searchmemes', async (req, res, next) => {
-	let searchterm = req.query.searchterm as string;
-	let resp = await searchMemes(searchterm);
+memesRoute.get("/mememaker/searchmemes", async (req, res, next) => {
+	const searchterm = req.query.searchterm as string;
+	const resp = await searchMemes(searchterm);
 	res.send(resp);
 });

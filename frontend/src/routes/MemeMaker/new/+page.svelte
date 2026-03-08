@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { run, preventDefault } from 'svelte/legacy';
-
 	import { Canvas, FabricImage, Shadow, Textbox } from 'fabric';
 	import { onMount } from 'svelte';
+	import { preventDefault, run } from 'svelte/legacy';
 
 	type canvasObjects = {
 		images: FabricImage[];
