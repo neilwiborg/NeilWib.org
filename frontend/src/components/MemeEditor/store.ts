@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { updateTextboxField } from "./translation";
+import { updateTextbox } from "./translation";
 import type { Point, Textbox } from "./types";
 
 type MemeEditorStore = {
@@ -9,7 +9,10 @@ type MemeEditorStore = {
 	addTextbox: (textbox: Textbox) => void;
 	setTextboxText: (id: string, text: string) => void;
 	setTextboxPosition: (id: string, position: Point) => void;
-	setTextboxRotation: (id: string, rotation: number) => void;
+	setTextboxTransform: (
+		id: string,
+		transform: Pick<Textbox, "x" | "y" | "rotation" | "width" | "fontSize">,
+	) => void;
 };
 
 export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
@@ -25,17 +28,14 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 		})),
 	setTextboxText: (id, text) =>
 		set((state) => ({
-			textboxes: updateTextboxField(state.textboxes, id, "text", text),
+			textboxes: updateTextbox(state.textboxes, id, { text }),
 		})),
 	setTextboxPosition: (id, position) =>
-		set((state) => {
-			const withUpdatedX = updateTextboxField(state.textboxes, id, "x", position.x);
-			return {
-				textboxes: updateTextboxField(withUpdatedX, id, "y", position.y),
-			};
-		}),
-	setTextboxRotation: (id, rotation) =>
 		set((state) => ({
-			textboxes: updateTextboxField(state.textboxes, id, "rotation", rotation),
+			textboxes: updateTextbox(state.textboxes, id, position),
+		})),
+	setTextboxTransform: (id, transform) =>
+		set((state) => ({
+			textboxes: updateTextbox(state.textboxes, id, transform),
 		})),
 }));

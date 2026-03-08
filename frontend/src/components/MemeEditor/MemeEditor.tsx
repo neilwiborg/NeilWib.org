@@ -7,7 +7,7 @@ import {
 } from "react";
 import { Canvas } from "./Canvas";
 import { useMemeEditorStore } from "./store";
-import { createNewTextbox, getCanvasMiddlePosition } from "./translation";
+import { createTextbox, getCanvasMiddlePosition } from "./translation";
 import { DEFAULT_FONT_SIZE, DEFAULT_PRIMARY_TEXT_COLOR, DEFAULT_STROKE_WIDTH, DEFAULT_TEXT_ALIGNMENT, type BackgroundSource, type TextAlignment } from "./types";
 
 export type MemeEditorProps = {
@@ -131,7 +131,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		}
 
 		const middlePosition = getCanvasMiddlePosition(backgroundImage);
-		addTextboxToStore(createNewTextbox(middlePosition));
+		addTextboxToStore(createTextbox(middlePosition));
 	};
 
 	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {

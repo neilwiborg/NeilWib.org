@@ -26,12 +26,17 @@ export type Textbox = Point & {
 	id: string;
 	text: string;
 	rotation: number;
+	width: number;
+	fontSize: number;
 };
 
 export type TextboxHandlers = {
 	onEditTextbox: (id: string) => void;
 	onSelectTextbox: (id: string) => void;
 	onDragTextbox: (id: string, position: Point) => void;
-	onRotateTextbox: (id: string, rotation: number) => void;
+	onTransformTextbox: (
+		id: string,
+		transform: Pick<Textbox, "x" | "y" | "rotation" | "width" | "fontSize">,
+	) => void;
 	setTextboxRef: (id: string, node: Konva.Text | null) => void;
 };

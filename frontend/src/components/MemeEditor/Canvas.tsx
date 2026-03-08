@@ -93,7 +93,7 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 	const textboxes = useMemeEditorStore((state) => state.textboxes);
 	const setTextboxText = useMemeEditorStore((state) => state.setTextboxText);
 	const setTextboxPosition = useMemeEditorStore((state) => state.setTextboxPosition);
-	const setTextboxRotation = useMemeEditorStore((state) => state.setTextboxRotation);
+	const setTextboxTransform = useMemeEditorStore((state) => state.setTextboxTransform);
 
 	const [selectedTextboxId, setSelectedTextboxId] = useState<string | null>(null);
 	const transformerRef = useRef<Konva.Transformer | null>(null);
@@ -115,7 +115,7 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 		onEditTextbox: (id) => editTextbox({ textboxes, setTextboxText, id }),
 		onSelectTextbox: setSelectedTextboxId,
 		onDragTextbox: setTextboxPosition,
-		onRotateTextbox: setTextboxRotation,
+		onTransformTextbox: setTextboxTransform,
 		setTextboxRef: (id, node) => setTextboxRef(textboxNodeRefs.current, id, node),
 	};
 
@@ -146,9 +146,8 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 				{konvaText}
 				<Transformer
 					ref={transformerRef}
-					enabledAnchors={[]}
 					rotateEnabled
-					resizeEnabled={false}
+					resizeEnabled
 				/>
 			</Layer>
 		</Stage>
