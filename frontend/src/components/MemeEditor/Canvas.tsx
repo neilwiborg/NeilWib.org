@@ -1,24 +1,140 @@
-import { Image as KonvaImage, Layer, Stage } from "react-konva";
+import type Konva from "konva";
+import { useEffect, useRef, useState } from "react";
+import { Image as KonvaImage, Layer, Stage, Transformer } from "react-konva";
 import { textboxesToKonvaText } from "./translation";
-import type { Textbox } from "./types";
+import { useMemeEditorStore } from "./store";
+import type { Textbox, TextboxHandlers } from "./types";
 
 type CanvasProps = {
 	backgroundImage: HTMLImageElement;
-	textboxes: Textbox[];
-	onEditTextbox: (id: string) => void;
 };
 
-export const Canvas = ({
-	backgroundImage,
+const syncTransformerSelection = (
+	transformer: Konva.Transformer | null,
+	selectedTextboxId: string | null,
+	textboxNodeRefs: Map<string, Konva.Text>,
+) => {
+	if (!transformer) {
+		return;
+	}
+
+	if (!selectedTextboxId) {
+		transformer.nodes([]);
+		transformer.getLayer()?.batchDraw();
+		return;
+	}
+
+	const selectedNode = textboxNodeRefs.get(selectedTextboxId);
+	if (!selectedNode) {
+		transformer.nodes([]);
+		transformer.getLayer()?.batchDraw();
+		return;
+	}
+
+	transformer.nodes([selectedNode]);
+	transformer.getLayer()?.batchDraw();
+};
+
+const clearStaleSelection = (
+	selectedTextboxId: string | null,
+	textboxes: Textbox[],
+	setSelectedTextboxId: (id: string | null) => void,
+) => {
+	if (!selectedTextboxId) {
+		return;
+	}
+
+	const textboxExists = textboxes.some((textbox) => textbox.id === selectedTextboxId);
+	if (!textboxExists) {
+		setSelectedTextboxId(null);
+	}
+};
+
+const isStageBackgroundClick = (
+	event: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+) => event.target === event.target.getStage();
+
+const editTextbox = ({
 	textboxes,
-	onEditTextbox,
-}: CanvasProps) => {
-	const konvaText = textboxesToKonvaText(textboxes, onEditTextbox);
+	setTextboxText,
+	id,
+}: {
+	textboxes: Textbox[];
+	setTextboxText: (id: string, text: string) => void;
+	id: string;
+}) => {
+	const textbox = textboxes.find((item) => item.id === id);
+	if (!textbox) {
+		throw new Error("Textbox not found");
+	}
+
+	const updatedText = window.prompt("Edit text", textbox.text);
+	if (updatedText === null) {
+		return;
+	}
+
+	setTextboxText(id, updatedText);
+};
+
+const setTextboxRef = (
+	textboxNodeRefs: Map<string, Konva.Text>,
+	id: string,
+	node: Konva.Text | null,
+) => {
+	if (node) {
+		textboxNodeRefs.set(id, node);
+		return;
+	}
+
+	textboxNodeRefs.delete(id);
+};
+
+export const Canvas = ({ backgroundImage }: CanvasProps) => {
+	const textboxes = useMemeEditorStore((state) => state.textboxes);
+	const setTextboxText = useMemeEditorStore((state) => state.setTextboxText);
+	const setTextboxPosition = useMemeEditorStore((state) => state.setTextboxPosition);
+	const setTextboxRotation = useMemeEditorStore((state) => state.setTextboxRotation);
+
+	const [selectedTextboxId, setSelectedTextboxId] = useState<string | null>(null);
+	const transformerRef = useRef<Konva.Transformer | null>(null);
+	const textboxNodeRefs = useRef<Map<string, Konva.Text>>(new Map());
+
+	useEffect(() => {
+		syncTransformerSelection(
+			transformerRef.current,
+			selectedTextboxId,
+			textboxNodeRefs.current,
+		);
+	}, [selectedTextboxId]);
+
+	useEffect(() => {
+		clearStaleSelection(selectedTextboxId, textboxes, setSelectedTextboxId);
+	}, [selectedTextboxId, textboxes]);
+
+	const textboxHandlers: TextboxHandlers = {
+		onEditTextbox: (id) => editTextbox({ textboxes, setTextboxText, id }),
+		onSelectTextbox: setSelectedTextboxId,
+		onDragTextbox: setTextboxPosition,
+		onRotateTextbox: setTextboxRotation,
+		setTextboxRef: (id, node) => setTextboxRef(textboxNodeRefs.current, id, node),
+	};
+
+	const konvaText = textboxesToKonvaText(textboxes, textboxHandlers);
 
 	return (
 		<Stage
 			width={backgroundImage.naturalWidth}
 			height={backgroundImage.naturalHeight}
+			onMouseDown={(event) => {
+				if (isStageBackgroundClick(event)) {
+					setSelectedTextboxId(null);
+				}
+			}}
+			onTouchStart={(event) => {
+				if (isStageBackgroundClick(event)) {
+					setSelectedTextboxId(null);
+				}
+			}}
 		>
 			<Layer>
 				<KonvaImage
@@ -28,6 +144,12 @@ export const Canvas = ({
 					listening={false}
 				/>
 				{konvaText}
+				<Transformer
+					ref={transformerRef}
+					enabledAnchors={[]}
+					rotateEnabled
+					resizeEnabled={false}
+				/>
 			</Layer>
 		</Stage>
 	);

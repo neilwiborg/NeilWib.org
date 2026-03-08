@@ -6,16 +6,15 @@ import {
 	useState,
 } from "react";
 import { Canvas } from "./Canvas";
-import {
-	createNewTextbox,
-	getCanvasMiddlePosition,
-	updateTextboxField,
-} from "./translation";
-import type { BackgroundSource, TextAlignment, Textbox } from "./types";
+import { useMemeEditorStore } from "./store";
+import { createNewTextbox, getCanvasMiddlePosition } from "./translation";
+import { DEFAULT_FONT_SIZE, DEFAULT_PRIMARY_TEXT_COLOR, DEFAULT_STROKE_WIDTH, DEFAULT_TEXT_ALIGNMENT, type BackgroundSource, type TextAlignment } from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
 };
+
+const textAlignments: TextAlignment[] = ["center", "left", "right"];
 
 const loadImage = (url: string) =>
 	new Promise<HTMLImageElement>((resolve, reject) => {
@@ -26,7 +25,7 @@ const loadImage = (url: string) =>
 	});
 
 const TextSizeInput = () => {
-	const [value, setValue] = useState<number>(50);
+	const [value, setValue] = useState<number>(DEFAULT_FONT_SIZE);
 
 	return (
 		<label>
@@ -41,7 +40,7 @@ const TextSizeInput = () => {
 };
 
 const TextColorInput = () => {
-	const [value, setValue] = useState<string>("#FFFFFF");
+	const [value, setValue] = useState<string>(DEFAULT_PRIMARY_TEXT_COLOR);
 
 	return (
 		<label>
@@ -55,10 +54,8 @@ const TextColorInput = () => {
 	);
 };
 
-const textAlignments: TextAlignment[] = ["center", "left", "right"];
-
 const TextAlignmentInput = () => {
-	const [value, setValue] = useState<TextAlignment>("center");
+	const [value, setValue] = useState<TextAlignment>(DEFAULT_TEXT_ALIGNMENT);
 
 	return (
 		<label>
@@ -78,7 +75,7 @@ const TextAlignmentInput = () => {
 };
 
 const OutlineWidthInput = () => {
-	const [value, setValue] = useState<number>(3);
+	const [value, setValue] = useState<number>(DEFAULT_STROKE_WIDTH);
 
 	return (
 		<label>
@@ -116,10 +113,11 @@ const ShadowStrengthInput = () => {
 export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-	const [backgroundImage, setBackgroundImage] =
-		useState<HTMLImageElement | null>(null);
-	const [textboxes, setTextboxes] = useState<Textbox[]>([]);
-	const [isLoaded, setIsLoaded] = useState<boolean>(false);
+	const backgroundImage = useMemeEditorStore((state) => state.backgroundImage);
+	const setBackgroundImage = useMemeEditorStore(
+		(state) => state.setBackgroundImage,
+	);
+	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 
 	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
@@ -133,26 +131,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		}
 
 		const middlePosition = getCanvasMiddlePosition(backgroundImage);
-		setTextboxes((previousTextboxes) => [
-			...previousTextboxes,
-			createNewTextbox(middlePosition),
-		]);
-	};
-
-	const editTextbox = (id: string) => {
-		const textbox = textboxes.find((item) => item.id === id);
-		if (!textbox) {
-			throw new Error("Textbox not found");
-		}
-
-		const updatedText = window.prompt("Edit text", textbox.text);
-		if (updatedText === null) {
-			return;
-		}
-
-		setTextboxes((previousTextboxes) =>
-			updateTextboxField(previousTextboxes, id, "text", updatedText),
-		);
+		addTextboxToStore(createNewTextbox(middlePosition));
 	};
 
 	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -172,10 +151,6 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		let objectUrl = "";
 
 		const hydrateBackground = async () => {
-			setIsLoaded(false);
-			setBackgroundImage(null);
-			setTextboxes([]);
-
 			try {
 				if (background.kind === "file") {
 					objectUrl = URL.createObjectURL(background.file);
@@ -193,14 +168,12 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 				}
 
 				setBackgroundImage(loadedBackgroundImage);
-				setIsLoaded(true);
 			} catch (error) {
 				if (controller.signal.aborted) {
 					return;
 				}
 
 				console.error("Failed to load background image", error);
-				return;
 			}
 		};
 
@@ -212,7 +185,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 				URL.revokeObjectURL(objectUrl);
 			}
 		};
-	}, [background]);
+	}, [background, setBackgroundImage]);
+
+	const loading = backgroundImage === null;
 
 	return (
 		<>
@@ -227,32 +202,24 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 					<ShadowStrengthInput />
 				</div>
 				<div className="grid">
-					<button onClick={openImageUpload} disabled={!isLoaded}>
+					<button onClick={openImageUpload} disabled={loading}>
 						Add image
 					</button>
-					<button onClick={addTextbox} disabled={!isLoaded}>
+					<button onClick={addTextbox} disabled={loading}>
 						Add textbox
 					</button>
-					<button onClick={downloadMeme} disabled={!isLoaded}>
+					<button onClick={downloadMeme} disabled={loading}>
 						Download meme
 					</button>
 					<button
 						onClick={(event) => void copyToClipboard(event)}
-						disabled={!isLoaded}
+						disabled={loading}
 					>
 						Copy meme to clipboard
 					</button>
 				</div>
 			</form>
-			{backgroundImage ? (
-				<Canvas
-					backgroundImage={backgroundImage}
-					textboxes={textboxes}
-					onEditTextbox={editTextbox}
-				/>
-			) : (
-				<p>Loading canvas...</p>
-			)}
+			{backgroundImage ? <Canvas backgroundImage={backgroundImage} /> : <p>Loading canvas...</p>}
 			<input
 				ref={imageUploadInputRef}
 				type="file"
