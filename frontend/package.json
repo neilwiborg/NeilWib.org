@@ -13,7 +13,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"dotenv": "^16.4.7",
+		"dotenv": "catalog:",
 		"fabric": "^6.6.1"
 	},
 	"devDependencies": {
@@ -22,15 +22,15 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@typescript-eslint/eslint-plugin": "^5.54.0",
 		"@typescript-eslint/parser": "^5.54.0",
-		"eslint": "^8.35.0",
-		"eslint-config-prettier": "^8.6.0",
+		"eslint": "catalog:",
+		"eslint-config-prettier": "catalog:",
 		"eslint-plugin-svelte": "^3.1.0",
-		"prettier": "^3.5.3",
+		"prettier": "catalog:",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.23.1",
 		"svelte-check": "^4.0.0",
-		"tslib": "^2.8.1",
-		"typescript": "^5.8.2",
+		"tslib": "catalog:",
+		"typescript": "catalog:",
 		"vite": "^7.3.1"
 	}
 }
