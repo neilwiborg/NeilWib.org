@@ -7,10 +7,10 @@ export const TemplateEditorRoute = () => {
 	const templateUrlEncoded = searchParams.get("templateUrl");
 
 	if (!name || !templateUrlEncoded) {
-    throw new Error("Missing template name and/or URL");
+		throw new Error("Missing template name and/or URL");
 	}
 
-  const templateUrl = decodeURIComponent(templateUrlEncoded);
+	const templateUrl = decodeURIComponent(templateUrlEncoded);
 
 	return (
 		<>

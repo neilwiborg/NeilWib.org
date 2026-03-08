@@ -1,6 +1,17 @@
-import { type ChangeEvent, type MouseEvent, useEffect, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	type MouseEvent,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { Canvas } from "./Canvas";
-import type { BackgroundSource, TextAlignment } from "./types";
+import {
+	createNewTextbox,
+	getCanvasMiddlePosition,
+	updateTextboxField,
+} from "./translation";
+import type { BackgroundSource, TextAlignment, Textbox } from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
@@ -105,9 +116,9 @@ const ShadowStrengthInput = () => {
 export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-	const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(
-		null,
-	);
+	const [backgroundImage, setBackgroundImage] =
+		useState<HTMLImageElement | null>(null);
+	const [textboxes, setTextboxes] = useState<Textbox[]>([]);
 	const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
 	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
@@ -117,6 +128,31 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 
 	const addTextbox = (event: MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
+		if (!backgroundImage) {
+			throw new Error("Background image is not loaded");
+		}
+
+		const middlePosition = getCanvasMiddlePosition(backgroundImage);
+		setTextboxes((previousTextboxes) => [
+			...previousTextboxes,
+			createNewTextbox(middlePosition),
+		]);
+	};
+
+	const editTextbox = (id: string) => {
+		const textbox = textboxes.find((item) => item.id === id);
+		if (!textbox) {
+			throw new Error("Textbox not found");
+		}
+
+		const updatedText = window.prompt("Edit text", textbox.text);
+		if (updatedText === null) {
+			return;
+		}
+
+		setTextboxes((previousTextboxes) =>
+			updateTextboxField(previousTextboxes, id, "text", updatedText),
+		);
 	};
 
 	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +174,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		const hydrateBackground = async () => {
 			setIsLoaded(false);
 			setBackgroundImage(null);
+			setTextboxes([]);
 
 			try {
 				if (background.kind === "file") {
@@ -199,12 +236,23 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 					<button onClick={downloadMeme} disabled={!isLoaded}>
 						Download meme
 					</button>
-					<button onClick={(event) => void copyToClipboard(event)} disabled={!isLoaded}>
+					<button
+						onClick={(event) => void copyToClipboard(event)}
+						disabled={!isLoaded}
+					>
 						Copy meme to clipboard
 					</button>
 				</div>
 			</form>
-			<Canvas backgroundImage={backgroundImage} />
+			{backgroundImage ? (
+				<Canvas
+					backgroundImage={backgroundImage}
+					textboxes={textboxes}
+					onEditTextbox={editTextbox}
+				/>
+			) : (
+				<p>Loading canvas...</p>
+			)}
 			<input
 				ref={imageUploadInputRef}
 				type="file"
