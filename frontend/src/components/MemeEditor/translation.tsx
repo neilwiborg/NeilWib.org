@@ -1,0 +1,199 @@
+import type Konva from "konva";
+import type { JSX } from "react";
+import { Image as KonvaImage, Text } from "react-konva";
+import { randomID } from "../../util/util";
+import {
+	DEFAULT_FONT_FAMILY,
+	DEFAULT_ROTATION,
+	DEFAULT_SECONDARY_TEXT_COLOR,
+	DEFAULT_TEXT,
+	DEFAULT_X_OFFSET,
+	DEFAULT_Y_OFFSET,
+	type EditorImage,
+	type ImageHandlers,
+	type KeyType,
+	type NodeKey,
+	type Point,
+	type Textbox,
+	type TextboxHandlers,
+	type TextStyle,
+} from "./types";
+
+const DEFAULT_TEXTBOX_WIDTH = 200;
+const MIN_TEXTBOX_WIDTH = 30;
+const MIN_FONT_SIZE = 8;
+const MIN_IMAGE_WIDTH = 20;
+const MIN_IMAGE_HEIGHT = 20;
+const DEFAULT_IMAGE_SCALE = 0.25;
+
+export const createNodeKey = (keyType: KeyType, id: string): NodeKey =>
+	`${keyType}:${id}`;
+
+export const parseNodeKey = (
+	nodeKey: NodeKey,
+): { keyType: KeyType; id: string } => {
+	const [keyType, ...idParts] = nodeKey.split(":");
+	return {
+		keyType: keyType as KeyType,
+		id: idParts.join(":"),
+	};
+};
+
+const onDragEditorNodeEnd =
+	<T extends { id: string }>(
+		element: T,
+		onDrag: (id: string, position: Point) => void,
+	) =>
+	(event: Konva.KonvaEventObject<DragEvent>) => {
+		const newPoint = {
+			x: event.target.x(),
+			y: event.target.y(),
+		};
+		onDrag(element.id, newPoint);
+	};
+
+const onTransformTextboxEnd =
+	(textbox: Textbox, handlers: TextboxHandlers) =>
+	(event: Konva.KonvaEventObject<Event>) => {
+		const node = event.target as Konva.Text;
+		const scaleX = node.scaleX();
+		const scaleY = node.scaleY();
+
+		node.scaleX(1);
+		node.scaleY(1);
+
+		handlers.onTransformTextbox(textbox.id, {
+			x: node.x(),
+			y: node.y(),
+			rotation: node.rotation(),
+			width: Math.max(MIN_TEXTBOX_WIDTH, textbox.width * scaleX),
+			fontSize: Math.round(Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY)),
+		});
+	};
+
+const onTransformImageEnd =
+	(image: EditorImage, handlers: ImageHandlers) =>
+	(event: Konva.KonvaEventObject<Event>) => {
+		const node = event.target as Konva.Image;
+		const scaleX = node.scaleX();
+		const scaleY = node.scaleY();
+
+		node.scaleX(1);
+		node.scaleY(1);
+
+		handlers.onTransformImage(image.id, {
+			x: node.x(),
+			y: node.y(),
+			rotation: node.rotation(),
+			width: Math.max(MIN_IMAGE_WIDTH, image.width * scaleX),
+			height: Math.max(MIN_IMAGE_HEIGHT, image.height * scaleY),
+		});
+	};
+
+export const getCanvasMiddlePosition = (
+	backgroundImage: HTMLImageElement,
+): Point => ({
+	x: backgroundImage.naturalWidth / 2 + DEFAULT_X_OFFSET,
+	y: backgroundImage.naturalHeight / 2 + DEFAULT_Y_OFFSET,
+});
+
+export const createTextbox = (
+	initialPosition: Point,
+	textStyle: TextStyle,
+): Textbox => ({
+	id: randomID(),
+	text: DEFAULT_TEXT,
+	x: initialPosition.x,
+	y: initialPosition.y,
+	rotation: DEFAULT_ROTATION,
+	width: DEFAULT_TEXTBOX_WIDTH,
+	fontSize: textStyle.fontSize,
+	fill: textStyle.fill,
+	textAlign: textStyle.textAlign,
+	strokeWidth: textStyle.strokeWidth,
+	shadowBlur: textStyle.shadowBlur,
+});
+
+export const createEditorImage = (
+	initialPosition: Point,
+	overlayImage: HTMLImageElement,
+): EditorImage => {
+	const width = overlayImage.naturalWidth * DEFAULT_IMAGE_SCALE;
+	const height = overlayImage.naturalHeight * DEFAULT_IMAGE_SCALE;
+	return {
+		id: randomID(),
+		image: overlayImage,
+		x: initialPosition.x - width / 2,
+		y: initialPosition.y - height / 2,
+		rotation: DEFAULT_ROTATION,
+		width,
+		height,
+	};
+};
+
+export const textboxesToKonvaText = (
+	textboxes: Textbox[],
+	handlers: TextboxHandlers,
+): JSX.Element[] =>
+	textboxes.map((textbox) => (
+		<Text
+			key={textbox.id}
+			ref={(node) => handlers.setNodeRef(textbox.id, node)}
+			x={textbox.x}
+			y={textbox.y}
+			rotation={textbox.rotation}
+			width={textbox.width}
+			text={textbox.text}
+			fontFamily={DEFAULT_FONT_FAMILY}
+			fontSize={textbox.fontSize}
+			fill={textbox.fill}
+			align={textbox.textAlign}
+			stroke={DEFAULT_SECONDARY_TEXT_COLOR}
+			strokeWidth={textbox.strokeWidth}
+			shadowColor={DEFAULT_SECONDARY_TEXT_COLOR}
+			shadowBlur={textbox.shadowBlur}
+			draggable
+			onClick={() => handlers.onSelect(textbox.id)}
+			onTap={() => handlers.onSelect(textbox.id)}
+			onDblClick={() => handlers.onEditTextbox(textbox.id)}
+			onDblTap={() => handlers.onEditTextbox(textbox.id)}
+			onDragEnd={onDragEditorNodeEnd(textbox, handlers.onDrag)}
+			onTransformEnd={onTransformTextboxEnd(textbox, handlers)}
+		/>
+	));
+
+export const imagesToKonvaImages = (
+	images: EditorImage[],
+	handlers: ImageHandlers,
+): JSX.Element[] =>
+	images.map((image) => (
+		<KonvaImage
+			key={image.id}
+			ref={(node) => handlers.setNodeRef(image.id, node)}
+			image={image.image}
+			x={image.x}
+			y={image.y}
+			width={image.width}
+			height={image.height}
+			rotation={image.rotation}
+			draggable
+			onClick={() => handlers.onSelect(image.id)}
+			onTap={() => handlers.onSelect(image.id)}
+			onDragEnd={onDragEditorNodeEnd(image, handlers.onDrag)}
+			onTransformEnd={onTransformImageEnd(image, handlers)}
+		/>
+	));
+
+export const updateTextbox = (
+	textboxes: Textbox[],
+	id: string,
+	patch: Partial<Textbox>,
+) =>
+	textboxes.map((textbox) =>
+		textbox.id === id
+			? {
+					...textbox,
+					...patch,
+				}
+			: textbox,
+	);

@@ -7,24 +7,24 @@ import { TemplateListRoute } from "./routes/meme-maker/templates/TemplateListRou
 import { Pages } from "./types/pages";
 
 const Hero = () => {
-  return (
-    <div className="hero">
-				<header className="container">
-					<hgroup>
-						<h1>
-							<Link to={Pages.HOME} className="contrast">
-								Neil Wiborg
-							</Link>
-						</h1>
-						<h2 className="contrast">
-							The home of projects made by the software engineer and computer
-							science student Neil Wiborg
-						</h2>
-					</hgroup>
-				</header>
-			</div>
-  )
-}
+	return (
+		<div className="hero">
+			<header className="container">
+				<hgroup>
+					<h1>
+						<Link to={Pages.HOME} className="contrast">
+							Neil Wiborg
+						</Link>
+					</h1>
+					<h2 className="contrast">
+						The home of projects made by the software engineer and computer
+						science student Neil Wiborg
+					</h2>
+				</hgroup>
+			</header>
+		</div>
+	);
+};
 
 const Page = () => {
 	return (
