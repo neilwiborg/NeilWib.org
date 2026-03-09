@@ -99,8 +99,8 @@ importers:
         specifier: 'catalog:'
         version: 17.3.1
       konva:
-        specifier: ^9.3.20
-        version: 9.3.22
+        specifier: ^10.2.0
+        version: 10.2.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -108,13 +108,13 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
       react-konva:
-        specifier: ^19.2.0
-        version: 19.2.3(@types/react@19.2.14)(konva@9.3.22)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)(konva@10.2.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-dom:
         specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       zustand:
-        specifier: ^5.0.8
+        specifier: ^5.0.11
         version: 5.0.11(@types/react@19.2.14)(react@19.2.4)
     devDependencies:
       '@biomejs/biome':
@@ -1472,8 +1472,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  konva@9.3.22:
-    resolution: {integrity: sha512-yQI5d1bmELlD/fowuyfOp9ff+oamg26WOCkyqUyc+nczD/lhRa3EvD2MZOoc4c1293TAubW9n34fSQLgSeEgSw==}
+  konva@10.2.0:
+    resolution: {integrity: sha512-JBoz0Xjbf49UPxCZegZ4WseqOzJ+C4AUDOtJ9eBve5RS5Fcq/u8TdBD5fDl/uPFInpC3a9uycm0sRyZpF4hheg==}
 
   lru-cache@11.2.6:
     resolution: {integrity: sha512-ESL2CrkS/2wTPfuend7Zhkzo2u0daGJ/A2VucJOgQ/C48S/zB8MMeMHSGKYpXhIjbPxfuezITkaBH1wqv00DDQ==}
@@ -3686,7 +3686,7 @@ snapshots:
 
   json5@2.2.3: {}
 
-  konva@9.3.22: {}
+  konva@10.2.0: {}
 
   lru-cache@11.2.6: {}
 
@@ -3849,11 +3849,11 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  react-konva@19.2.3(@types/react@19.2.14)(konva@9.3.22)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-konva@19.2.3(@types/react@19.2.14)(konva@10.2.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@types/react-reconciler': 0.33.0(@types/react@19.2.14)
       its-fine: 2.0.0(@types/react@19.2.14)(react@19.2.4)
-      konva: 9.3.22
+      konva: 10.2.0
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-reconciler: 0.33.0(react@19.2.4)
