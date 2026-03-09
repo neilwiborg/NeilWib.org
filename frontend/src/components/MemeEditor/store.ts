@@ -30,6 +30,37 @@ type MemeEditorStore = {
 	) => void;
 };
 
+const applyTextboxTransform = (
+	textboxes: Textbox[],
+	id: string,
+	transform: TextboxTransform,
+	textStyle: TextStyle,
+) => {
+	if (transform.fontSize === undefined) {
+		return {
+			textboxes: updateTextbox(textboxes, id, transform),
+			textStyle,
+		};
+	}
+
+	const roundedFontSize = Math.round(transform.fontSize);
+	const nextTextboxes = updateTextbox(textboxes, id, {
+		...transform,
+		fontSize: roundedFontSize,
+	});
+
+	return {
+		textboxes: nextTextboxes.map((textbox) => ({
+			...textbox,
+			fontSize: roundedFontSize,
+		})),
+		textStyle: {
+			...textStyle,
+			fontSize: roundedFontSize,
+		},
+	};
+};
+
 export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 	backgroundImage: null,
 	textboxes: [],
@@ -58,16 +89,19 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 			textboxes: updateTextbox(state.textboxes, id, { text }),
 		})),
 	setTextboxTransform: (id, transform) =>
-		set((state) => ({
-			textboxes: updateTextbox(state.textboxes, id, transform),
-			textStyle:
-				transform.fontSize === undefined
-					? state.textStyle
-					: {
-							...state.textStyle,
-							fontSize: Math.round(transform.fontSize),
-						},
-		})),
+		set((state) => {
+			const result = applyTextboxTransform(
+				state.textboxes,
+				id,
+				transform,
+				state.textStyle,
+			);
+
+			return {
+				textboxes: result.textboxes,
+				textStyle: result.textStyle,
+			};
+		}),
 	setImageTransform: (id, transform) =>
 		set((state) => ({
 			images: state.images.map((image) =>
