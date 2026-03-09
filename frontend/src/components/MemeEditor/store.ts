@@ -13,10 +13,14 @@ import {
 	type TextStyle,
 } from "./types";
 
-type MemeEditorStore = {
+type MemeEditorState = {
 	textboxes: Textbox[];
 	images: EditorImage[];
 	textStyle: TextStyle;
+};
+
+type MemeEditorStore = MemeEditorState & {
+	resetEditor: () => void;
 	addTextbox: (textbox: Textbox) => void;
 	addImage: (image: EditorImage) => void;
 	setTextboxText: (id: string, text: string) => void;
@@ -59,7 +63,7 @@ const applyTextboxTransform = (
 	};
 };
 
-export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
+const createInitialState = (): MemeEditorState => ({
 	textboxes: [],
 	images: [],
 	textStyle: {
@@ -69,6 +73,11 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 		strokeWidth: DEFAULT_STROKE_WIDTH,
 		shadowBlur: DEFAULT_SHADOW_BLUR,
 	},
+});
+
+export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
+	...createInitialState(),
+	resetEditor: () => set(createInitialState()),
 	addTextbox: (textbox) =>
 		set((state) => ({
 			textboxes: [...state.textboxes, textbox],

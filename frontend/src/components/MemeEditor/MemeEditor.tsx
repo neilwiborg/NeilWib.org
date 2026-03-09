@@ -269,6 +269,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const textStyle = useMemeEditorStore((state) => state.textStyle);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
+	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
 	const [backgroundImage, setBackgroundImage] =
 		useState<HTMLImageElement | null>(null);
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -284,6 +285,8 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	useEffect(() => {
 		const controller = new AbortController();
 		let objectUrl = "";
+		setBackgroundImage(null);
+		resetEditor();
 
 		const hydrateBackground = async () => {
 			try {
@@ -320,7 +323,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 				URL.revokeObjectURL(objectUrl);
 			}
 		};
-	}, [background]);
+	}, [background, resetEditor]);
 
 	if (!backgroundImage) {
 		return <p>Loading canvas...</p>;
