@@ -1,9 +1,20 @@
 import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
 import { Image as KonvaImage, Layer, Stage, Transformer } from "react-konva";
-import { textboxesToKonvaText } from "./translation";
 import { useMemeEditorStore } from "./store";
-import type { Textbox, TextboxHandlers } from "./types";
+import {
+	createNodeKey,
+	imagesToKonvaImages,
+	parseNodeKey,
+	textboxesToKonvaText,
+} from "./translation";
+import type {
+	EditorImage,
+	ImageHandlers,
+	NodeKey,
+	Textbox,
+	TextboxHandlers,
+} from "./types";
 
 type CanvasProps = {
 	backgroundImage: HTMLImageElement;
@@ -11,20 +22,20 @@ type CanvasProps = {
 
 const syncTransformerSelection = (
 	transformer: Konva.Transformer | null,
-	selectedTextboxId: string | null,
-	textboxNodeRefs: Map<string, Konva.Text>,
+	selectedNodeKey: NodeKey | null,
+	nodeRefs: Map<NodeKey, Konva.Node>,
 ) => {
 	if (!transformer) {
 		return;
 	}
 
-	if (!selectedTextboxId) {
+	if (!selectedNodeKey) {
 		transformer.nodes([]);
 		transformer.getLayer()?.batchDraw();
 		return;
 	}
 
-	const selectedNode = textboxNodeRefs.get(selectedTextboxId);
+	const selectedNode = nodeRefs.get(selectedNodeKey);
 	if (!selectedNode) {
 		transformer.nodes([]);
 		transformer.getLayer()?.batchDraw();
@@ -36,17 +47,21 @@ const syncTransformerSelection = (
 };
 
 const clearStaleSelection = (
-	selectedTextboxId: string | null,
+	selectedNodeKey: NodeKey | null,
 	textboxes: Textbox[],
-	setSelectedTextboxId: (id: string | null) => void,
+	images: EditorImage[],
+	setSelectedNodeKey: (id: NodeKey | null) => void,
 ) => {
-	if (!selectedTextboxId) {
+	if (!selectedNodeKey) {
 		return;
 	}
 
-	const textboxExists = textboxes.some((textbox) => textbox.id === selectedTextboxId);
-	if (!textboxExists) {
-		setSelectedTextboxId(null);
+	const { keyType, id } = parseNodeKey(selectedNodeKey);
+	const exists =
+		(keyType === "text" && textboxes.some((textbox) => textbox.id === id)) ||
+		(keyType === "image" && images.some((image) => image.id === id));
+	if (!exists) {
+		setSelectedNodeKey(null);
 	}
 };
 
@@ -76,50 +91,65 @@ const editTextbox = ({
 	setTextboxText(id, updatedText);
 };
 
-const setTextboxRef = (
-	textboxNodeRefs: Map<string, Konva.Text>,
-	id: string,
-	node: Konva.Text | null,
+const setNodeRef = (
+	nodeRefs: Map<NodeKey, Konva.Node>,
+	nodeKey: NodeKey,
+	node: Konva.Node | null,
 ) => {
 	if (node) {
-		textboxNodeRefs.set(id, node);
+		nodeRefs.set(nodeKey, node);
 		return;
 	}
 
-	textboxNodeRefs.delete(id);
+	nodeRefs.delete(nodeKey);
 };
 
 export const Canvas = ({ backgroundImage }: CanvasProps) => {
 	const textboxes = useMemeEditorStore((state) => state.textboxes);
+	const images = useMemeEditorStore((state) => state.images);
 	const setTextboxText = useMemeEditorStore((state) => state.setTextboxText);
-	const setTextboxPosition = useMemeEditorStore((state) => state.setTextboxPosition);
-	const setTextboxTransform = useMemeEditorStore((state) => state.setTextboxTransform);
+	const setTextboxTransform = useMemeEditorStore(
+		(state) => state.setTextboxTransform,
+	);
+	const setImageTransform = useMemeEditorStore(
+		(state) => state.setImageTransform,
+	);
 
-	const [selectedTextboxId, setSelectedTextboxId] = useState<string | null>(null);
+	const [selectedNodeKey, setSelectedNodeKey] = useState<NodeKey | null>(null);
 	const transformerRef = useRef<Konva.Transformer | null>(null);
-	const textboxNodeRefs = useRef<Map<string, Konva.Text>>(new Map());
+	const nodeRefs = useRef<Map<NodeKey, Konva.Node>>(new Map());
 
 	useEffect(() => {
 		syncTransformerSelection(
 			transformerRef.current,
-			selectedTextboxId,
-			textboxNodeRefs.current,
+			selectedNodeKey,
+			nodeRefs.current,
 		);
-	}, [selectedTextboxId]);
+	}, [selectedNodeKey]);
 
 	useEffect(() => {
-		clearStaleSelection(selectedTextboxId, textboxes, setSelectedTextboxId);
-	}, [selectedTextboxId, textboxes]);
+		clearStaleSelection(selectedNodeKey, textboxes, images, setSelectedNodeKey);
+	}, [selectedNodeKey, textboxes, images]);
 
 	const textboxHandlers: TextboxHandlers = {
 		onEditTextbox: (id) => editTextbox({ textboxes, setTextboxText, id }),
-		onSelectTextbox: setSelectedTextboxId,
-		onDragTextbox: setTextboxPosition,
+		onSelect: (id) => setSelectedNodeKey(createNodeKey("text", id)),
+		onDrag: setTextboxTransform,
 		onTransformTextbox: setTextboxTransform,
-		setTextboxRef: (id, node) => setTextboxRef(textboxNodeRefs.current, id, node),
+		setNodeRef: (id, node) =>
+			setNodeRef(nodeRefs.current, createNodeKey("text", id), node),
+	};
+
+	const imageHandlers: ImageHandlers = {
+		onSelect: (id) => setSelectedNodeKey(createNodeKey("image", id)),
+		onDrag: setImageTransform,
+		onTransformImage: setImageTransform,
+		setNodeRef: (id, node) =>
+			setNodeRef(nodeRefs.current, createNodeKey("image", id), node),
 	};
 
 	const konvaText = textboxesToKonvaText(textboxes, textboxHandlers);
+	const konvaImages = imagesToKonvaImages(images, imageHandlers);
 
 	return (
 		<Stage
@@ -127,12 +157,12 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 			height={backgroundImage.naturalHeight}
 			onMouseDown={(event) => {
 				if (isStageBackgroundClick(event)) {
-					setSelectedTextboxId(null);
+					setSelectedNodeKey(null);
 				}
 			}}
 			onTouchStart={(event) => {
 				if (isStageBackgroundClick(event)) {
-					setSelectedTextboxId(null);
+					setSelectedNodeKey(null);
 				}
 			}}
 		>
@@ -143,12 +173,9 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 					height={backgroundImage.naturalHeight}
 					listening={false}
 				/>
+				{konvaImages}
 				{konvaText}
-				<Transformer
-					ref={transformerRef}
-					rotateEnabled
-					resizeEnabled
-				/>
+				<Transformer ref={transformerRef} rotateEnabled resizeEnabled />
 			</Layer>
 		</Stage>
 	);

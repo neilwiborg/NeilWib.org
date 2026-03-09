@@ -1,13 +1,12 @@
-import {
-	type ChangeEvent,
-	type MouseEvent,
-	useEffect,
-	useRef,
-} from "react";
+import { type ChangeEvent, type MouseEvent, useEffect, useRef } from "react";
 import { Canvas } from "./Canvas";
 import { useMemeEditorStore } from "./store";
-import { createTextbox, getCanvasMiddlePosition } from "./translation";
-import type { BackgroundSource, TextAlignment } from "./types";
+import {
+	createEditorImage,
+	createTextbox,
+	getCanvasMiddlePosition,
+} from "./translation";
+import type { BackgroundSource, TextAlignment, TextStyle } from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
@@ -122,34 +121,95 @@ const ShadowStrengthInput = () => {
 	);
 };
 
-export const MemeEditor = ({ background }: MemeEditorProps) => {
+type AddImageButtonProps = {
+	backgroundImage: HTMLImageElement;
+	onAddImage: (image: ReturnType<typeof createEditorImage>) => void;
+};
+
+const AddImageButton = ({
+	backgroundImage,
+	onAddImage,
+}: AddImageButtonProps) => {
 	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
 
+	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		const inputClicker = imageUploadInputRef.current;
+		if (!inputClicker) {
+			throw new Error("Image upload input ref is not set");
+		}
+
+		inputClicker.click();
+	};
+
+	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (!files || files.length === 0) {
+			return;
+		}
+
+		// reset input
+		event.target.value = "";
+
+		const imageFile = files[0];
+		const imageUrl = URL.createObjectURL(imageFile);
+		try {
+			const loadedImage = await loadImage(imageUrl);
+			const middlePosition = getCanvasMiddlePosition(backgroundImage);
+			onAddImage(createEditorImage(middlePosition, loadedImage));
+		} finally {
+			URL.revokeObjectURL(imageUrl);
+		}
+	};
+
+	return (
+		<>
+			<button type="button" onClick={openImageUpload}>
+				Add image
+			</button>
+			<input
+				ref={imageUploadInputRef}
+				type="file"
+				accept="image/*"
+				onChange={(event) => void addImage(event)}
+				hidden
+			/>
+		</>
+	);
+};
+
+type AddTextboxButtonProps = {
+	backgroundImage: HTMLImageElement;
+	textStyle: TextStyle;
+	onAddTextbox: (textbox: ReturnType<typeof createTextbox>) => void;
+};
+
+const AddTextboxButton = ({
+	backgroundImage,
+	textStyle,
+	onAddTextbox,
+}: AddTextboxButtonProps) => {
+	const addTextbox = (event: MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		const middlePosition = getCanvasMiddlePosition(backgroundImage);
+		onAddTextbox(createTextbox(middlePosition, textStyle));
+	};
+
+	return (
+		<button type="button" onClick={addTextbox}>
+			Add textbox
+		</button>
+	);
+};
+
+export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const backgroundImage = useMemeEditorStore((state) => state.backgroundImage);
 	const textStyle = useMemeEditorStore((state) => state.textStyle);
 	const setBackgroundImage = useMemeEditorStore(
 		(state) => state.setBackgroundImage,
 	);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
-
-	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-		imageUploadInputRef.current?.click();
-	};
-
-	const addTextbox = (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-		if (!backgroundImage) {
-			throw new Error("Background image is not loaded");
-		}
-
-		const middlePosition = getCanvasMiddlePosition(backgroundImage);
-		addTextboxToStore(createTextbox(middlePosition, textStyle));
-	};
-
-	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
-		event.target.value = "";
-	};
+	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 
 	const downloadMeme = (event: MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
@@ -200,7 +260,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		};
 	}, [background, setBackgroundImage]);
 
-	const loading = backgroundImage === null;
+	if (!backgroundImage) {
+		return <p>Loading canvas...</p>;
+	}
 
 	return (
 		<>
@@ -215,31 +277,22 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 					<ShadowStrengthInput />
 				</div>
 				<div className="grid">
-					<button onClick={openImageUpload} disabled={loading}>
-						Add image
-					</button>
-					<button onClick={addTextbox} disabled={loading}>
-						Add textbox
-					</button>
-					<button onClick={downloadMeme} disabled={loading}>
-						Download meme
-					</button>
-					<button
-						onClick={(event) => void copyToClipboard(event)}
-						disabled={loading}
-					>
+					<AddImageButton
+						backgroundImage={backgroundImage}
+						onAddImage={addImageToStore}
+					/>
+					<AddTextboxButton
+						backgroundImage={backgroundImage}
+						textStyle={textStyle}
+						onAddTextbox={addTextboxToStore}
+					/>
+					<button onClick={downloadMeme}>Download meme</button>
+					<button onClick={(event) => void copyToClipboard(event)}>
 						Copy meme to clipboard
 					</button>
 				</div>
 			</form>
-			{backgroundImage ? <Canvas backgroundImage={backgroundImage} /> : <p>Loading canvas...</p>}
-			<input
-				ref={imageUploadInputRef}
-				type="file"
-				accept="image/*"
-				onChange={(event) => void addImage(event)}
-				hidden
-			/>
+			<Canvas backgroundImage={backgroundImage} />
 		</>
 	);
 };

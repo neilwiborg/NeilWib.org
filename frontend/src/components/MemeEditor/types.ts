@@ -16,9 +16,18 @@ export type BackgroundSource =
 	| { kind: "file"; file: File }
 	| { kind: "url"; url: string };
 
+export type KeyType = "text" | "image";
+export type NodeKey = `${KeyType}:${string}`;
+
 export type Point = {
 	x: number;
 	y: number;
+};
+
+export type EditorNode = Point & {
+	id: string;
+	rotation: number;
+	width: number;
 };
 
 export type TextAlignment = "center" | "left" | "right";
@@ -31,21 +40,44 @@ export type TextStyle = {
 	shadowBlur: number;
 };
 
-export type Textbox = Point &
+export type Textbox = EditorNode &
 	TextStyle & {
-	id: string;
-	text: string;
-	rotation: number;
-	width: number;
+		text: string;
+	};
+
+export type EditorImage = EditorNode & {
+	image: HTMLImageElement;
+	height: number;
 };
 
-export type TextboxHandlers = {
+export type EditorNodeTransform = Partial<{
+	x: EditorNode["x"];
+	y: EditorNode["y"];
+	rotation: EditorNode["rotation"];
+	width: EditorNode["width"];
+}>;
+
+export type TextboxTransform = EditorNodeTransform &
+	Partial<{
+		fontSize: Textbox["fontSize"];
+	}>;
+
+export type ImageTransform = EditorNodeTransform &
+	Partial<{
+		height: EditorImage["height"];
+	}>;
+
+export type EditorNodeHandlers = {
+	onSelect: (id: string) => void;
+	onDrag: (id: string, position: Point) => void;
+	setNodeRef: (id: string, node: Konva.Node | null) => void;
+};
+
+export type TextboxHandlers = EditorNodeHandlers & {
 	onEditTextbox: (id: string) => void;
-	onSelectTextbox: (id: string) => void;
-	onDragTextbox: (id: string, position: Point) => void;
-	onTransformTextbox: (
-		id: string,
-		transform: Pick<Textbox, "x" | "y" | "rotation" | "width" | "fontSize">,
-	) => void;
-	setTextboxRef: (id: string, node: Konva.Text | null) => void;
+	onTransformTextbox: (id: string, transform: TextboxTransform) => void;
+};
+
+export type ImageHandlers = EditorNodeHandlers & {
+	onTransformImage: (id: string, transform: ImageTransform) => void;
 };
