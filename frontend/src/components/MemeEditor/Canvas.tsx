@@ -1,5 +1,12 @@
 import type Konva from "konva";
-import { useEffect, useRef, useState } from "react";
+import type { Ref } from "react";
+import {
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from "react";
 import { Image as KonvaImage, Layer, Stage, Transformer } from "react-konva";
 import { useMemeEditorStore } from "./store";
 import {
@@ -8,16 +15,21 @@ import {
 	parseNodeKey,
 	textboxesToKonvaText,
 } from "./translation";
-import type {
-	EditorImage,
-	ImageHandlers,
-	NodeKey,
-	Textbox,
-	TextboxHandlers,
+import {
+	type EditorImage,
+	IMAGE_MIME_TYPE,
+	type ImageHandlers,
+	type NodeKey,
+	type Textbox,
+	type TextboxHandlers,
 } from "./types";
 
 type CanvasProps = {
 	backgroundImage: HTMLImageElement;
+	ref: Ref<CanvasHandle>;
+};
+export type CanvasHandle = {
+	exportBlob: () => Promise<Blob>;
 };
 
 const syncTransformerSelection = (
@@ -104,7 +116,35 @@ const setNodeRef = (
 	nodeRefs.delete(nodeKey);
 };
 
-export const Canvas = ({ backgroundImage }: CanvasProps) => {
+const exportStageImageBlob = async (
+	stage: Konva.Stage,
+	transformer: Konva.Transformer | null,
+) => {
+	const selectedNodes = transformer?.nodes() ?? [];
+	try {
+		if (transformer) {
+			transformer.nodes([]);
+			transformer.getLayer()?.batchDraw();
+		}
+
+		const exportedBlob = await stage.toBlob({
+			mimeType: IMAGE_MIME_TYPE,
+			pixelRatio: 1,
+		});
+		if (!(exportedBlob instanceof Blob)) {
+			throw new Error("Failed to export canvas as image");
+		}
+
+		return exportedBlob;
+	} finally {
+		if (transformer) {
+			transformer.nodes(selectedNodes);
+			transformer.getLayer()?.batchDraw();
+		}
+	}
+};
+
+export const Canvas = ({ backgroundImage, ref }: CanvasProps) => {
 	const textboxes = useMemeEditorStore((state) => state.textboxes);
 	const images = useMemeEditorStore((state) => state.images);
 	const setTextboxText = useMemeEditorStore((state) => state.setTextboxText);
@@ -116,8 +156,27 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 	);
 
 	const [selectedNodeKey, setSelectedNodeKey] = useState<NodeKey | null>(null);
+	const stageRef = useRef<Konva.Stage | null>(null);
 	const transformerRef = useRef<Konva.Transformer | null>(null);
 	const nodeRefs = useRef<Map<NodeKey, Konva.Node>>(new Map());
+
+	const exportBlob = useCallback<() => Promise<Blob>>(async () => {
+		const stage = stageRef.current;
+		const transformer = transformerRef.current;
+		if (!stage) {
+			throw new Error("Stage is not ready");
+		}
+
+		return exportStageImageBlob(stage, transformer);
+	}, []);
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			exportBlob,
+		}),
+		[exportBlob],
+	);
 
 	useEffect(() => {
 		syncTransformerSelection(
@@ -153,6 +212,7 @@ export const Canvas = ({ backgroundImage }: CanvasProps) => {
 
 	return (
 		<Stage
+			ref={stageRef}
 			width={backgroundImage.naturalWidth}
 			height={backgroundImage.naturalHeight}
 			onMouseDown={(event) => {

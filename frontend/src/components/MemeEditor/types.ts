@@ -11,6 +11,7 @@ export const DEFAULT_STROKE_WIDTH = 3;
 export const DEFAULT_PRIMARY_TEXT_COLOR = "#FFFFFF";
 export const DEFAULT_SECONDARY_TEXT_COLOR = "#000000";
 export const DEFAULT_SHADOW_BLUR = 30;
+export const IMAGE_MIME_TYPE = "image/png";
 
 export type BackgroundSource =
 	| { kind: "file"; file: File }

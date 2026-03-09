@@ -14,11 +14,9 @@ import {
 } from "./types";
 
 type MemeEditorStore = {
-	backgroundImage: HTMLImageElement | null;
 	textboxes: Textbox[];
 	images: EditorImage[];
 	textStyle: TextStyle;
-	setBackgroundImage: (image: HTMLImageElement) => void;
 	addTextbox: (textbox: Textbox) => void;
 	addImage: (image: EditorImage) => void;
 	setTextboxText: (id: string, text: string) => void;
@@ -62,7 +60,6 @@ const applyTextboxTransform = (
 };
 
 export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
-	backgroundImage: null,
 	textboxes: [],
 	images: [],
 	textStyle: {
@@ -72,10 +69,6 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 		strokeWidth: DEFAULT_STROKE_WIDTH,
 		shadowBlur: DEFAULT_SHADOW_BLUR,
 	},
-	setBackgroundImage: (image) =>
-		set({
-			backgroundImage: image,
-		}),
 	addTextbox: (textbox) =>
 		set((state) => ({
 			textboxes: [...state.textboxes, textbox],

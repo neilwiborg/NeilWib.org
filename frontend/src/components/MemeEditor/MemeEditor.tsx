@@ -1,5 +1,12 @@
-import { type ChangeEvent, type MouseEvent, useEffect, useRef } from "react";
-import { Canvas } from "./Canvas";
+import {
+	type ChangeEvent,
+	type MouseEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import { Canvas, type CanvasHandle } from "./Canvas";
 import { useMemeEditorStore } from "./store";
 import {
 	createEditorImage,
@@ -7,6 +14,7 @@ import {
 	getCanvasMiddlePosition,
 } from "./translation";
 import type { BackgroundSource, TextAlignment, TextStyle } from "./types";
+import { IMAGE_MIME_TYPE } from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
@@ -202,22 +210,76 @@ const AddTextboxButton = ({
 	);
 };
 
-export const MemeEditor = ({ background }: MemeEditorProps) => {
-	const backgroundImage = useMemeEditorStore((state) => state.backgroundImage);
-	const textStyle = useMemeEditorStore((state) => state.textStyle);
-	const setBackgroundImage = useMemeEditorStore(
-		(state) => state.setBackgroundImage,
+type DownloadMemeButtonProps = {
+	getMemeBlob: () => Promise<Blob>;
+};
+
+const DownloadMemeButton = ({ getMemeBlob }: DownloadMemeButtonProps) => {
+	const downloadLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+	const downloadMeme = async () => {
+		const link = downloadLinkRef.current;
+		if (!link) {
+			throw new Error("Download link is not ready");
+		}
+
+		const imageBlob = await getMemeBlob();
+		const downloadUrl = URL.createObjectURL(imageBlob);
+		link.href = downloadUrl;
+		link.download = "meme.png";
+		link.click();
+		window.requestAnimationFrame(() => {
+			URL.revokeObjectURL(downloadUrl);
+		});
+	};
+
+	return (
+		<>
+			<button type="button" onClick={downloadMeme}>
+				Download meme
+			</button>
+			{/** biome-ignore lint/a11y/useAnchorContent: not a real link */}
+			{/** biome-ignore lint/a11y/useValidAnchor: not a real link */}
+			<a ref={downloadLinkRef} hidden></a>
+		</>
 	);
+};
+
+type CopyMemeButtonProps = {
+	getMemeBlob: () => Promise<Blob>;
+};
+
+const CopyMemeButton = ({ getMemeBlob }: CopyMemeButtonProps) => {
+	const copyToClipboard = async () => {
+		const imageBlob = await getMemeBlob();
+		const clipboardItem = new window.ClipboardItem({
+			[IMAGE_MIME_TYPE]: imageBlob,
+		});
+		await window.navigator.clipboard.write([clipboardItem]);
+	};
+
+	return (
+		<button type="button" onClick={copyToClipboard}>
+			Copy meme to clipboard
+		</button>
+	);
+};
+
+export const MemeEditor = ({ background }: MemeEditorProps) => {
+	const textStyle = useMemeEditorStore((state) => state.textStyle);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
+	const [backgroundImage, setBackgroundImage] =
+		useState<HTMLImageElement | null>(null);
+	const canvasRef = useRef<CanvasHandle>(null);
 
-	const downloadMeme = (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-	};
-
-	const copyToClipboard = async (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-	};
+	const downloadBlob = useCallback(async () => {
+		const canvas = canvasRef.current;
+		if (!canvas) {
+			throw new Error("Canvas export is not ready");
+		}
+		return canvas.exportBlob();
+	}, []);
 
 	useEffect(() => {
 		const controller = new AbortController();
@@ -258,7 +320,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 				URL.revokeObjectURL(objectUrl);
 			}
 		};
-	}, [background, setBackgroundImage]);
+	}, [background]);
 
 	if (!backgroundImage) {
 		return <p>Loading canvas...</p>;
@@ -286,13 +348,11 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 						textStyle={textStyle}
 						onAddTextbox={addTextboxToStore}
 					/>
-					<button onClick={downloadMeme}>Download meme</button>
-					<button onClick={(event) => void copyToClipboard(event)}>
-						Copy meme to clipboard
-					</button>
+					<DownloadMemeButton getMemeBlob={downloadBlob} />
+					<CopyMemeButton getMemeBlob={downloadBlob} />
 				</div>
 			</form>
-			<Canvas backgroundImage={backgroundImage} />
+			<Canvas ref={canvasRef} backgroundImage={backgroundImage} />
 		</>
 	);
 };
