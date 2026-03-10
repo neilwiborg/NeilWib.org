@@ -44,8 +44,8 @@ type TextSizeInputProps = {
 };
 
 const TextSizeInput = ({ previewScale }: TextSizeInputProps) => {
-	const value = useMemeEditorStore((state) => state.textStyle.fontSize);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("fontSize"));
 	const displayValue = Math.max(1, Math.round(value * previewScale));
 
 	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -68,18 +68,14 @@ const TextSizeInput = ({ previewScale }: TextSizeInputProps) => {
 	return (
 		<label>
 			Text size
-			<input
-				type="number"
-				value={displayValue}
-				onChange={handleChange}
-			/>
+			<input type="number" value={displayValue} onChange={handleChange} />
 		</label>
 	);
 };
 
 const TextColorInput = () => {
-	const value = useMemeEditorStore((state) => state.textStyle.fill);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("fill"));
 
 	return (
 		<label>
@@ -94,8 +90,8 @@ const TextColorInput = () => {
 };
 
 const TextAlignmentInput = () => {
-	const value = useMemeEditorStore((state) => state.textStyle.textAlign);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("textAlign"));
 
 	return (
 		<label>
@@ -117,8 +113,10 @@ const TextAlignmentInput = () => {
 };
 
 const OutlineWidthInput = () => {
-	const value = useMemeEditorStore((state) => state.textStyle.strokeWidth);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) =>
+		state.getTextStyle("strokeWidth"),
+	);
 
 	return (
 		<label>
@@ -138,8 +136,8 @@ const OutlineWidthInput = () => {
 };
 
 const ShadowStrengthInput = () => {
-	const value = useMemeEditorStore((state) => state.textStyle.shadowBlur);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("shadowBlur"));
 
 	return (
 		<label>
@@ -165,20 +163,22 @@ const TextStyleScopeInput = () => {
 	);
 
 	const onToggle = (event: ChangeEvent<HTMLInputElement>) => {
-		const nextScope: TextStyleScope = event.target.checked ? "all" : "selected";
+		const nextScope: TextStyleScope = event.target.checked
+			? "global"
+			: "selected";
 		setTextStyleScope(nextScope);
 	};
 
-		return (
-			<label>
-				<input
-					type="checkbox"
-					role="switch"
-					aria-checked={value === "all"}
-					checked={value === "all"}
-					onChange={onToggle}
-				/>
-				Apply styles to all textboxes
+	return (
+		<label>
+			<input
+				type="checkbox"
+				role="switch"
+				aria-checked={value === "global"}
+				checked={value === "global"}
+				onChange={onToggle}
+			/>
+			Apply styles to all textboxes
 		</label>
 	);
 };
@@ -320,7 +320,7 @@ const CopyMemeButton = ({ getMemeBlob }: CopyMemeButtonProps) => {
 };
 
 export const MemeEditor = ({ background }: MemeEditorProps) => {
-	const textStyle = useMemeEditorStore((state) => state.textStyle);
+	const globalTextStyle = useMemeEditorStore((state) => state.globalTextStyle);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
@@ -407,7 +407,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 						/>
 						<AddTextboxButton
 							backgroundImage={backgroundImage}
-							textStyle={textStyle}
+							textStyle={globalTextStyle}
 							onAddTextbox={addTextboxToStore}
 						/>
 					</div>

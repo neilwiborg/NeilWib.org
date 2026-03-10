@@ -157,6 +157,9 @@ export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 	const setImageTransform = useMemeEditorStore(
 		(state) => state.setImageTransform,
 	);
+	const setSelectedTextboxId = useMemeEditorStore(
+		(state) => state.setSelectedTextboxId,
+	);
 
 	const [selectedNodeKey, setSelectedNodeKey] = useState<NodeKey | null>(null);
 	const stageRef = useRef<Konva.Stage | null>(null);
@@ -201,6 +204,17 @@ export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 	useEffect(() => {
 		clearStaleSelection(selectedNodeKey, textboxes, images, setSelectedNodeKey);
 	}, [selectedNodeKey, textboxes, images]);
+
+	useEffect(() => {
+		if (!selectedNodeKey) {
+			setSelectedTextboxId(null);
+			return;
+		}
+
+		const { keyType, id } = parseNodeKey(selectedNodeKey);
+		const selectedTextboxId = keyType === "text" ? id : null;
+		setSelectedTextboxId(selectedTextboxId);
+	}, [selectedNodeKey, setSelectedTextboxId]);
 
 	const textboxHandlers: TextboxHandlers = {
 		onEditTextbox: (id) => editTextbox({ textboxes, setTextboxText, id }),
