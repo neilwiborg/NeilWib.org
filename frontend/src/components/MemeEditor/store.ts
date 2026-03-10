@@ -11,12 +11,16 @@ import {
 	type Textbox,
 	type TextboxTransform,
 	type TextStyle,
+	type TextStyleScope,
 } from "./types";
 
 type MemeEditorState = {
 	textboxes: Textbox[];
 	images: EditorImage[];
-	textStyle: TextStyle;
+	textStyleScope: TextStyleScope;
+	selectedTextboxId: string | null;
+	defaultFontSize: number | null;
+	globalTextStyle: TextStyle;
 };
 
 type MemeEditorStore = MemeEditorState & {
@@ -26,58 +30,197 @@ type MemeEditorStore = MemeEditorState & {
 	setTextboxText: (id: string, text: string) => void;
 	setTextboxTransform: (id: string, transform: TextboxTransform) => void;
 	setImageTransform: (id: string, transform: ImageTransform) => void;
+	setTextStyleScope: (scope: TextStyleScope) => void;
+	setSelectedTextboxId: (id: string | null) => void;
+	setDefaultFontSize: (fontSize: number) => void;
 	setTextStyle: <K extends keyof TextStyle>(
 		field: K,
 		value: TextStyle[K],
 	) => void;
+	getTextStyle: <K extends keyof TextStyle>(field: K) => TextStyle[K];
 };
 
 const applyTextboxTransform = (
-	textboxes: Textbox[],
+	state: MemeEditorState,
 	id: string,
 	transform: TextboxTransform,
-	textStyle: TextStyle,
 ) => {
+	const textboxes = state.textboxes;
+	const globalTextStyle = state.globalTextStyle;
+	const textStyleScope = state.textStyleScope;
+
 	if (transform.fontSize === undefined) {
 		return {
 			textboxes: updateTextbox(textboxes, id, transform),
-			textStyle,
+			globalTextStyle,
 		};
 	}
 
+	// update the textbox font size
 	const roundedFontSize = Math.round(transform.fontSize);
 	const nextTextboxes = updateTextbox(textboxes, id, {
 		...transform,
 		fontSize: roundedFontSize,
 	});
 
+	// if scope is global, update all textboxes to use the same font size
+	if (textStyleScope === "global") {
+		return applyGlobalTextStyleChange(
+			{
+				...state,
+				textboxes: nextTextboxes,
+			},
+			"fontSize",
+			roundedFontSize,
+		);
+	}
+
 	return {
-		textboxes: nextTextboxes.map((textbox) => ({
-			...textbox,
-			fontSize: roundedFontSize,
-		})),
-		textStyle: {
-			...textStyle,
-			fontSize: roundedFontSize,
-		},
+		textboxes: nextTextboxes,
+		globalTextStyle,
 	};
 };
 
-const createInitialState = (): MemeEditorState => ({
-	textboxes: [],
-	images: [],
-	textStyle: {
-		fontSize: DEFAULT_FONT_SIZE,
-		fill: DEFAULT_PRIMARY_TEXT_COLOR,
-		textAlign: DEFAULT_TEXT_ALIGNMENT,
-		strokeWidth: DEFAULT_STROKE_WIDTH,
-		shadowBlur: DEFAULT_SHADOW_BLUR,
-	},
+const toTextStyle = (textbox: Textbox): TextStyle => ({
+	fontSize: textbox.fontSize,
+	fill: textbox.fill,
+	textAlign: textbox.textAlign,
+	strokeWidth: textbox.strokeWidth,
+	shadowBlur: textbox.shadowBlur,
 });
 
-export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
+const getSelectedTextbox = (state: MemeEditorState) => {
+	if (!state.selectedTextboxId) {
+		return null;
+	}
+
+	const textbox = state.textboxes.find(
+		(textbox) => textbox.id === state.selectedTextboxId,
+	);
+	return textbox || null;
+};
+
+const getTextStyleValue = <K extends keyof TextStyle>(
+	state: MemeEditorState,
+	field: K,
+): TextStyle[K] => {
+	if (state.textStyleScope === "selected") {
+		const selectedTextbox = getSelectedTextbox(state);
+		if (selectedTextbox) {
+			return selectedTextbox[field];
+		}
+	}
+
+	return state.globalTextStyle[field];
+};
+
+const applyGlobalTextStyleChange = <K extends keyof TextStyle>(
+	state: MemeEditorState,
+	field: K,
+	value: TextStyle[K],
+): Pick<MemeEditorState, "textboxes" | "globalTextStyle"> => {
+	const textboxes = state.textboxes.map((textbox) => ({
+		...textbox,
+		[field]: value,
+	}));
+
+	const globalTextStyle = {
+		...state.globalTextStyle,
+		[field]: value,
+	};
+
+	return {
+		textboxes,
+		globalTextStyle,
+	};
+};
+
+const applyTextStyleChange = <K extends keyof TextStyle>(
+	state: MemeEditorState,
+	field: K,
+	value: TextStyle[K],
+) => {
+	let textboxes = state.textboxes;
+
+	// update all textboxes
+	if (state.textStyleScope === "global") {
+		return applyGlobalTextStyleChange(state, field, value);
+		// update just the selected textbox
+	} else if (state.selectedTextboxId) {
+		textboxes = updateTextbox(textboxes, state.selectedTextboxId, {
+			[field]: value,
+		});
+	}
+
+	return {
+		textboxes,
+	};
+};
+
+const applyTextStyleScopeChange = (
+	state: MemeEditorState,
+	newScope: TextStyleScope,
+) => {
+	// short-circuit if scope isn't changing
+	if (newScope === state.textStyleScope) {
+		return { textStyleScope: newScope };
+	}
+
+	// if switching scope to selected, reset global text style to default
+	if (newScope === "selected") {
+		const defaultTextStyle = createDefaultTextStyle(state.defaultFontSize);
+		return {
+			textStyleScope: newScope,
+			globalTextStyle: defaultTextStyle,
+		};
+	}
+
+	// short-circuit if switching scope to global and no textboxes exist
+	if (state.textboxes.length === 0) {
+		return { textStyleScope: newScope };
+	}
+
+	// if switching scope to global, update all textboxes to use the same style as the first textbox
+	const firstTextbox = state.textboxes[0];
+	const nextTextStyle = toTextStyle(firstTextbox);
+	const textboxes = state.textboxes.map((textbox) => ({
+		...textbox,
+		...nextTextStyle,
+	}));
+
+	// update scope, set global text style to match the first textbox, and update all textboxes
+	return {
+		textStyleScope: newScope,
+		globalTextStyle: nextTextStyle,
+		textboxes,
+	};
+};
+
+const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
+	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
+	fill: DEFAULT_PRIMARY_TEXT_COLOR,
+	textAlign: DEFAULT_TEXT_ALIGNMENT,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
+	shadowBlur: DEFAULT_SHADOW_BLUR,
+});
+
+const createInitialState = (
+	defaultFontSize: number | null = null,
+): MemeEditorState => ({
+	textboxes: [],
+	images: [],
+	textStyleScope: "global",
+	selectedTextboxId: null,
+	defaultFontSize,
+	globalTextStyle: createDefaultTextStyle(defaultFontSize),
+});
+
+export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 	...createInitialState(),
-	resetEditor: () => set(createInitialState()),
+	resetEditor: () =>
+		set((state) =>
+			createInitialState(state.defaultFontSize ?? DEFAULT_FONT_SIZE),
+		),
 	addTextbox: (textbox) =>
 		set((state) => ({
 			textboxes: [...state.textboxes, textbox],
@@ -92,17 +235,7 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 		})),
 	setTextboxTransform: (id, transform) =>
 		set((state) => {
-			const result = applyTextboxTransform(
-				state.textboxes,
-				id,
-				transform,
-				state.textStyle,
-			);
-
-			return {
-				textboxes: result.textboxes,
-				textStyle: result.textStyle,
-			};
+			return applyTextboxTransform(state, id, transform);
 		}),
 	setImageTransform: (id, transform) =>
 		set((state) => ({
@@ -115,15 +248,18 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 					: image,
 			),
 		})),
-	setTextStyle: (field, value) =>
-		set((state) => ({
-			textStyle: {
-				...state.textStyle,
-				[field]: value,
-			},
-			textboxes: state.textboxes.map((textbox) => ({
-				...textbox,
-				[field]: value,
-			})),
+	setTextStyleScope: (scope) =>
+		set((state) => applyTextStyleScopeChange(state, scope)),
+	setSelectedTextboxId: (id) =>
+		set(() => ({
+			selectedTextboxId: id,
 		})),
+	setDefaultFontSize: (fontSize) =>
+		set(() => ({
+			defaultFontSize: fontSize,
+			globalTextStyle: createDefaultTextStyle(fontSize),
+		})),
+	setTextStyle: (field, value) =>
+		set((state) => applyTextStyleChange(state, field, value)),
+	getTextStyle: (field) => getTextStyleValue(get(), field),
 }));

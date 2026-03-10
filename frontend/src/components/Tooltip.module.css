@@ -1,0 +1,3 @@
+.root[data-tooltip]:not(a, button, input) {
+	border-bottom: 0;
+}

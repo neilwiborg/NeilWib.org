@@ -34,6 +34,7 @@ export type EditorNode = Point & {
 	width: number;
 };
 
+export type TextStyleScope = "global" | "selected";
 export type TextAlignment = "center" | "left" | "right";
 
 export type TextStyle = {
