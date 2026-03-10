@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { parseNodeKey } from "./translation";
 import { updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
@@ -8,6 +9,7 @@ import {
 	DEFAULT_TEXT_ALIGNMENT,
 	type EditorImage,
 	type ImageTransform,
+	type NodeKey,
 	type Textbox,
 	type TextboxTransform,
 	type TextStyle,
@@ -18,7 +20,7 @@ type MemeEditorState = {
 	textboxes: Textbox[];
 	images: EditorImage[];
 	textStyleScope: TextStyleScope;
-	selectedTextboxId: string | null;
+	selectedNodeKey: NodeKey | null;
 	defaultFontSize: number | null;
 	globalTextStyle: TextStyle;
 };
@@ -31,7 +33,8 @@ type MemeEditorStore = MemeEditorState & {
 	setTextboxTransform: (id: string, transform: TextboxTransform) => void;
 	setImageTransform: (id: string, transform: ImageTransform) => void;
 	setTextStyleScope: (scope: TextStyleScope) => void;
-	setSelectedTextboxId: (id: string | null) => void;
+	setSelectedNodeKey: (nodeKey: NodeKey | null) => void;
+	deleteSelectedNode: () => void;
 	setDefaultFontSize: (fontSize: number) => void;
 	setTextStyle: <K extends keyof TextStyle>(
 		field: K,
@@ -90,13 +93,16 @@ const toTextStyle = (textbox: Textbox): TextStyle => ({
 });
 
 const getSelectedTextbox = (state: MemeEditorState) => {
-	if (!state.selectedTextboxId) {
+	if (!state.selectedNodeKey) {
 		return null;
 	}
 
-	const textbox = state.textboxes.find(
-		(textbox) => textbox.id === state.selectedTextboxId,
-	);
+	const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+	if (keyType !== "text") {
+		return null;
+	}
+
+	const textbox = state.textboxes.find((item) => item.id === id);
 	return textbox || null;
 };
 
@@ -146,12 +152,16 @@ const applyTextStyleChange = <K extends keyof TextStyle>(
 	if (state.textStyleScope === "global") {
 		return applyGlobalTextStyleChange(state, field, value);
 		// update just the selected textbox
-	} else if (state.selectedTextboxId) {
-		textboxes = updateTextbox(textboxes, state.selectedTextboxId, {
+	} else if (state.selectedNodeKey !== null) {
+		const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+		if (keyType !== "text") {
+			throw new Error("cannot set text style when non-textbox node is selected")
+		}
+
+		textboxes = updateTextbox(textboxes, id, {
 			[field]: value,
 		});
 	}
-
 	return {
 		textboxes,
 	};
@@ -196,6 +206,27 @@ const applyTextStyleScopeChange = (
 	};
 };
 
+const applySelectedNodeDeletion = (
+	state: MemeEditorState,
+): Partial<MemeEditorState> => {
+	if (!state.selectedNodeKey) {
+		return state;
+	}
+
+	const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+	if (keyType === "text") {
+		return {
+			textboxes: state.textboxes.filter((textbox) => textbox.id !== id),
+			selectedNodeKey: null,
+		};
+	}
+
+	return {
+		images: state.images.filter((image) => image.id !== id),
+		selectedNodeKey: null,
+	};
+};
+
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
 	fill: DEFAULT_PRIMARY_TEXT_COLOR,
@@ -210,7 +241,7 @@ const createInitialState = (
 	textboxes: [],
 	images: [],
 	textStyleScope: "global",
-	selectedTextboxId: null,
+	selectedNodeKey: null,
 	defaultFontSize,
 	globalTextStyle: createDefaultTextStyle(defaultFontSize),
 });
@@ -250,10 +281,11 @@ export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 		})),
 	setTextStyleScope: (scope) =>
 		set((state) => applyTextStyleScopeChange(state, scope)),
-	setSelectedTextboxId: (id) =>
+	setSelectedNodeKey: (nodeKey) =>
 		set(() => ({
-			selectedTextboxId: id,
+			selectedNodeKey: nodeKey,
 		})),
+	deleteSelectedNode: () => set((state) => applySelectedNodeDeletion(state)),
 	setDefaultFontSize: (fontSize) =>
 		set(() => ({
 			defaultFontSize: fontSize,

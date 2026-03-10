@@ -5,7 +5,6 @@ import {
 	useEffect,
 	useImperativeHandle,
 	useRef,
-	useState,
 } from "react";
 import { Image as KonvaImage, Layer, Stage, Transformer } from "react-konva";
 import { useMemeEditorStore } from "./store";
@@ -157,11 +156,10 @@ export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 	const setImageTransform = useMemeEditorStore(
 		(state) => state.setImageTransform,
 	);
-	const setSelectedTextboxId = useMemeEditorStore(
-		(state) => state.setSelectedTextboxId,
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
+	const setSelectedNodeKey = useMemeEditorStore(
+		(state) => state.setSelectedNodeKey,
 	);
-
-	const [selectedNodeKey, setSelectedNodeKey] = useState<NodeKey | null>(null);
 	const stageRef = useRef<Konva.Stage | null>(null);
 	const transformerRef = useRef<Konva.Transformer | null>(null);
 	const nodeRefs = useRef<Map<NodeKey, Konva.Node>>(new Map());
@@ -203,18 +201,7 @@ export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 
 	useEffect(() => {
 		clearStaleSelection(selectedNodeKey, textboxes, images, setSelectedNodeKey);
-	}, [selectedNodeKey, textboxes, images]);
-
-	useEffect(() => {
-		if (!selectedNodeKey) {
-			setSelectedTextboxId(null);
-			return;
-		}
-
-		const { keyType, id } = parseNodeKey(selectedNodeKey);
-		const selectedTextboxId = keyType === "text" ? id : null;
-		setSelectedTextboxId(selectedTextboxId);
-	}, [selectedNodeKey, setSelectedTextboxId]);
+	}, [selectedNodeKey, textboxes, images, setSelectedNodeKey]);
 
 	const textboxHandlers: TextboxHandlers = {
 		onEditTextbox: (id) => editTextbox({ textboxes, setTextboxText, id }),

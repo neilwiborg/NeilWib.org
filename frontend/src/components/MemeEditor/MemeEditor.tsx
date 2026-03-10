@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Tooltip } from "../Tooltip";
 import { Canvas, type CanvasHandle } from "./Canvas";
+import styles from "./MemeEditor.module.css";
 import { useMemeEditorStore } from "./store";
 import {
 	createEditorImage,
@@ -16,9 +17,11 @@ import {
 	getCanvasMiddlePosition,
 	getDefaultFontSize,
 	getPreviewScale,
+	parseNodeKey,
 } from "./translation";
 import type {
 	BackgroundSource,
+	NodeKey,
 	TextAlignment,
 	TextStyle,
 	TextStyleScope,
@@ -40,15 +43,149 @@ const loadImage = (url: string) => {
 	});
 };
 
-const getDeactivatedReason = (
+const getTextInputDeactivatedReason = (
 	textStyleScope: TextStyleScope,
-	selectedTextboxId: string | null,
+	selectedNodeKey: NodeKey | null,
 ) => {
-	if (textStyleScope === "selected" && selectedTextboxId === null) {
+	if (textStyleScope !== "selected") {
+		return "";
+	}
+
+	if (selectedNodeKey == null) {
+		return "No textbox selected";
+	}
+
+	const { keyType } = parseNodeKey(selectedNodeKey);
+	if (keyType !== "text") {
 		return "No textbox selected";
 	}
 
 	return "";
+};
+
+const getDeleteButtonDeactivatedReason = (selectedNodeKey: NodeKey | null) => {
+	if (selectedNodeKey == null) {
+		return "No selection";
+	}
+
+	return "";
+};
+
+type AddImageButtonProps = {
+	backgroundImage: HTMLImageElement;
+	onAddImage: (image: ReturnType<typeof createEditorImage>) => void;
+};
+
+const AddImageButton = ({
+	backgroundImage,
+	onAddImage,
+}: AddImageButtonProps) => {
+	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
+
+	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		const inputClicker = imageUploadInputRef.current;
+		if (!inputClicker) {
+			throw new Error("Image upload input ref is not set");
+		}
+
+		inputClicker.click();
+	};
+
+	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (!files || files.length === 0) {
+			return;
+		}
+
+		// reset input
+		event.target.value = "";
+
+		const imageFile = files[0];
+		const imageUrl = URL.createObjectURL(imageFile);
+		try {
+			const loadedImage = await loadImage(imageUrl);
+			const middlePosition = getCanvasMiddlePosition(backgroundImage);
+			onAddImage(createEditorImage(middlePosition, loadedImage));
+		} finally {
+			URL.revokeObjectURL(imageUrl);
+		}
+	};
+
+	return (
+		<>
+			<button type="button" onClick={openImageUpload}>
+				Add image
+			</button>
+			<input
+				ref={imageUploadInputRef}
+				type="file"
+				accept="image/*"
+				onChange={(event) => void addImage(event)}
+				hidden
+			/>
+		</>
+	);
+};
+
+type AddTextboxButtonProps = {
+	backgroundImage: HTMLImageElement;
+	textStyle: TextStyle;
+	onAddTextbox: (textbox: ReturnType<typeof createTextbox>) => void;
+};
+
+const AddTextboxButton = ({
+	backgroundImage,
+	textStyle,
+	onAddTextbox,
+}: AddTextboxButtonProps) => {
+	const addTextbox = (event: MouseEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		const middlePosition = getCanvasMiddlePosition(backgroundImage);
+		onAddTextbox(createTextbox(middlePosition, textStyle));
+	};
+
+	return (
+		<button type="button" onClick={addTextbox}>
+			Add textbox
+		</button>
+	);
+};
+
+const TextStyleScopeInput = () => {
+	const value = useMemeEditorStore((state) => state.textStyleScope);
+	const setTextStyleScope = useMemeEditorStore(
+		(state) => state.setTextStyleScope,
+	);
+
+	const onChange = (event: ChangeEvent<HTMLInputElement>) => {
+		const nextScope = event.target.value as TextStyleScope;
+		setTextStyleScope(nextScope);
+	};
+
+	return (
+		<fieldset>
+			<legend>Apply text styles to</legend>
+			<input
+				type="radio"
+				id="text-style-scope-global"
+				name="text-style-scope"
+				value="global"
+				checked={value === "global"}
+				onChange={onChange}
+			/>
+			<label htmlFor="text-style-scope-global">All</label>
+			<input
+				type="radio"
+				id="text-style-scope-selected"
+				name="text-style-scope"
+				value="selected"
+				checked={value === "selected"}
+				onChange={onChange}
+			/>
+			<label htmlFor="text-style-scope-selected">Selected</label>
+		</fieldset>
+	);
 };
 
 type TextSizeInputProps = {
@@ -212,120 +349,36 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 	);
 };
 
-const TextStyleScopeInput = () => {
-	const value = useMemeEditorStore((state) => state.textStyleScope);
-	const setTextStyleScope = useMemeEditorStore(
-		(state) => state.setTextStyleScope,
+const DeleteSelectionButton = () => {
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
+	const deleteSelectedNode = useMemeEditorStore(
+		(state) => state.deleteSelectedNode,
 	);
+	const disabled = selectedNodeKey === null;
 
-	const onChange = (event: ChangeEvent<HTMLInputElement>) => {
-		const nextScope = event.target.value as TextStyleScope;
-		setTextStyleScope(nextScope);
-	};
+	return (
+		<Tooltip
+			message={getDeleteButtonDeactivatedReason(selectedNodeKey)}
+			active={disabled}
+		>
+				<button
+					type="button"
+					onClick={deleteSelectedNode}
+					disabled={disabled}
+					className={styles.dangerButton}
+				>
+					Delete Selection
+				</button>
+		</Tooltip>
+	);
+};
 
+const SelectionActions = () => {
 	return (
 		<fieldset>
-			<legend>Apply text styles to</legend>
-			<input
-				type="radio"
-				id="text-style-scope-global"
-				name="text-style-scope"
-				value="global"
-				checked={value === "global"}
-				onChange={onChange}
-			/>
-			<label htmlFor="text-style-scope-global">All</label>
-			<input
-				type="radio"
-				id="text-style-scope-selected"
-				name="text-style-scope"
-				value="selected"
-				checked={value === "selected"}
-				onChange={onChange}
-			/>
-			<label htmlFor="text-style-scope-selected">Selected</label>
+			<legend>Selection Actions</legend>
+			<DeleteSelectionButton />
 		</fieldset>
-	);
-};
-
-type AddImageButtonProps = {
-	backgroundImage: HTMLImageElement;
-	onAddImage: (image: ReturnType<typeof createEditorImage>) => void;
-};
-
-const AddImageButton = ({
-	backgroundImage,
-	onAddImage,
-}: AddImageButtonProps) => {
-	const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
-
-	const openImageUpload = (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-		const inputClicker = imageUploadInputRef.current;
-		if (!inputClicker) {
-			throw new Error("Image upload input ref is not set");
-		}
-
-		inputClicker.click();
-	};
-
-	const addImage = async (event: ChangeEvent<HTMLInputElement>) => {
-		const files = event.target.files;
-		if (!files || files.length === 0) {
-			return;
-		}
-
-		// reset input
-		event.target.value = "";
-
-		const imageFile = files[0];
-		const imageUrl = URL.createObjectURL(imageFile);
-		try {
-			const loadedImage = await loadImage(imageUrl);
-			const middlePosition = getCanvasMiddlePosition(backgroundImage);
-			onAddImage(createEditorImage(middlePosition, loadedImage));
-		} finally {
-			URL.revokeObjectURL(imageUrl);
-		}
-	};
-
-	return (
-		<>
-			<button type="button" onClick={openImageUpload}>
-				Add image
-			</button>
-			<input
-				ref={imageUploadInputRef}
-				type="file"
-				accept="image/*"
-				onChange={(event) => void addImage(event)}
-				hidden
-			/>
-		</>
-	);
-};
-
-type AddTextboxButtonProps = {
-	backgroundImage: HTMLImageElement;
-	textStyle: TextStyle;
-	onAddTextbox: (textbox: ReturnType<typeof createTextbox>) => void;
-};
-
-const AddTextboxButton = ({
-	backgroundImage,
-	textStyle,
-	onAddTextbox,
-}: AddTextboxButtonProps) => {
-	const addTextbox = (event: MouseEvent<HTMLButtonElement>) => {
-		event.preventDefault();
-		const middlePosition = getCanvasMiddlePosition(backgroundImage);
-		onAddTextbox(createTextbox(middlePosition, textStyle));
-	};
-
-	return (
-		<button type="button" onClick={addTextbox}>
-			Add textbox
-		</button>
 	);
 };
 
@@ -387,9 +440,7 @@ const CopyMemeButton = ({ getMemeBlob }: CopyMemeButtonProps) => {
 export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const globalTextStyle = useMemeEditorStore((state) => state.globalTextStyle);
 	const textStyleScope = useMemeEditorStore((state) => state.textStyleScope);
-	const selectedTextboxId = useMemeEditorStore(
-		(state) => state.selectedTextboxId,
-	);
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
@@ -457,9 +508,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		}
 		return getPreviewScale(backgroundImage);
 	}, [backgroundImage]);
-	const disabledReason = getDeactivatedReason(
+	const disabledReason = getTextInputDeactivatedReason(
 		textStyleScope,
-		selectedTextboxId,
+		selectedNodeKey,
 	);
 
 	useEffect(() => {
@@ -506,13 +557,14 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 							<TextColorInput disabledReason={disabledReason} />
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
-						<div className="grid">
-							<OutlineWidthInput disabledReason={disabledReason} />
-							<ShadowStrengthInput disabledReason={disabledReason} />
+							<div className="grid">
+								<OutlineWidthInput disabledReason={disabledReason} />
+								<ShadowStrengthInput disabledReason={disabledReason} />
+							</div>
+							<SelectionActions />
 						</div>
 					</div>
-				</div>
-			</form>
+				</form>
 			<div className="grid">
 				<DownloadMemeButton getMemeBlob={downloadBlob} />
 				<CopyMemeButton getMemeBlob={downloadBlob} />
