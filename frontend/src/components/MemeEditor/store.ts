@@ -11,12 +11,14 @@ import {
 	type Textbox,
 	type TextboxTransform,
 	type TextStyle,
+	type TextStyleScope,
 } from "./types";
 
 type MemeEditorState = {
 	textboxes: Textbox[];
 	images: EditorImage[];
 	textStyle: TextStyle;
+	textStyleScope: TextStyleScope;
 };
 
 type MemeEditorStore = MemeEditorState & {
@@ -30,6 +32,7 @@ type MemeEditorStore = MemeEditorState & {
 		field: K,
 		value: TextStyle[K],
 	) => void;
+	setTextStyleScope: (scope: TextStyleScope) => void;
 };
 
 const applyTextboxTransform = (
@@ -73,6 +76,7 @@ const createInitialState = (): MemeEditorState => ({
 		strokeWidth: DEFAULT_STROKE_WIDTH,
 		shadowBlur: DEFAULT_SHADOW_BLUR,
 	},
+	textStyleScope: "all",
 });
 
 export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
@@ -125,5 +129,9 @@ export const useMemeEditorStore = create<MemeEditorStore>((set) => ({
 				...textbox,
 				[field]: value,
 			})),
+		})),
+	setTextStyleScope: (scope) =>
+		set(() => ({
+			textStyleScope: scope,
 		})),
 }));

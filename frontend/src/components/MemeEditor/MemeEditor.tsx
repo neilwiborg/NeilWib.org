@@ -16,7 +16,12 @@ import {
 	getDefaultFontSize,
 	getPreviewScale,
 } from "./translation";
-import type { BackgroundSource, TextAlignment, TextStyle } from "./types";
+import type {
+	BackgroundSource,
+	TextAlignment,
+	TextStyle,
+	TextStyleScope,
+} from "./types";
 import { IMAGE_MIME_TYPE } from "./types";
 
 export type MemeEditorProps = {
@@ -149,6 +154,31 @@ const ShadowStrengthInput = () => {
 					setTextStyle("shadowBlur", Number(event.target.value))
 				}
 			/>
+		</label>
+	);
+};
+
+const TextStyleScopeInput = () => {
+	const value = useMemeEditorStore((state) => state.textStyleScope);
+	const setTextStyleScope = useMemeEditorStore(
+		(state) => state.setTextStyleScope,
+	);
+
+	const onToggle = (event: ChangeEvent<HTMLInputElement>) => {
+		const nextScope: TextStyleScope = event.target.checked ? "all" : "selected";
+		setTextStyleScope(nextScope);
+	};
+
+		return (
+			<label>
+				<input
+					type="checkbox"
+					role="switch"
+					aria-checked={value === "all"}
+					checked={value === "all"}
+					onChange={onToggle}
+				/>
+				Apply styles to all textboxes
 		</label>
 	);
 };
@@ -392,6 +422,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 						/>
 					</div>
 					<div>
+						<TextStyleScopeInput />
 						<div className="grid">
 							<TextSizeInput previewScale={previewScale} />
 							<TextColorInput />
