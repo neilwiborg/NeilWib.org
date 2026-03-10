@@ -24,14 +24,6 @@ import {
 	type TextboxHandlers,
 } from "./types";
 
-type CanvasProps = {
-	backgroundImage: HTMLImageElement;
-	ref: Ref<CanvasHandle>;
-};
-export type CanvasHandle = {
-	exportBlob: () => Promise<Blob>;
-};
-
 const syncTransformerSelection = (
 	transformer: Konva.Transformer | null,
 	selectedNodeKey: NodeKey | null,
@@ -119,6 +111,7 @@ const setNodeRef = (
 const exportStageImageBlob = async (
 	stage: Konva.Stage,
 	transformer: Konva.Transformer | null,
+	exportPixelRatio: number,
 ) => {
 	const selectedNodes = transformer?.nodes() ?? [];
 	try {
@@ -129,7 +122,7 @@ const exportStageImageBlob = async (
 
 		const exportedBlob = await stage.toBlob({
 			mimeType: IMAGE_MIME_TYPE,
-			pixelRatio: 1,
+			pixelRatio: exportPixelRatio,
 		});
 		if (!(exportedBlob instanceof Blob)) {
 			throw new Error("Failed to export canvas as image");
@@ -144,7 +137,17 @@ const exportStageImageBlob = async (
 	}
 };
 
-export const Canvas = ({ backgroundImage, ref }: CanvasProps) => {
+export type CanvasHandle = {
+	exportBlob: () => Promise<Blob>;
+};
+
+export type CanvasProps = {
+	backgroundImage: HTMLImageElement;
+	previewScale: number;
+	ref: Ref<CanvasHandle>;
+};
+
+export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 	const textboxes = useMemeEditorStore((state) => state.textboxes);
 	const images = useMemeEditorStore((state) => state.images);
 	const setTextboxText = useMemeEditorStore((state) => state.setTextboxText);
@@ -159,6 +162,15 @@ export const Canvas = ({ backgroundImage, ref }: CanvasProps) => {
 	const stageRef = useRef<Konva.Stage | null>(null);
 	const transformerRef = useRef<Konva.Transformer | null>(null);
 	const nodeRefs = useRef<Map<NodeKey, Konva.Node>>(new Map());
+	const exportPixelRatio = 1 / previewScale;
+	const stageWidth = Math.max(
+		1,
+		Math.round(backgroundImage.naturalWidth * previewScale),
+	);
+	const stageHeight = Math.max(
+		1,
+		Math.round(backgroundImage.naturalHeight * previewScale),
+	);
 
 	const exportBlob = useCallback<() => Promise<Blob>>(async () => {
 		const stage = stageRef.current;
@@ -167,8 +179,8 @@ export const Canvas = ({ backgroundImage, ref }: CanvasProps) => {
 			throw new Error("Stage is not ready");
 		}
 
-		return exportStageImageBlob(stage, transformer);
-	}, []);
+		return exportStageImageBlob(stage, transformer, exportPixelRatio);
+	}, [exportPixelRatio]);
 
 	useImperativeHandle(
 		ref,
@@ -213,8 +225,10 @@ export const Canvas = ({ backgroundImage, ref }: CanvasProps) => {
 	return (
 		<Stage
 			ref={stageRef}
-			width={backgroundImage.naturalWidth}
-			height={backgroundImage.naturalHeight}
+			width={stageWidth}
+			height={stageHeight}
+			scaleX={previewScale}
+			scaleY={previewScale}
 			onMouseDown={(event) => {
 				if (isStageBackgroundClick(event)) {
 					setSelectedNodeKey(null);

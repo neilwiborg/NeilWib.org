@@ -3,12 +3,15 @@ import type { JSX } from "react";
 import { Image as KonvaImage, Text } from "react-konva";
 import { randomID } from "../../util/util";
 import {
+	DEFAULT_DISPLAY_FONT_SIZE,
 	DEFAULT_FONT_FAMILY,
 	DEFAULT_ROTATION,
 	DEFAULT_SECONDARY_TEXT_COLOR,
 	DEFAULT_TEXT,
 	DEFAULT_X_OFFSET,
 	DEFAULT_Y_OFFSET,
+	EDITOR_PREVIEW_MAX_HEIGHT,
+	EDITOR_PREVIEW_MAX_WIDTH,
 	type EditorImage,
 	type ImageHandlers,
 	type KeyType,
@@ -25,6 +28,16 @@ const MIN_FONT_SIZE = 8;
 const MIN_IMAGE_WIDTH = 20;
 const MIN_IMAGE_HEIGHT = 20;
 const DEFAULT_IMAGE_SCALE = 0.25;
+
+export const getPreviewScale = (backgroundImage: HTMLImageElement) => {
+	const widthScale = EDITOR_PREVIEW_MAX_WIDTH / backgroundImage.naturalWidth;
+	const heightScale = EDITOR_PREVIEW_MAX_HEIGHT / backgroundImage.naturalHeight;
+	return Math.min(widthScale, heightScale, 1);
+};
+
+export const getDefaultFontSize = (previewScale: number) => {
+	return Math.max(1, Math.round(DEFAULT_DISPLAY_FONT_SIZE / previewScale));
+};
 
 export const createNodeKey = (keyType: KeyType, id: string): NodeKey =>
 	`${keyType}:${id}`;

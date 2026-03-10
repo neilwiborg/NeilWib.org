@@ -1,5 +1,8 @@
 import type Konva from "konva";
 
+export const EDITOR_PREVIEW_MAX_WIDTH = 525;
+export const EDITOR_PREVIEW_MAX_HEIGHT = 550;
+export const DEFAULT_DISPLAY_FONT_SIZE = 50;
 export const DEFAULT_TEXT = "Enter text";
 export const DEFAULT_X_OFFSET = -100;
 export const DEFAULT_Y_OFFSET = 0;
