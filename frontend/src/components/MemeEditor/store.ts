@@ -204,7 +204,9 @@ const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	shadowBlur: DEFAULT_SHADOW_BLUR,
 });
 
-const createInitialState = (defaultFontSize: number | null = null): MemeEditorState => ({
+const createInitialState = (
+	defaultFontSize: number | null = null,
+): MemeEditorState => ({
 	textboxes: [],
 	images: [],
 	textStyleScope: "global",

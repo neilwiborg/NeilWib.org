@@ -7,6 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { Tooltip } from "../Tooltip";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import { useMemeEditorStore } from "./store";
 import {
@@ -39,14 +40,30 @@ const loadImage = (url: string) => {
 	});
 };
 
-type TextSizeInputProps = {
-	previewScale: number;
+const getDeactivatedReason = (
+	textStyleScope: TextStyleScope,
+	selectedTextboxId: string | null,
+) => {
+	if (textStyleScope === "selected" && selectedTextboxId === null) {
+		return "No textbox selected";
+	}
+
+	return "";
 };
 
-const TextSizeInput = ({ previewScale }: TextSizeInputProps) => {
+type TextSizeInputProps = {
+	previewScale: number;
+	disabledReason: string;
+};
+
+const TextSizeInput = ({
+	previewScale,
+	disabledReason,
+}: TextSizeInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("fontSize"));
 	const displayValue = Math.max(1, Math.round(value * previewScale));
+	const disabled = disabledReason !== "";
 
 	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
 		// round text size to nearest int
@@ -66,93 +83,132 @@ const TextSizeInput = ({ previewScale }: TextSizeInputProps) => {
 	};
 
 	return (
-		<label>
-			Text size
-			<input type="number" value={displayValue} onChange={handleChange} />
-		</label>
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Text size
+				<input
+					type="number"
+					value={displayValue}
+					onChange={handleChange}
+					disabled={disabled}
+				/>
+			</label>
+		</Tooltip>
 	);
 };
 
-const TextColorInput = () => {
+type TextColorInputProps = {
+	disabledReason: string;
+};
+
+const TextColorInput = ({ disabledReason }: TextColorInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("fill"));
+	const disabled = disabledReason !== "";
 
 	return (
-		<label>
-			Text color
-			<input
-				type="color"
-				value={value}
-				onChange={(event) => setTextStyle("fill", event.target.value)}
-			/>
-		</label>
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Text color
+				<input
+					type="color"
+					value={value}
+					onChange={(event) => setTextStyle("fill", event.target.value)}
+					disabled={disabled}
+				/>
+			</label>
+		</Tooltip>
 	);
 };
 
-const TextAlignmentInput = () => {
+type TextAlignmentInputProps = {
+	disabledReason: string;
+};
+
+const TextAlignmentInput = ({ disabledReason }: TextAlignmentInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("textAlign"));
+	const disabled = disabledReason !== "";
 
 	return (
-		<label>
-			Text alignment
-			<select
-				value={value}
-				onChange={(event) =>
-					setTextStyle("textAlign", event.target.value as TextAlignment)
-				}
-			>
-				{textAlignments.map((alignment) => (
-					<option value={alignment} key={alignment}>
-						{alignment}
-					</option>
-				))}
-			</select>
-		</label>
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Text alignment
+				<select
+					value={value}
+					onChange={(event) =>
+						setTextStyle("textAlign", event.target.value as TextAlignment)
+					}
+					disabled={disabled}
+				>
+					{textAlignments.map((alignment) => (
+						<option value={alignment} key={alignment}>
+							{alignment}
+						</option>
+					))}
+				</select>
+			</label>
+		</Tooltip>
 	);
 };
 
-const OutlineWidthInput = () => {
+type OutlineWidthInputProps = {
+	disabledReason: string;
+};
+
+const OutlineWidthInput = ({ disabledReason }: OutlineWidthInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) =>
 		state.getTextStyle("strokeWidth"),
 	);
+	const disabled = disabledReason !== "";
 
 	return (
-		<label>
-			Outline width: {value}
-			<input
-				type="range"
-				min="0.5"
-				max="10"
-				step="0.5"
-				value={value}
-				onChange={(event) =>
-					setTextStyle("strokeWidth", Number(event.target.value))
-				}
-			/>
-		</label>
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Outline width: {value}
+				<input
+					type="range"
+					min="0.5"
+					max="10"
+					step="0.5"
+					value={value}
+					onChange={(event) =>
+						setTextStyle("strokeWidth", Number(event.target.value))
+					}
+					disabled={disabled}
+				/>
+			</label>
+		</Tooltip>
 	);
 };
 
-const ShadowStrengthInput = () => {
+type ShadowStrengthInputProps = {
+	disabledReason: string;
+};
+
+const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("shadowBlur"));
+	const disabled = disabledReason !== "";
 
 	return (
-		<label>
-			Shadow strength: {value}
-			<input
-				type="range"
-				min="0"
-				max="50"
-				step="1"
-				value={value}
-				onChange={(event) =>
-					setTextStyle("shadowBlur", Number(event.target.value))
-				}
-			/>
-		</label>
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Shadow strength: {value}
+				<input
+					type="range"
+					min="0"
+					max="50"
+					step="1"
+					value={value}
+					onChange={(event) =>
+						setTextStyle("shadowBlur", Number(event.target.value))
+					}
+					disabled={disabled}
+				/>
+			</label>
+		</Tooltip>
 	);
 };
 
@@ -330,6 +386,10 @@ const CopyMemeButton = ({ getMemeBlob }: CopyMemeButtonProps) => {
 
 export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const globalTextStyle = useMemeEditorStore((state) => state.globalTextStyle);
+	const textStyleScope = useMemeEditorStore((state) => state.textStyleScope);
+	const selectedTextboxId = useMemeEditorStore(
+		(state) => state.selectedTextboxId,
+	);
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
@@ -397,6 +457,10 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		}
 		return getPreviewScale(backgroundImage);
 	}, [backgroundImage]);
+	const disabledReason = getDeactivatedReason(
+		textStyleScope,
+		selectedTextboxId,
+	);
 
 	useEffect(() => {
 		const defaultFontSize = getDefaultFontSize(previewScale);
@@ -435,13 +499,16 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 					<div>
 						<TextStyleScopeInput />
 						<div className="grid">
-							<TextSizeInput previewScale={previewScale} />
-							<TextColorInput />
-							<TextAlignmentInput />
+							<TextSizeInput
+								previewScale={previewScale}
+								disabledReason={disabledReason}
+							/>
+							<TextColorInput disabledReason={disabledReason} />
+							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
 						<div className="grid">
-							<OutlineWidthInput />
-							<ShadowStrengthInput />
+							<OutlineWidthInput disabledReason={disabledReason} />
+							<ShadowStrengthInput disabledReason={disabledReason} />
 						</div>
 					</div>
 				</div>
