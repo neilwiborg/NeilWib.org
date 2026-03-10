@@ -324,7 +324,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
-	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const setDefaultFontSize = useMemeEditorStore(
+		(state) => state.setDefaultFontSize,
+	);
 	const [backgroundImage, setBackgroundImage] =
 		useState<HTMLImageElement | null>(null);
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -388,9 +390,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	}, [backgroundImage]);
 
 	useEffect(() => {
-		const defaultActualFontSize = getDefaultFontSize(previewScale);
-		setTextStyle("fontSize", defaultActualFontSize);
-	}, [previewScale, setTextStyle]);
+		const defaultFontSize = getDefaultFontSize(previewScale);
+		setDefaultFontSize(defaultFontSize);
+	}, [previewScale, setDefaultFontSize]);
 
 	if (!backgroundImage) {
 		return <p>Loading canvas...</p>;

@@ -19,6 +19,7 @@ type MemeEditorState = {
 	images: EditorImage[];
 	textStyleScope: TextStyleScope;
 	selectedTextboxId: string | null;
+	defaultFontSize: number | null;
 	globalTextStyle: TextStyle;
 };
 
@@ -31,6 +32,7 @@ type MemeEditorStore = MemeEditorState & {
 	setImageTransform: (id: string, transform: ImageTransform) => void;
 	setTextStyleScope: (scope: TextStyleScope) => void;
 	setSelectedTextboxId: (id: string | null) => void;
+	setDefaultFontSize: (fontSize: number) => void;
 	setTextStyle: <K extends keyof TextStyle>(
 		field: K,
 		value: TextStyle[K],
@@ -166,10 +168,10 @@ const applyTextStyleScopeChange = (
 
 	// if switching scope to selected, reset global text style to default
 	if (newScope === "selected") {
-		const intialState = createInitialState();
+		const defaultTextStyle = createDefaultTextStyle(state.defaultFontSize);
 		return {
 			textStyleScope: newScope,
-			globalTextStyle: intialState.globalTextStyle,
+			globalTextStyle: defaultTextStyle,
 		};
 	}
 
@@ -194,23 +196,29 @@ const applyTextStyleScopeChange = (
 	};
 };
 
-const createInitialState = (): MemeEditorState => ({
+const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
+	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
+	fill: DEFAULT_PRIMARY_TEXT_COLOR,
+	textAlign: DEFAULT_TEXT_ALIGNMENT,
+	strokeWidth: DEFAULT_STROKE_WIDTH,
+	shadowBlur: DEFAULT_SHADOW_BLUR,
+});
+
+const createInitialState = (defaultFontSize: number | null = null): MemeEditorState => ({
 	textboxes: [],
 	images: [],
 	textStyleScope: "global",
 	selectedTextboxId: null,
-	globalTextStyle: {
-		fontSize: DEFAULT_FONT_SIZE,
-		fill: DEFAULT_PRIMARY_TEXT_COLOR,
-		textAlign: DEFAULT_TEXT_ALIGNMENT,
-		strokeWidth: DEFAULT_STROKE_WIDTH,
-		shadowBlur: DEFAULT_SHADOW_BLUR,
-	},
+	defaultFontSize,
+	globalTextStyle: createDefaultTextStyle(defaultFontSize),
 });
 
 export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 	...createInitialState(),
-	resetEditor: () => set(createInitialState()),
+	resetEditor: () =>
+		set((state) =>
+			createInitialState(state.defaultFontSize ?? DEFAULT_FONT_SIZE),
+		),
 	addTextbox: (textbox) =>
 		set((state) => ({
 			textboxes: [...state.textboxes, textbox],
@@ -243,6 +251,11 @@ export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 	setSelectedTextboxId: (id) =>
 		set(() => ({
 			selectedTextboxId: id,
+		})),
+	setDefaultFontSize: (fontSize) =>
+		set(() => ({
+			defaultFontSize: fontSize,
+			globalTextStyle: createDefaultTextStyle(fontSize),
 		})),
 	setTextStyle: (field, value) =>
 		set((state) => applyTextStyleChange(state, field, value)),
