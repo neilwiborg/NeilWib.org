@@ -162,24 +162,33 @@ const TextStyleScopeInput = () => {
 		(state) => state.setTextStyleScope,
 	);
 
-	const onToggle = (event: ChangeEvent<HTMLInputElement>) => {
-		const nextScope: TextStyleScope = event.target.checked
-			? "global"
-			: "selected";
+	const onChange = (event: ChangeEvent<HTMLInputElement>) => {
+		const nextScope = event.target.value as TextStyleScope;
 		setTextStyleScope(nextScope);
 	};
 
 	return (
-		<label>
+		<fieldset>
+			<legend>Apply text styles to</legend>
 			<input
-				type="checkbox"
-				role="switch"
-				aria-checked={value === "global"}
+				type="radio"
+				id="text-style-scope-global"
+				name="text-style-scope"
+				value="global"
 				checked={value === "global"}
-				onChange={onToggle}
+				onChange={onChange}
 			/>
-			Apply styles to all textboxes
-		</label>
+			<label htmlFor="text-style-scope-global">All</label>
+			<input
+				type="radio"
+				id="text-style-scope-selected"
+				name="text-style-scope"
+				value="selected"
+				checked={value === "selected"}
+				onChange={onChange}
+			/>
+			<label htmlFor="text-style-scope-selected">Selected</label>
+		</fieldset>
 	);
 };
 
