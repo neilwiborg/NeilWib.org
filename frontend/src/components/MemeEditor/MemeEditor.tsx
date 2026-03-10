@@ -3,6 +3,7 @@ import {
 	type MouseEvent,
 	useCallback,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -12,6 +13,8 @@ import {
 	createEditorImage,
 	createTextbox,
 	getCanvasMiddlePosition,
+	getDefaultFontSize,
+	getPreviewScale,
 } from "./translation";
 import type { BackgroundSource, TextAlignment, TextStyle } from "./types";
 import { IMAGE_MIME_TYPE } from "./types";
@@ -22,27 +25,48 @@ export type MemeEditorProps = {
 
 const textAlignments: TextAlignment[] = ["center", "left", "right"];
 
-const loadImage = (url: string) =>
-	new Promise<HTMLImageElement>((resolve, reject) => {
+const loadImage = (url: string) => {
+	return new Promise<HTMLImageElement>((resolve, reject) => {
 		const image = new window.Image();
 		image.onload = () => resolve(image);
 		image.onerror = () => reject(new Error(`Failed to load image from ${url}`));
 		image.src = url;
 	});
+};
 
-const TextSizeInput = () => {
+type TextSizeInputProps = {
+	previewScale: number;
+};
+
+const TextSizeInput = ({ previewScale }: TextSizeInputProps) => {
 	const value = useMemeEditorStore((state) => state.textStyle.fontSize);
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const displayValue = Math.max(1, Math.round(value * previewScale));
+
+	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+		// round text size to nearest int
+		const inputSize = Math.round(Number(event.target.value));
+		const isValidNumber = Number.isFinite(inputSize) && inputSize > 0;
+
+		// clamp display size to 1 if input is invalid
+		const clampedDisplaySize = isValidNumber ? inputSize : 1;
+
+		// convert display size to actual size
+		const actualSize = Math.max(
+			1,
+			Math.round(clampedDisplaySize / previewScale),
+		);
+
+		setTextStyle("fontSize", actualSize);
+	};
 
 	return (
 		<label>
 			Text size
 			<input
 				type="number"
-				value={value}
-				onChange={(event) =>
-					setTextStyle("fontSize", Math.round(Number(event.target.value)))
-				}
+				value={displayValue}
+				onChange={handleChange}
 			/>
 		</label>
 	);
@@ -270,6 +294,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const addTextboxToStore = useMemeEditorStore((state) => state.addTextbox);
 	const addImageToStore = useMemeEditorStore((state) => state.addImage);
 	const resetEditor = useMemeEditorStore((state) => state.resetEditor);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const [backgroundImage, setBackgroundImage] =
 		useState<HTMLImageElement | null>(null);
 	const canvasRef = useRef<CanvasHandle>(null);
@@ -325,6 +350,18 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		};
 	}, [background, resetEditor]);
 
+	const previewScale = useMemo(() => {
+		if (!backgroundImage) {
+			return 1;
+		}
+		return getPreviewScale(backgroundImage);
+	}, [backgroundImage]);
+
+	useEffect(() => {
+		const defaultActualFontSize = getDefaultFontSize(previewScale);
+		setTextStyle("fontSize", defaultActualFontSize);
+	}, [previewScale, setTextStyle]);
+
 	if (!backgroundImage) {
 		return <p>Loading canvas...</p>;
 	}
@@ -333,29 +370,44 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		<>
 			<form>
 				<div className="grid">
-					<TextSizeInput />
-					<TextColorInput />
-					<TextAlignmentInput />
+					<div className="grid">
+						<AddImageButton
+							backgroundImage={backgroundImage}
+							onAddImage={addImageToStore}
+						/>
+						<AddTextboxButton
+							backgroundImage={backgroundImage}
+							textStyle={textStyle}
+							onAddTextbox={addTextboxToStore}
+						/>
+					</div>
+					<div></div>
 				</div>
 				<div className="grid">
-					<OutlineWidthInput />
-					<ShadowStrengthInput />
-				</div>
-				<div className="grid">
-					<AddImageButton
-						backgroundImage={backgroundImage}
-						onAddImage={addImageToStore}
-					/>
-					<AddTextboxButton
-						backgroundImage={backgroundImage}
-						textStyle={textStyle}
-						onAddTextbox={addTextboxToStore}
-					/>
-					<DownloadMemeButton getMemeBlob={downloadBlob} />
-					<CopyMemeButton getMemeBlob={downloadBlob} />
+					<div>
+						<Canvas
+							ref={canvasRef}
+							backgroundImage={backgroundImage}
+							previewScale={previewScale}
+						/>
+					</div>
+					<div>
+						<div className="grid">
+							<TextSizeInput previewScale={previewScale} />
+							<TextColorInput />
+							<TextAlignmentInput />
+						</div>
+						<div className="grid">
+							<OutlineWidthInput />
+							<ShadowStrengthInput />
+						</div>
+					</div>
 				</div>
 			</form>
-			<Canvas ref={canvasRef} backgroundImage={backgroundImage} />
+			<div className="grid">
+				<DownloadMemeButton getMemeBlob={downloadBlob} />
+				<CopyMemeButton getMemeBlob={downloadBlob} />
+			</div>
 		</>
 	);
 };
