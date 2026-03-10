@@ -1,0 +1,16 @@
+.dangerButton:not(:disabled) {
+	background-color: #c62828;
+	border-color: #c62828;
+}
+
+.dangerButton:not(:disabled):hover,
+.dangerButton:not(:disabled):focus {
+	background-color: #b71c1c;
+	border-color: #b71c1c;
+}
+
+.dangerButton:disabled {
+	background-color: #c62828;
+	border-color: #c62828;
+	opacity: 0.5;
+}
