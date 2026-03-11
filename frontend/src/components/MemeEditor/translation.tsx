@@ -22,7 +22,6 @@ import {
 	type TextStyle,
 } from "./types";
 
-const DEFAULT_TEXTBOX_WIDTH = 200;
 const MIN_TEXTBOX_WIDTH = 30;
 const MIN_FONT_SIZE = 8;
 const MIN_IMAGE_WIDTH = 20;
@@ -79,7 +78,7 @@ const onTransformTextboxEnd =
 			x: node.x(),
 			y: node.y(),
 			rotation: node.rotation(),
-			width: Math.max(MIN_TEXTBOX_WIDTH, textbox.width * scaleX),
+			width: Math.max(MIN_TEXTBOX_WIDTH, node.width() * scaleX),
 			fontSize: Math.round(Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY)),
 		});
 	};
@@ -119,7 +118,6 @@ export const createTextbox = (
 	x: initialPosition.x,
 	y: initialPosition.y,
 	rotation: DEFAULT_ROTATION,
-	width: DEFAULT_TEXTBOX_WIDTH,
 	fontSize: textStyle.fontSize,
 	fill: textStyle.fill,
 	textAlign: textStyle.textAlign,
