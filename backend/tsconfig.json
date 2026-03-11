@@ -1,23 +1,15 @@
 {
+	"extends": "../tsconfig.base.json",
 	"compilerOptions": {
-		"target": "ESNext",
 		"lib": ["ESNext"],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"moduleDetection": "force",
 		"rootDir": "./src",
 		"types": ["node"],
-		"resolveJsonModule": true,
-		"verbatimModuleSyntax": true,
-		"noUncheckedSideEffectImports": true,
-		"isolatedModules": true,
 		"outDir": "./build",
 		"noEmitOnError": true,
 		"importHelpers": true,
-		"esModuleInterop": true,
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true
+		"esModuleInterop": true
 	},
 	"include": ["src"]
 }
