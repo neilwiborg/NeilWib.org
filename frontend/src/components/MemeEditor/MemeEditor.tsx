@@ -361,14 +361,14 @@ const DeleteSelectionButton = () => {
 			message={getDeleteButtonDeactivatedReason(selectedNodeKey)}
 			active={disabled}
 		>
-				<button
-					type="button"
-					onClick={deleteSelectedNode}
-					disabled={disabled}
-					className={styles.dangerButton}
-				>
-					Delete Selection
-				</button>
+			<button
+				type="button"
+				onClick={deleteSelectedNode}
+				disabled={disabled}
+				className={styles.dangerButton}
+			>
+				Delete Selection
+			</button>
 		</Tooltip>
 	);
 };
@@ -557,14 +557,14 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 							<TextColorInput disabledReason={disabledReason} />
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
-							<div className="grid">
-								<OutlineWidthInput disabledReason={disabledReason} />
-								<ShadowStrengthInput disabledReason={disabledReason} />
-							</div>
-							<SelectionActions />
+						<div className="grid">
+							<OutlineWidthInput disabledReason={disabledReason} />
+							<ShadowStrengthInput disabledReason={disabledReason} />
 						</div>
+						<SelectionActions />
 					</div>
-				</form>
+				</div>
+			</form>
 			<div className="grid">
 				<DownloadMemeButton getMemeBlob={downloadBlob} />
 				<CopyMemeButton getMemeBlob={downloadBlob} />

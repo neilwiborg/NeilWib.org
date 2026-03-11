@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { parseNodeKey } from "./translation";
-import { updateTextbox } from "./translation";
+import { parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
 	DEFAULT_PRIMARY_TEXT_COLOR,
@@ -155,7 +154,9 @@ const applyTextStyleChange = <K extends keyof TextStyle>(
 	} else if (state.selectedNodeKey !== null) {
 		const { keyType, id } = parseNodeKey(state.selectedNodeKey);
 		if (keyType !== "text") {
-			throw new Error("cannot set text style when non-textbox node is selected")
+			throw new Error(
+				"cannot set text style when non-textbox node is selected",
+			);
 		}
 
 		textboxes = updateTextbox(textboxes, id, {
