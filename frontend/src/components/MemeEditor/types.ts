@@ -31,7 +31,6 @@ export type Point = {
 export type EditorNode = Point & {
 	id: string;
 	rotation: number;
-	width: number;
 };
 
 export type TextStyleScope = "global" | "selected";
@@ -48,10 +47,12 @@ export type TextStyle = {
 export type Textbox = EditorNode &
 	TextStyle & {
 		text: string;
+		width?: number;
 	};
 
 export type EditorImage = EditorNode & {
 	image: HTMLImageElement;
+	width: number;
 	height: number;
 };
 
@@ -59,16 +60,17 @@ export type EditorNodeTransform = Partial<{
 	x: EditorNode["x"];
 	y: EditorNode["y"];
 	rotation: EditorNode["rotation"];
-	width: EditorNode["width"];
 }>;
 
 export type TextboxTransform = EditorNodeTransform &
 	Partial<{
 		fontSize: Textbox["fontSize"];
+		width: Textbox["width"];
 	}>;
 
 export type ImageTransform = EditorNodeTransform &
 	Partial<{
+		width: EditorImage["width"];
 		height: EditorImage["height"];
 	}>;
 
