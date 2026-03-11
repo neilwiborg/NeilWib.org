@@ -1,8 +1,8 @@
 import express from "express";
-import { defaultRoute } from "./defaultRoute";
-import { memeScraperRoute } from "./mememaker/memeScraperRoute";
-import { memesRoute } from "./mememaker/memesRoute";
-import { photosRoute } from "./photos/photosRoute";
+import { defaultRoute } from "./defaultRoute.js";
+import { memeScraperRoute } from "./mememaker/memeScraperRoute.js";
+import { memesRoute } from "./mememaker/memesRoute.js";
+import { photosRoute } from "./photos/photosRoute.js";
 
 export const routes = express.Router();
 
