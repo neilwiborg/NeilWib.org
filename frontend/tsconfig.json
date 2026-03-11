@@ -1,20 +1,12 @@
 {
+	"extends": "../tsconfig.base.json",
 	"compilerOptions": {
-		"target": "ES2022",
-		"useDefineForClassFields": true,
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"module": "ESNext",
-		"skipLibCheck": true,
+		"lib": ["ES2024", "DOM", "DOM.Iterable"],
+		"module": "Preserve",
 		"moduleResolution": "Bundler",
-		"allowImportingTsExtensions": false,
 		"types": ["vite/client"],
-		"resolveJsonModule": true,
-		"isolatedModules": true,
 		"noEmit": true,
-		"jsx": "react-jsx",
-		"strict": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true
+		"jsx": "react-jsx"
 	},
 	"include": ["src"]
 }

@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"moduleDetection": "force",
+		"resolveJsonModule": true,
+		"verbatimModuleSyntax": true,
+		"noUncheckedSideEffectImports": true,
+		"isolatedModules": true,
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true
+	}
+}

@@ -2,10 +2,12 @@
 	"name": "backend",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "tsx watch ./src/server.ts",
 		"build": "rm -rf ./build && tsc",
 		"start": "node ./build/server.js",
+		"check": "biome check .",
 		"lint": "biome lint .",
 		"format": "biome format --write ."
 	},
