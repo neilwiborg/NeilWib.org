@@ -1,17 +1,7 @@
-import {
-	type AttributeValue,
-	DynamoDBClient,
-	PutItemCommand,
-	type PutItemCommandInput,
-	ScanCommand,
-	type PutItemCommandOutput,
-} from "@aws-sdk/client-dynamodb";
-import { randomUUID } from "crypto";
 import { JSDOM } from "jsdom";
 import { URLSearchParams } from "url";
-
-const defaultRegion = "us-west-2";
-const ddbClient = new DynamoDBClient({ region: defaultRegion });
+import { addMemeTemplate } from "../store/meme-template.store.js";
+export type { AddMemeResult } from "../store/meme-template.store.js";
 
 export type Meme = {
 	id: string;
@@ -34,11 +24,6 @@ type ScrapedImgflipData = {
 	imgflipID: number;
 	description: string;
 };
-
-export type AddMemeResult =
-	| PutItemCommandOutput
-	| { message: "AlreadyExists"; id?: string }
-	| { message: "ErrorAddingMeme" };
 
 export class InvalidMemeUrlError extends Error {
 	constructor() {
@@ -185,45 +170,6 @@ const scrapeMeme = async (imgflipUrl: string) => {
 	} satisfies ScrapedImgflipData;
 };
 
-const addToDB = async (imgflipData: ScrapedImgflipData): Promise<AddMemeResult> => {
-	const tablename = "mememaker-templates";
-	const id = randomUUID();
-
-	const item: Record<string, AttributeValue> = {
-		id: { S: id },
-		title: { S: imgflipData.title },
-		templateURL: { S: imgflipData.templateURL },
-		imgflipID: { N: imgflipData.imgflipID.toString() },
-		description: { S: imgflipData.description },
-		_aka: { SS: imgflipData.aka },
-		_searchTitle: { S: imgflipData.title.toLowerCase() }, // TODO: remove punctuation
-	};
-
-	const params: PutItemCommandInput = {
-		TableName: tablename,
-		Item: item,
-	};
-
-	const scanParams = {
-		FilterExpression: "imgflipID = :imgflipID",
-		ExpressionAttributeValues: {
-			":imgflipID": { N: imgflipData.imgflipID.toString() },
-		},
-		TableName: tablename,
-	};
-
-	// do scan (add GSI?) to check for imgflipID already existing in table
-	const scanResp = await ddbClient.send(new ScanCommand(scanParams));
-	if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
-		return { message: "ErrorAddingMeme" };
-	}
-	if (scanResp.Items.length > 0) {
-		return { message: "AlreadyExists", id: scanResp.Items[0].id.S };
-	}
-
-	return ddbClient.send(new PutItemCommand(params));
-};
-
 export const addMemeFromImgflipUrl = async (imgflipUrl: string) => {
 	const sanitizedUrl = sanitizeInputURL(imgflipUrl);
 	if (sanitizedUrl === "") {
@@ -235,5 +181,5 @@ export const addMemeFromImgflipUrl = async (imgflipUrl: string) => {
 		throw new MemeScrapeFailedError();
 	}
 
-	return addToDB(imgflipData);
+	return addMemeTemplate(imgflipData);
 };
