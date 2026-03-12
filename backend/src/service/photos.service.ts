@@ -1,33 +1,31 @@
 import dotenv from "dotenv";
-import express from "express";
 import { createApi } from "unsplash-js";
 
 dotenv.config();
-
-export const photosRoute = express.Router();
 
 const unsplashAccessKey = process.env.UNSPLASH_ACCESS_KEY ?? "";
 const unsplash = createApi({
 	accessKey: unsplashAccessKey,
 });
+
 const UNSPLASH_URL = new URL("https://unsplash.com/");
 const UTM_PARAMS = new URLSearchParams({
 	utm_source: "Personal Website",
 	utm_medium: "referral",
 });
 
-type photoAuthor = {
+export type PhotoAuthor = {
 	firstName: string;
 	middleName?: string;
 	lastName: string;
 	profileURL: string;
 };
 
-type photoResponse = {
+export type PhotoResponse = {
 	sourceName: string;
 	sourceURL: string;
 	imageURL: string;
-	author: photoAuthor;
+	author: PhotoAuthor;
 };
 
 const addUTMParams = (url: URL) => {
@@ -35,27 +33,32 @@ const addUTMParams = (url: URL) => {
 	return url;
 };
 
-photosRoute.get("/photos/seattle", async (req, res, next) => {
+export class UnsplashResponseError extends Error {
+	constructor() {
+		super("Unable to fetch Unsplash photo");
+		this.name = "UnsplashResponseError";
+	}
+}
+
+export const getSeattlePhoto = async (): Promise<PhotoResponse> => {
 	const unsplashResponse = await unsplash.photos.get({
 		photoId: "JEicDFy5Cd8",
 	});
-	if (unsplashResponse.errors) {
-		// TODO
-	}
-	const sanitizedResponse = unsplashResponse.response!;
 
-	const response: photoResponse = {
+	if (unsplashResponse.errors || !unsplashResponse.response) {
+		throw new UnsplashResponseError();
+	}
+
+	const sanitizedResponse = unsplashResponse.response;
+
+	return {
 		sourceName: "Unsplash",
 		sourceURL: addUTMParams(UNSPLASH_URL).toString(),
 		imageURL: addUTMParams(new URL(sanitizedResponse.urls.regular)).toString(),
 		author: {
 			firstName: sanitizedResponse.user.first_name,
 			lastName: sanitizedResponse.user.last_name ?? "",
-			profileURL: addUTMParams(
-				new URL(sanitizedResponse.user.links.html),
-			).toString(),
+			profileURL: addUTMParams(new URL(sanitizedResponse.user.links.html)).toString(),
 		},
 	};
-
-	res.json(response);
-});
+};

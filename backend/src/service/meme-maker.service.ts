@@ -4,17 +4,30 @@ import {
 	PutItemCommand,
 	type PutItemCommandInput,
 	ScanCommand,
+	type PutItemCommandOutput,
 } from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
-import express from "express";
 import { JSDOM } from "jsdom";
-
-export const memeScraperRoute = express.Router();
+import { URLSearchParams } from "url";
 
 const defaultRegion = "us-west-2";
 const ddbClient = new DynamoDBClient({ region: defaultRegion });
 
-type scrapedImgflipData = {
+export type Meme = {
+	id: string;
+	name: string;
+	url: string;
+	width: number;
+	height: number;
+	box_count: number;
+	captions: number;
+};
+
+export type MemeResponse = {
+	data: { memes: Meme[] };
+};
+
+type ScrapedImgflipData = {
 	title: string;
 	templateURL: string;
 	aka: string[];
@@ -22,16 +35,78 @@ type scrapedImgflipData = {
 	description: string;
 };
 
+export type AddMemeResult =
+	| PutItemCommandOutput
+	| { message: "AlreadyExists"; id?: string }
+	| { message: "ErrorAddingMeme" };
+
+export class InvalidMemeUrlError extends Error {
+	constructor() {
+		super("Invalid URL");
+		this.name = "InvalidMemeUrlError";
+	}
+}
+
+export class MemeScrapeFailedError extends Error {
+	constructor() {
+		super("Invalid URL");
+		this.name = "MemeScrapeFailedError";
+	}
+}
+
+const getImgflipMemeBlob = async (url: string) => {
+	const res = await fetch(url);
+	return res.blob();
+};
+
+export const getMemeImage = async (url: string) => {
+	const resp = await getImgflipMemeBlob(url);
+	const arrayBuffer = await resp.arrayBuffer();
+
+	return {
+		contentType: resp.type || "image/jpeg",
+		bytes: Buffer.from(arrayBuffer),
+	};
+};
+
+export const getTop100Memes = async () => {
+	const res = await fetch("https://api.imgflip.com/get_memes");
+	const resJson: MemeResponse = await res.json();
+
+	for (const meme of resJson.data.memes) {
+		const urlParam = encodeURIComponent(meme.url);
+		meme.url =
+			"https://api.neilwib.org/mememaker/meme?" +
+			new URLSearchParams({
+				url: urlParam,
+			});
+	}
+
+	return resJson;
+};
+
+export const searchMemes = async (query: string) => {
+	const topMemes = await getTop100Memes();
+	const result: MemeResponse = { data: { memes: [] } };
+
+	for (const meme of topMemes.data.memes) {
+		if (meme.name.toLowerCase().includes(query.toLowerCase())) {
+			result.data.memes.push(meme);
+		}
+	}
+
+	return result;
+};
+
 const sanitizeInputURL = (imgflipUrl: string) => {
 	const regex = /https:\/\/imgflip.com\/(?:meme(?:template|generator)?)\/(.*)/;
-
 	const regexMatches = imgflipUrl.match(regex);
+
 	if (regexMatches === null || regexMatches.length < 2) {
 		return "";
 	}
 
-	const sanitizedPath = "https://imgflip.com/memetemplate/" + regexMatches[1];
-	return sanitizedPath;
+	return "https://imgflip.com/memetemplate/" + regexMatches[1];
 };
 
 const scrapeMeme = async (imgflipUrl: string) => {
@@ -39,12 +114,11 @@ const scrapeMeme = async (imgflipUrl: string) => {
 	if (!page.ok) {
 		return null;
 	}
+
 	const pageContents = await page.text();
 	const dom = new JSDOM(pageContents);
-	// /meme/X querySelectors
-	// let title = dom.window.document.querySelector("a.meme-link")?.getAttribute("title");
-	// let templateURL = dom.window.document.querySelector("a.meme-link > img")?.getAttribute("src");
-	let title = dom.window.document.querySelector("#mtm-title")?.textContent; //.replace(" Meme Template", "");
+
+	let title = dom.window.document.querySelector("#mtm-title")?.textContent;
 	if (title !== null && title !== undefined) {
 		if (title.endsWith(" Meme Template")) {
 			title = title.replace(" Meme Template", "");
@@ -52,6 +126,7 @@ const scrapeMeme = async (imgflipUrl: string) => {
 			title = title.replace(" Template", "");
 		}
 	}
+
 	let templateURL = dom.window.document
 		.querySelector("#mtm-img")
 		?.getAttribute("src");
@@ -62,32 +137,35 @@ const scrapeMeme = async (imgflipUrl: string) => {
 			templateURL = "https://imgflip.com" + templateURL;
 		}
 	}
-	let subtitle =
-		dom.window.document.querySelector("#mtm-subtitle")?.textContent;
-	const aka = [];
+
+	let subtitle = dom.window.document.querySelector("#mtm-subtitle")?.textContent;
+	const aka: string[] = [];
 	if (subtitle !== null && subtitle !== undefined) {
 		subtitle = subtitle.replace("also called: ", "");
-		let window = "";
+		let windowText = "";
 		for (let i = 0; i < subtitle.length; i++) {
 			const c = subtitle[i];
 			if (c === ",") {
-				aka.push(window.trimStart().toLowerCase());
-				window = "";
+				aka.push(windowText.trimStart().toLowerCase());
+				windowText = "";
 			} else {
-				window += c;
+				windowText += c;
 			}
 		}
-		aka.push(window.trimStart().toLowerCase());
+		aka.push(windowText.trimStart().toLowerCase());
 	}
+
 	const description =
 		dom.window.document.querySelector("#mtm-description")?.textContent ?? "";
 	const properties = dom.window.document.querySelectorAll("#mtm-info > p");
 	let imgflipID = -1;
+
 	properties.forEach((tag) => {
 		if (tag.textContent?.startsWith("Template ID")) {
 			imgflipID = parseInt(tag.textContent.replace("Template ID: ", ""), 10);
 		}
 	});
+
 	if (
 		title === null ||
 		title === undefined ||
@@ -97,16 +175,17 @@ const scrapeMeme = async (imgflipUrl: string) => {
 	) {
 		return null;
 	}
+
 	return {
-		title: title,
-		templateURL: templateURL,
-		aka: aka,
-		imgflipID: imgflipID,
-		description: description,
-	};
+		title,
+		templateURL,
+		aka,
+		imgflipID,
+		description,
+	} satisfies ScrapedImgflipData;
 };
 
-const addToDB = async (imgflipData: scrapedImgflipData) => {
+const addToDB = async (imgflipData: ScrapedImgflipData): Promise<AddMemeResult> => {
 	const tablename = "mememaker-templates";
 	const id = randomUUID();
 
@@ -125,7 +204,6 @@ const addToDB = async (imgflipData: scrapedImgflipData) => {
 		Item: item,
 	};
 
-	// do scan (add GSI?) to check for imgflipID already existing in table
 	const scanParams = {
 		FilterExpression: "imgflipID = :imgflipID",
 		ExpressionAttributeValues: {
@@ -133,32 +211,29 @@ const addToDB = async (imgflipData: scrapedImgflipData) => {
 		},
 		TableName: tablename,
 	};
+
+	// do scan (add GSI?) to check for imgflipID already existing in table
 	const scanResp = await ddbClient.send(new ScanCommand(scanParams));
 	if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
 		return { message: "ErrorAddingMeme" };
 	}
-	if (scanResp.Items?.length > 0) {
+	if (scanResp.Items.length > 0) {
 		return { message: "AlreadyExists", id: scanResp.Items[0].id.S };
 	}
 
-	const resp = await ddbClient.send(new PutItemCommand(params));
-	return resp;
+	return ddbClient.send(new PutItemCommand(params));
 };
 
-memeScraperRoute.get("/mememaker/addmeme", async (req, res, next) => {
-	if (req.query.url === undefined) {
-		res.status(400).send("No URL provided");
-	}
-	const url = decodeURIComponent(req.query.url as string);
-	// validate url
-	const sanitizedUrl = sanitizeInputURL(url);
+export const addMemeFromImgflipUrl = async (imgflipUrl: string) => {
+	const sanitizedUrl = sanitizeInputURL(imgflipUrl);
 	if (sanitizedUrl === "") {
-		res.status(400).send("Invalid URL");
+		throw new InvalidMemeUrlError();
 	}
-	const imgflipData: scrapedImgflipData | null = await scrapeMeme(sanitizedUrl);
+
+	const imgflipData = await scrapeMeme(sanitizedUrl);
 	if (imgflipData === null) {
-		res.status(400).send("Invalid URL");
+		throw new MemeScrapeFailedError();
 	}
-	const dbResp = await addToDB(imgflipData!);
-	res.send(dbResp);
-});
+
+	return addToDB(imgflipData);
+};
