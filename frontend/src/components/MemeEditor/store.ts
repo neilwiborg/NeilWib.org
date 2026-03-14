@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
+	DEFAULT_MEME_FONT,
 	DEFAULT_PRIMARY_TEXT_COLOR,
 	DEFAULT_SHADOW_BLUR,
 	DEFAULT_STROKE_WIDTH,
@@ -84,6 +85,7 @@ const applyTextboxTransform = (
 };
 
 const toTextStyle = (textbox: Textbox): TextStyle => ({
+	fontFamily: textbox.fontFamily,
 	fontSize: textbox.fontSize,
 	fill: textbox.fill,
 	textAlign: textbox.textAlign,
@@ -234,6 +236,7 @@ const applySelectedNodeDeletion = (
 };
 
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
+	fontFamily: DEFAULT_MEME_FONT.fontFamily,
 	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
 	fill: DEFAULT_PRIMARY_TEXT_COLOR,
 	textAlign: DEFAULT_TEXT_ALIGNMENT,

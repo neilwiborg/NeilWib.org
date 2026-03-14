@@ -4,11 +4,9 @@ import { Image as KonvaImage, Text } from "react-konva";
 import { randomID } from "../../util/util";
 import {
 	DEFAULT_DISPLAY_FONT_SIZE,
-	DEFAULT_FONT_FAMILY,
 	DEFAULT_ROTATION,
 	DEFAULT_SECONDARY_TEXT_COLOR,
 	DEFAULT_TEXT,
-	MIN_FONT_SIZE,
 	DEFAULT_X_OFFSET,
 	DEFAULT_Y_OFFSET,
 	EDITOR_PREVIEW_MAX_HEIGHT,
@@ -16,6 +14,7 @@ import {
 	type EditorImage,
 	type ImageHandlers,
 	type KeyType,
+	MIN_FONT_SIZE,
 	type NodeKey,
 	type Point,
 	type Textbox,
@@ -154,6 +153,7 @@ export const createTextbox = (
 	y: initialPosition.y,
 	rotation: DEFAULT_ROTATION,
 	fontSize: textStyle.fontSize,
+	fontFamily: textStyle.fontFamily,
 	fill: textStyle.fill,
 	textAlign: textStyle.textAlign,
 	strokeWidth: textStyle.strokeWidth,
@@ -195,7 +195,7 @@ export const textboxesToKonvaText = (
 			rotation={textbox.rotation}
 			width={textbox.width}
 			text={getTextboxDisplayText(textbox)}
-			fontFamily={DEFAULT_FONT_FAMILY}
+			fontFamily={textbox.fontFamily}
 			fontSize={textbox.fontSize}
 			fontStyle={getTextboxFontStyle(textbox)}
 			fill={textbox.fill}
