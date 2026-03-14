@@ -89,6 +89,7 @@ const toTextStyle = (textbox: Textbox): TextStyle => ({
 	textAlign: textbox.textAlign,
 	strokeWidth: textbox.strokeWidth,
 	shadowBlur: textbox.shadowBlur,
+	caps: textbox.caps,
 });
 
 const getSelectedTextbox = (state: MemeEditorState) => {
@@ -234,6 +235,7 @@ const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	textAlign: DEFAULT_TEXT_ALIGNMENT,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	shadowBlur: DEFAULT_SHADOW_BLUR,
+	caps: true,
 });
 
 const createInitialState = (

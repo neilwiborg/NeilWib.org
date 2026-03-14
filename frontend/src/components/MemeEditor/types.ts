@@ -42,6 +42,7 @@ export type TextStyle = {
 	textAlign: TextAlignment;
 	strokeWidth: number;
 	shadowBlur: number;
+	caps: boolean;
 };
 
 export type Textbox = EditorNode &

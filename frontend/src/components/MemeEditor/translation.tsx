@@ -102,6 +102,10 @@ const onTransformImageEnd =
 		});
 	};
 
+const getTextboxDisplayText = (textbox: Textbox) => {
+	return textbox.caps ? textbox.text.toUpperCase() : textbox.text;
+};
+
 export const getCanvasMiddlePosition = (
 	backgroundImage: HTMLImageElement,
 ): Point => ({
@@ -123,6 +127,7 @@ export const createTextbox = (
 	textAlign: textStyle.textAlign,
 	strokeWidth: textStyle.strokeWidth,
 	shadowBlur: textStyle.shadowBlur,
+	caps: textStyle.caps,
 });
 
 export const createEditorImage = (
@@ -154,7 +159,7 @@ export const textboxesToKonvaText = (
 			y={textbox.y}
 			rotation={textbox.rotation}
 			width={textbox.width}
-			text={textbox.text}
+			text={getTextboxDisplayText(textbox)}
 			fontFamily={DEFAULT_FONT_FAMILY}
 			fontSize={textbox.fontSize}
 			fill={textbox.fill}
