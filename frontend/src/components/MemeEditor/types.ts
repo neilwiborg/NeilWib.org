@@ -8,7 +8,6 @@ export const DEFAULT_X_OFFSET = -100;
 export const DEFAULT_Y_OFFSET = 0;
 export const DEFAULT_ROTATION = 0;
 export const DEFAULT_TEXT_ALIGNMENT: TextAlignment = "center";
-export const DEFAULT_FONT_FAMILY = "Impact";
 export const DEFAULT_FONT_SIZE = 50;
 export const MIN_FONT_SIZE = 8;
 export const MIN_STROKE_WIDTH = 0;
@@ -38,10 +37,57 @@ export type EditorNode = Point & {
 	rotation: number;
 };
 
+export type MemeFont = {
+	label: string;
+	fontFamily: string;
+};
+
+export const MEME_FONTS: MemeFont[] = [
+	{
+		label: "Impact",
+		fontFamily: 'Impact, "Anton", sans-serif',
+	},
+	{
+		label: "Arial",
+		fontFamily: 'Arial, "Arimo", sans-serif',
+	},
+	{
+		label: "Arial Black",
+		fontFamily: '"Arial Black", "Archivo Black", sans-serif',
+	},
+	{
+		label: "Comic Sans MS",
+		fontFamily: '"Comic Sans MS", "Comic Neue", cursive',
+	},
+	{
+		label: "Montserrat",
+		fontFamily: '"Montserrat", sans-serif',
+	},
+	{
+		label: "Bebas Neue",
+		fontFamily: '"Bebas Neue", sans-serif',
+	},
+	{
+		label: "Oswald",
+		fontFamily: '"Oswald", sans-serif',
+	},
+	{
+		label: "Luckiest Guy",
+		fontFamily: '"Luckiest Guy", cursive',
+	},
+	{
+		label: "Bangers",
+		fontFamily: '"Bangers", cursive',
+	},
+];
+
+export const DEFAULT_MEME_FONT = MEME_FONTS[0];
+
 export type TextStyleScope = "global" | "selected";
 export type TextAlignment = "center" | "left" | "right";
 
 export type TextStyle = {
+	fontFamily: string;
 	fontSize: number;
 	fill: string;
 	textAlign: TextAlignment;

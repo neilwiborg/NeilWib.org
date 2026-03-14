@@ -30,6 +30,7 @@ import {
 	IMAGE_MIME_TYPE,
 	MAX_SHADOW_BLUR,
 	MAX_STROKE_WIDTH,
+	MEME_FONTS,
 	MIN_FONT_SIZE,
 	MIN_SHADOW_BLUR,
 	MIN_STROKE_WIDTH,
@@ -231,16 +232,52 @@ const TextSizeInput = ({
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
 			<label>
-					Text size
-					<input
-						type="number"
-						inputMode="numeric"
-						min={minDisplayValue}
-						step={1}
-						value={displayValue}
-						onChange={handleChange}
-						disabled={disabled}
-					/>
+				Text size
+				<input
+					type="number"
+					inputMode="numeric"
+					min={minDisplayValue}
+					step={1}
+					value={displayValue}
+					onChange={handleChange}
+					disabled={disabled}
+				/>
+			</label>
+		</Tooltip>
+	);
+};
+
+type FontFamilyInputProps = {
+	disabledReason: string;
+};
+
+const FontFamilyInput = ({ disabledReason }: FontFamilyInputProps) => {
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("fontFamily"));
+	const disabled = disabledReason !== "";
+
+	const options = useMemo(() => {
+		const fontFamilies = MEME_FONTS.map((font) => {
+			return (
+				<option value={font.fontFamily} key={font.label}>
+					{font.label}
+				</option>
+			);
+		});
+		return fontFamilies;
+	}, []);
+
+	return (
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				Font
+				<select
+					value={value}
+					onChange={(event) => setTextStyle("fontFamily", event.target.value)}
+					disabled={disabled}
+				>
+					{options}
+				</select>
 			</label>
 		</Tooltip>
 	);
@@ -314,16 +351,16 @@ const OutlineWidthInput = ({ disabledReason }: OutlineWidthInputProps) => {
 
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
-				<label>
-					Outline width: {value}
-					<input
-						type="range"
-						min={MIN_STROKE_WIDTH}
-						max={MAX_STROKE_WIDTH}
-						step="0.5"
-						value={value}
-						onChange={(event) =>
-							setTextStyle("strokeWidth", Number(event.target.value))
+			<label>
+				Outline width: {value}
+				<input
+					type="range"
+					min={MIN_STROKE_WIDTH}
+					max={MAX_STROKE_WIDTH}
+					step="0.5"
+					value={value}
+					onChange={(event) =>
+						setTextStyle("strokeWidth", Number(event.target.value))
 					}
 					disabled={disabled}
 				/>
@@ -343,16 +380,16 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
-				<label>
-					Shadow strength: {value}
-					<input
-						type="range"
-						min={MIN_SHADOW_BLUR}
-						max={MAX_SHADOW_BLUR}
-						step="1"
-						value={value}
-						onChange={(event) =>
-							setTextStyle("shadowBlur", Number(event.target.value))
+			<label>
+				Shadow strength: {value}
+				<input
+					type="range"
+					min={MIN_SHADOW_BLUR}
+					max={MAX_SHADOW_BLUR}
+					step="1"
+					value={value}
+					onChange={(event) =>
+						setTextStyle("shadowBlur", Number(event.target.value))
 					}
 					disabled={disabled}
 				/>
@@ -501,6 +538,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		if (!canvas) {
 			throw new Error("Canvas export is not ready");
 		}
+		await document.fonts.ready;
 		return canvas.exportBlob();
 	}, []);
 
@@ -596,10 +634,13 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 					<fieldset>
 						<legend>Text Styles</legend>
 						<div className="grid">
+							<FontFamilyInput disabledReason={disabledReason} />
 							<TextSizeInput
 								previewScale={previewScale}
 								disabledReason={disabledReason}
 							/>
+						</div>
+						<div className="grid">
 							<TextColorInput disabledReason={disabledReason} />
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
