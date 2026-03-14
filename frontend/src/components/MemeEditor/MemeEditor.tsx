@@ -98,11 +98,12 @@ const AddImageButton = ({
 			return;
 		}
 
+		const imageFile = files[0];
+		const imageUrl = URL.createObjectURL(imageFile);
+
 		// reset input
 		event.target.value = "";
 
-		const imageFile = files[0];
-		const imageUrl = URL.createObjectURL(imageFile);
 		try {
 			const loadedImage = await loadImage(imageUrl);
 			const middlePosition = getCanvasMiddlePosition(backgroundImage);
