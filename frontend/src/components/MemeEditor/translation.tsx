@@ -109,6 +109,34 @@ const getTextboxDisplayText = (textbox: Textbox) => {
 	return textbox.caps ? textbox.text.toUpperCase() : textbox.text;
 };
 
+const getTextboxFontStyle = (textbox: Textbox) => {
+	const fontStyles = [];
+
+	if (textbox.bold) {
+		fontStyles.push("bold");
+	}
+
+	if (textbox.italic) {
+		fontStyles.push("italic");
+	}
+
+	return fontStyles.join(" ");
+};
+
+const getTextboxTextDecoration = (textbox: Textbox) => {
+	const decorations = [];
+
+	if (textbox.underline) {
+		decorations.push("underline");
+	}
+
+	if (textbox.strikethrough) {
+		decorations.push("line-through");
+	}
+
+	return decorations.join(" ");
+};
+
 export const getCanvasMiddlePosition = (
 	backgroundImage: HTMLImageElement,
 ): Point => ({
@@ -131,6 +159,10 @@ export const createTextbox = (
 	strokeWidth: textStyle.strokeWidth,
 	shadowBlur: textStyle.shadowBlur,
 	caps: textStyle.caps,
+	bold: textStyle.bold,
+	italic: textStyle.italic,
+	underline: textStyle.underline,
+	strikethrough: textStyle.strikethrough,
 });
 
 export const createEditorImage = (
@@ -165,8 +197,10 @@ export const textboxesToKonvaText = (
 			text={getTextboxDisplayText(textbox)}
 			fontFamily={DEFAULT_FONT_FAMILY}
 			fontSize={textbox.fontSize}
+			fontStyle={getTextboxFontStyle(textbox)}
 			fill={textbox.fill}
 			align={textbox.textAlign}
+			textDecoration={getTextboxTextDecoration(textbox)}
 			stroke={DEFAULT_SECONDARY_TEXT_COLOR}
 			strokeWidth={textbox.strokeWidth}
 			shadowColor={DEFAULT_SECONDARY_TEXT_COLOR}
