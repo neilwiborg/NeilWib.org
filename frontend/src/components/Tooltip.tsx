@@ -9,13 +9,12 @@ export type TooltipProps = {
 
 export const Tooltip = ({ message, active, children }: TooltipProps) => {
 	const hasTooltip = active && message !== "";
-
-	if (!hasTooltip) {
-		return <>{children}</>;
-	}
-
 	return (
-		<div className={styles.root} data-tooltip={message} data-placement="top">
+		<div
+			className={styles.root}
+			data-tooltip={hasTooltip ? message : undefined}
+			data-placement={"top"}
+		>
 			{children}
 		</div>
 	);

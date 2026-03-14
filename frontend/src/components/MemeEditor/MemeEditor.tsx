@@ -26,7 +26,14 @@ import type {
 	TextStyle,
 	TextStyleScope,
 } from "./types";
-import { IMAGE_MIME_TYPE } from "./types";
+import {
+	IMAGE_MIME_TYPE,
+	MAX_SHADOW_BLUR,
+	MAX_STROKE_WIDTH,
+	MIN_FONT_SIZE,
+	MIN_SHADOW_BLUR,
+	MIN_STROKE_WIDTH,
+} from "./types";
 
 export type MemeEditorProps = {
 	background: BackgroundSource;
@@ -200,6 +207,7 @@ const TextSizeInput = ({
 }: TextSizeInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("fontSize"));
+	const minDisplayValue = Math.max(1, Math.ceil(MIN_FONT_SIZE * previewScale));
 	const displayValue = Math.max(1, Math.round(value * previewScale));
 	const disabled = disabledReason !== "";
 
@@ -208,12 +216,12 @@ const TextSizeInput = ({
 		const inputSize = Math.round(Number(event.target.value));
 		const isValidNumber = Number.isFinite(inputSize) && inputSize > 0;
 
-		// clamp display size to 1 if input is invalid
-		const clampedDisplaySize = isValidNumber ? inputSize : 1;
+		// clamp display size to min text size if input is invalid
+		const clampedDisplaySize = isValidNumber ? inputSize : minDisplayValue;
 
 		// convert display size to actual size
 		const actualSize = Math.max(
-			1,
+			MIN_FONT_SIZE,
 			Math.round(clampedDisplaySize / previewScale),
 		);
 
@@ -223,13 +231,16 @@ const TextSizeInput = ({
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
 			<label>
-				Text size
-				<input
-					type="number"
-					value={displayValue}
-					onChange={handleChange}
-					disabled={disabled}
-				/>
+					Text size
+					<input
+						type="number"
+						inputMode="numeric"
+						min={minDisplayValue}
+						step={1}
+						value={displayValue}
+						onChange={handleChange}
+						disabled={disabled}
+					/>
 			</label>
 		</Tooltip>
 	);
@@ -303,16 +314,16 @@ const OutlineWidthInput = ({ disabledReason }: OutlineWidthInputProps) => {
 
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
-			<label>
-				Outline width: {value}
-				<input
-					type="range"
-					min="0.5"
-					max="10"
-					step="0.5"
-					value={value}
-					onChange={(event) =>
-						setTextStyle("strokeWidth", Number(event.target.value))
+				<label>
+					Outline width: {value}
+					<input
+						type="range"
+						min={MIN_STROKE_WIDTH}
+						max={MAX_STROKE_WIDTH}
+						step="0.5"
+						value={value}
+						onChange={(event) =>
+							setTextStyle("strokeWidth", Number(event.target.value))
 					}
 					disabled={disabled}
 				/>
@@ -332,16 +343,16 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
-			<label>
-				Shadow strength: {value}
-				<input
-					type="range"
-					min="0"
-					max="50"
-					step="1"
-					value={value}
-					onChange={(event) =>
-						setTextStyle("shadowBlur", Number(event.target.value))
+				<label>
+					Shadow strength: {value}
+					<input
+						type="range"
+						min={MIN_SHADOW_BLUR}
+						max={MAX_SHADOW_BLUR}
+						step="1"
+						value={value}
+						onChange={(event) =>
+							setTextStyle("shadowBlur", Number(event.target.value))
 					}
 					disabled={disabled}
 				/>
@@ -549,31 +560,32 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 
 	return (
 		<>
-			<form>
+			<div className="grid">
 				<div className="grid">
-					<div className="grid">
-						<AddImageButton
-							backgroundImage={backgroundImage}
-							onAddImage={addImageToStore}
-						/>
-						<AddTextboxButton
-							backgroundImage={backgroundImage}
-							textStyle={globalTextStyle}
-							onAddTextbox={addTextboxToStore}
-						/>
-					</div>
-					<div></div>
+					<AddImageButton
+						backgroundImage={backgroundImage}
+						onAddImage={addImageToStore}
+					/>
+					<AddTextboxButton
+						backgroundImage={backgroundImage}
+						textStyle={globalTextStyle}
+						onAddTextbox={addTextboxToStore}
+					/>
 				</div>
-				<div className="grid">
-					<div>
-						<Canvas
-							ref={canvasRef}
-							backgroundImage={backgroundImage}
-							previewScale={previewScale}
-						/>
-					</div>
-					<div>
-						<TextStyleScopeInput />
+				<div></div>
+			</div>
+			<div className="grid">
+				<div>
+					<Canvas
+						ref={canvasRef}
+						backgroundImage={backgroundImage}
+						previewScale={previewScale}
+					/>
+				</div>
+				<div>
+					<TextStyleScopeInput />
+					<fieldset>
+						<legend>Text Style</legend>
 						<div className="grid">
 							<TextSizeInput
 								previewScale={previewScale}
@@ -589,10 +601,10 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 						<div className="grid">
 							<CapsInput disabledReason={disabledReason} />
 						</div>
-						<SelectionActions />
-					</div>
+					</fieldset>
+					<SelectionActions />
 				</div>
-			</form>
+			</div>
 			<div className="grid">
 				<DownloadMemeButton getMemeBlob={downloadBlob} />
 				<CopyMemeButton getMemeBlob={downloadBlob} />
