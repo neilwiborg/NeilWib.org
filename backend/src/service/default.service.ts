@@ -1,3 +1,11 @@
-export const getWelcomeMessage = () => {
-	return "Welcome to Express!";
+export type DefaultService = {
+	getWelcomeMessage: () => string;
+};
+
+export const createDefaultService = (): DefaultService => {
+	return {
+		getWelcomeMessage: () => {
+			return "Welcome to Express!";
+		},
+	};
 };

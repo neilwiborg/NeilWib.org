@@ -1,28 +1,30 @@
 import { JSDOM } from "jsdom";
-import { URLSearchParams } from "url";
-import { addMemeTemplate } from "../store/meme-template.store.js";
+import type {
+	AddMemeResult,
+	MemeTemplateStore,
+} from "../store/meme-template.store.js";
+import type {
+	ImgflipClient,
+	Meme,
+	MemeResponse,
+	ScrapedImgflipData,
+} from "../client/imgflip.client.js";
+
 export type { AddMemeResult } from "../store/meme-template.store.js";
 
-export type Meme = {
-	id: string;
-	name: string;
-	url: string;
-	width: number;
-	height: number;
-	box_count: number;
-	captions: number;
+export type MemeMakerService = {
+	getMemeImage: (
+		url: string,
+	) => Promise<{ contentType: string; bytes: Buffer<ArrayBuffer> }>;
+	getTop100Memes: () => Promise<MemeResponse>;
+	searchMemes: (query: string) => Promise<MemeResponse>;
+	addMemeFromImgflipUrl: (imgflipUrl: string) => Promise<AddMemeResult>;
 };
 
-export type MemeResponse = {
-	data: { memes: Meme[] };
-};
-
-type ScrapedImgflipData = {
-	title: string;
-	templateURL: string;
-	aka: string[];
-	imgflipID: number;
-	description: string;
+type CreateMemeMakerServiceParams = {
+	memeTemplateStore: MemeTemplateStore;
+	imgflipClient: ImgflipClient;
+	apiBaseUrl: string;
 };
 
 export class InvalidMemeUrlError extends Error {
@@ -39,50 +41,6 @@ export class MemeScrapeFailedError extends Error {
 	}
 }
 
-const getImgflipMemeBlob = async (url: string) => {
-	const res = await fetch(url);
-	return res.blob();
-};
-
-export const getMemeImage = async (url: string) => {
-	const resp = await getImgflipMemeBlob(url);
-	const arrayBuffer = await resp.arrayBuffer();
-
-	return {
-		contentType: resp.type || "image/jpeg",
-		bytes: Buffer.from(arrayBuffer),
-	};
-};
-
-export const getTop100Memes = async () => {
-	const res = await fetch("https://api.imgflip.com/get_memes");
-	const resJson: MemeResponse = await res.json();
-
-	for (const meme of resJson.data.memes) {
-		const urlParam = encodeURIComponent(meme.url);
-		meme.url =
-			"https://api.neilwib.org/mememaker/meme?" +
-			new URLSearchParams({
-				url: urlParam,
-			});
-	}
-
-	return resJson;
-};
-
-export const searchMemes = async (query: string) => {
-	const topMemes = await getTop100Memes();
-	const result: MemeResponse = { data: { memes: [] } };
-
-	for (const meme of topMemes.data.memes) {
-		if (meme.name.toLowerCase().includes(query.toLowerCase())) {
-			result.data.memes.push(meme);
-		}
-	}
-
-	return result;
-};
-
 const sanitizeInputURL = (imgflipUrl: string) => {
 	const regex = /https:\/\/imgflip.com\/(?:meme(?:template|generator)?)\/(.*)/;
 	const regexMatches = imgflipUrl.match(regex);
@@ -94,13 +52,20 @@ const sanitizeInputURL = (imgflipUrl: string) => {
 	return "https://imgflip.com/memetemplate/" + regexMatches[1];
 };
 
-const scrapeMeme = async (imgflipUrl: string) => {
-	const page = await fetch(imgflipUrl);
-	if (!page.ok) {
-		return null;
-	}
+const toProxyUrl = (apiBaseUrl: string, imageUrl: string) => {
+	const proxyUrl = new URL("/mememaker/meme", apiBaseUrl);
+	proxyUrl.searchParams.set("url", imageUrl);
+	return proxyUrl.toString();
+};
 
-	const pageContents = await page.text();
+const withProxyUrls = (apiBaseUrl: string, memes: Meme[]): Meme[] => {
+	return memes.map((meme) => ({
+		...meme,
+		url: toProxyUrl(apiBaseUrl, meme.url),
+	}));
+};
+
+const scrapeMeme = (pageContents: string): ScrapedImgflipData | null => {
 	const dom = new JSDOM(pageContents);
 
 	let title = dom.window.document.querySelector("#mtm-title")?.textContent;
@@ -167,19 +132,58 @@ const scrapeMeme = async (imgflipUrl: string) => {
 		aka,
 		imgflipID,
 		description,
-	} satisfies ScrapedImgflipData;
+	};
 };
 
-export const addMemeFromImgflipUrl = async (imgflipUrl: string) => {
-	const sanitizedUrl = sanitizeInputURL(imgflipUrl);
-	if (sanitizedUrl === "") {
-		throw new InvalidMemeUrlError();
-	}
+export const createMemeMakerService = ({
+	memeTemplateStore,
+	imgflipClient,
+	apiBaseUrl,
+}: CreateMemeMakerServiceParams): MemeMakerService => {
+	return {
+		getMemeImage: async (url: string) => {
+			return imgflipClient.getMemeImage(url);
+		},
 
-	const imgflipData = await scrapeMeme(sanitizedUrl);
-	if (imgflipData === null) {
-		throw new MemeScrapeFailedError();
-	}
+		getTop100Memes: async () => {
+			const topMemes = await imgflipClient.getTop100Memes();
+			return {
+				data: {
+					memes: withProxyUrls(apiBaseUrl, topMemes.data.memes),
+				},
+			};
+		},
 
-	return addMemeTemplate(imgflipData);
+		searchMemes: async (query: string) => {
+			const topMemes = await imgflipClient.getTop100Memes();
+			const matchingMemes = topMemes.data.memes.filter((meme) =>
+				meme.name.toLowerCase().includes(query.toLowerCase()),
+			);
+
+			return {
+				data: {
+					memes: withProxyUrls(apiBaseUrl, matchingMemes),
+				},
+			};
+		},
+
+		addMemeFromImgflipUrl: async (imgflipUrl: string) => {
+			const sanitizedUrl = sanitizeInputURL(imgflipUrl);
+			if (sanitizedUrl === "") {
+				throw new InvalidMemeUrlError();
+			}
+
+			const templatePage = await imgflipClient.getTemplatePage(sanitizedUrl);
+			if (templatePage === null) {
+				throw new MemeScrapeFailedError();
+			}
+
+			const imgflipData = scrapeMeme(templatePage);
+			if (imgflipData === null) {
+				throw new MemeScrapeFailedError();
+			}
+
+			return memeTemplateStore.addMemeTemplate(imgflipData);
+		},
+	};
 };

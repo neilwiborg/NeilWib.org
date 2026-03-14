@@ -1,12 +1,4 @@
-import dotenv from "dotenv";
-import { createApi } from "unsplash-js";
-
-dotenv.config();
-
-const unsplashAccessKey = process.env.UNSPLASH_ACCESS_KEY ?? "";
-const unsplash = createApi({
-	accessKey: unsplashAccessKey,
-});
+import type { createApi } from "unsplash-js";
 
 const UNSPLASH_URL = new URL("https://unsplash.com/");
 const UTM_PARAMS = new URLSearchParams({
@@ -28,6 +20,14 @@ export type PhotoResponse = {
 	author: PhotoAuthor;
 };
 
+export type PhotosService = {
+	getSeattlePhoto: () => Promise<PhotoResponse>;
+};
+
+type CreatePhotosServiceParams = {
+	unsplash: ReturnType<typeof createApi>;
+};
+
 const addUTMParams = (url: URL) => {
 	UTM_PARAMS.forEach((value, key) => url.searchParams.append(key, value));
 	return url;
@@ -40,25 +40,33 @@ export class UnsplashResponseError extends Error {
 	}
 }
 
-export const getSeattlePhoto = async (): Promise<PhotoResponse> => {
-	const unsplashResponse = await unsplash.photos.get({
-		photoId: "JEicDFy5Cd8",
-	});
-
-	if (unsplashResponse.errors || !unsplashResponse.response) {
-		throw new UnsplashResponseError();
-	}
-
-	const sanitizedResponse = unsplashResponse.response;
-
+export const createPhotosService = ({
+	unsplash,
+}: CreatePhotosServiceParams): PhotosService => {
 	return {
-		sourceName: "Unsplash",
-		sourceURL: addUTMParams(UNSPLASH_URL).toString(),
-		imageURL: addUTMParams(new URL(sanitizedResponse.urls.regular)).toString(),
-		author: {
-			firstName: sanitizedResponse.user.first_name,
-			lastName: sanitizedResponse.user.last_name ?? "",
-			profileURL: addUTMParams(new URL(sanitizedResponse.user.links.html)).toString(),
+		getSeattlePhoto: async (): Promise<PhotoResponse> => {
+			const unsplashResponse = await unsplash.photos.get({
+				photoId: "JEicDFy5Cd8",
+			});
+
+			if (unsplashResponse.errors || !unsplashResponse.response) {
+				throw new UnsplashResponseError();
+			}
+
+			const sanitizedResponse = unsplashResponse.response;
+
+			return {
+				sourceName: "Unsplash",
+				sourceURL: addUTMParams(UNSPLASH_URL).toString(),
+				imageURL: addUTMParams(new URL(sanitizedResponse.urls.regular)).toString(),
+				author: {
+					firstName: sanitizedResponse.user.first_name,
+					lastName: sanitizedResponse.user.last_name ?? "",
+					profileURL: addUTMParams(
+						new URL(sanitizedResponse.user.links.html),
+					).toString(),
+				},
+			};
 		},
 	};
 };

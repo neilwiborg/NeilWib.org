@@ -1,6 +1,6 @@
 import {
 	type AttributeValue,
-	DynamoDBClient,
+	type DynamoDBClient,
 	PutItemCommand,
 	type PutItemCommandInput,
 	type PutItemCommandOutput,
@@ -8,8 +8,6 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
 
-const defaultRegion = "us-west-2";
-const ddbClient = new DynamoDBClient({ region: defaultRegion });
 const tablename = "mememaker-templates";
 
 export type MemeTemplateRecord = {
@@ -25,42 +23,56 @@ export type AddMemeResult =
 	| { message: "AlreadyExists"; id?: string }
 	| { message: "ErrorAddingMeme" };
 
-export const addMemeTemplate = async (
-	imgflipData: MemeTemplateRecord,
-): Promise<AddMemeResult> => {
-	const id = randomUUID();
+export type MemeTemplateStore = {
+	addMemeTemplate: (imgflipData: MemeTemplateRecord) => Promise<AddMemeResult>;
+};
 
-	const item: Record<string, AttributeValue> = {
-		id: { S: id },
-		title: { S: imgflipData.title },
-		templateURL: { S: imgflipData.templateURL },
-		imgflipID: { N: imgflipData.imgflipID.toString() },
-		description: { S: imgflipData.description },
-		_aka: { SS: imgflipData.aka },
-		_searchTitle: { S: imgflipData.title.toLowerCase() }, // TODO: remove punctuation
-	};
+type CreateMemeTemplateStoreParams = {
+	ddbClient: DynamoDBClient;
+};
 
-	const params: PutItemCommandInput = {
-		TableName: tablename,
-		Item: item,
-	};
+export const createMemeTemplateStore = ({
+	ddbClient,
+}: CreateMemeTemplateStoreParams): MemeTemplateStore => {
+	return {
+		addMemeTemplate: async (
+			imgflipData: MemeTemplateRecord,
+		): Promise<AddMemeResult> => {
+			const id = randomUUID();
 
-	const scanParams = {
-		FilterExpression: "imgflipID = :imgflipID",
-		ExpressionAttributeValues: {
-			":imgflipID": { N: imgflipData.imgflipID.toString() },
+			const item: Record<string, AttributeValue> = {
+				id: { S: id },
+				title: { S: imgflipData.title },
+				templateURL: { S: imgflipData.templateURL },
+				imgflipID: { N: imgflipData.imgflipID.toString() },
+				description: { S: imgflipData.description },
+				_aka: { SS: imgflipData.aka },
+				_searchTitle: { S: imgflipData.title.toLowerCase() }, // TODO: remove punctuation
+			};
+
+			const params: PutItemCommandInput = {
+				TableName: tablename,
+				Item: item,
+			};
+
+			const scanParams = {
+				FilterExpression: "imgflipID = :imgflipID",
+				ExpressionAttributeValues: {
+					":imgflipID": { N: imgflipData.imgflipID.toString() },
+				},
+				TableName: tablename,
+			};
+
+			// do scan (add GSI?) to check for imgflipID already existing in table
+			const scanResp = await ddbClient.send(new ScanCommand(scanParams));
+			if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
+				return { message: "ErrorAddingMeme" };
+			}
+			if (scanResp.Items.length > 0) {
+				return { message: "AlreadyExists", id: scanResp.Items[0].id.S };
+			}
+
+			return ddbClient.send(new PutItemCommand(params));
 		},
-		TableName: tablename,
 	};
-
-	// do scan (add GSI?) to check for imgflipID already existing in table
-	const scanResp = await ddbClient.send(new ScanCommand(scanParams));
-	if (scanResp.Items === undefined || scanResp.Items.length === undefined) {
-		return { message: "ErrorAddingMeme" };
-	}
-	if (scanResp.Items.length > 0) {
-		return { message: "AlreadyExists", id: scanResp.Items[0].id.S };
-	}
-
-	return ddbClient.send(new PutItemCommand(params));
 };

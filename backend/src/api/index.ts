@@ -1,10 +1,27 @@
 import express from "express";
-import { defaultApi } from "./default.api.js";
-import { mememakerApi } from "./meme-maker.api.js";
-import { photosApi } from "./photos.api.js";
+import { createDefaultApi } from "./default.api.js";
+import { createMemeMakerApi } from "./meme-maker.api.js";
+import { createPhotosApi } from "./photos.api.js";
+import type { DefaultService } from "../service/default.service.js";
+import type { MemeMakerService } from "../service/meme-maker.service.js";
+import type { PhotosService } from "../service/photos.service.js";
 
-export const api = express.Router();
+type CreateApiParams = {
+	defaultService: DefaultService;
+	memeMakerService: MemeMakerService;
+	photosService: PhotosService;
+};
 
-api.use(defaultApi);
-api.use(mememakerApi);
-api.use(photosApi);
+export const createApi = ({
+	defaultService,
+	memeMakerService,
+	photosService,
+}: CreateApiParams) => {
+	const api = express.Router();
+
+	api.use(createDefaultApi({ defaultService }));
+	api.use(createMemeMakerApi({ memeMakerService }));
+	api.use(createPhotosApi({ photosService }));
+
+	return api;
+};

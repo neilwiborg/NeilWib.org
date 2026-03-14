@@ -1,8 +1,16 @@
 import express from "express";
-import { getWelcomeMessage } from "../service/default.service.js";
+import type { DefaultService } from "../service/default.service.js";
 
-export const defaultApi = express.Router();
+type CreateDefaultApiParams = {
+	defaultService: DefaultService;
+};
 
-defaultApi.get("/", (req, res) => {
-	res.send(getWelcomeMessage());
-});
+export const createDefaultApi = ({ defaultService }: CreateDefaultApiParams) => {
+	const defaultApi = express.Router();
+
+	defaultApi.get("/", (req, res) => {
+		res.send(defaultService.getWelcomeMessage());
+	});
+
+	return defaultApi;
+};
