@@ -14,3 +14,19 @@
 	border-color: #c62828;
 	opacity: 0.5;
 }
+
+.boldLabel {
+	font-weight: bold;
+}
+
+.italicLabel {
+	font-style: italic;
+}
+
+.underlineLabel {
+	text-decoration: underline;
+}
+
+.strikethroughLabel {
+	text-decoration: line-through;
+}

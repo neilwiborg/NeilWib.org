@@ -48,6 +48,10 @@ export type TextStyle = {
 	strokeWidth: number;
 	shadowBlur: number;
 	caps: boolean;
+	bold: boolean;
+	italic: boolean;
+	underline: boolean;
+	strikethrough: boolean;
 };
 
 export type Textbox = EditorNode &

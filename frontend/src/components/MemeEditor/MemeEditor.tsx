@@ -361,13 +361,21 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 	);
 };
 
-type CapsInputProps = {
+type TextPropertyCheckboxProps = {
+	field: "caps" | "bold" | "italic" | "underline" | "strikethrough";
+	label: string;
+	labelClassName: string;
 	disabledReason: string;
 };
 
-const CapsInput = ({ disabledReason }: CapsInputProps) => {
+const TextPropertyCheckbox = ({
+	disabledReason,
+	field,
+	label,
+	labelClassName,
+}: TextPropertyCheckboxProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
-	const value = useMemeEditorStore((state) => state.getTextStyle("caps"));
+	const value = useMemeEditorStore((state) => state.getTextStyle(field));
 	const disabled = disabledReason !== "";
 
 	return (
@@ -376,10 +384,10 @@ const CapsInput = ({ disabledReason }: CapsInputProps) => {
 				<input
 					type="checkbox"
 					checked={value}
-					onChange={(event) => setTextStyle("caps", event.target.checked)}
+					onChange={(event) => setTextStyle(field, event.target.checked)}
 					disabled={disabled}
 				/>
-				CAPS
+				<span className={labelClassName}>{label}</span>
 			</label>
 		</Tooltip>
 	);
@@ -585,7 +593,7 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 				<div>
 					<TextStyleScopeInput />
 					<fieldset>
-						<legend>Text Style</legend>
+						<legend>Text Styles</legend>
 						<div className="grid">
 							<TextSizeInput
 								previewScale={previewScale}
@@ -595,11 +603,42 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
 						<div className="grid">
-							<OutlineWidthInput disabledReason={disabledReason} />
-							<ShadowStrengthInput disabledReason={disabledReason} />
-						</div>
-						<div className="grid">
-							<CapsInput disabledReason={disabledReason} />
+							<div>
+								<TextPropertyCheckbox
+									disabledReason={disabledReason}
+									field="caps"
+									label="CAPS"
+									labelClassName=""
+								/>
+								<TextPropertyCheckbox
+									disabledReason={disabledReason}
+									field="bold"
+									label="Bold"
+									labelClassName={styles.boldLabel}
+								/>
+								<TextPropertyCheckbox
+									disabledReason={disabledReason}
+									field="italic"
+									label="Italic"
+									labelClassName={styles.italicLabel}
+								/>
+								<TextPropertyCheckbox
+									disabledReason={disabledReason}
+									field="underline"
+									label="Underline"
+									labelClassName={styles.underlineLabel}
+								/>
+								<TextPropertyCheckbox
+									disabledReason={disabledReason}
+									field="strikethrough"
+									label="Strikethrough"
+									labelClassName={styles.strikethroughLabel}
+								/>
+							</div>
+							<div>
+								<OutlineWidthInput disabledReason={disabledReason} />
+								<ShadowStrengthInput disabledReason={disabledReason} />
+							</div>
 						</div>
 					</fieldset>
 					<SelectionActions />
