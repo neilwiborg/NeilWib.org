@@ -245,7 +245,13 @@ export const Canvas = ({ backgroundImage, previewScale, ref }: CanvasProps) => {
 				/>
 				{konvaImages}
 				{konvaText}
-				<Transformer ref={transformerRef} rotateEnabled resizeEnabled />
+				<Transformer
+					ref={transformerRef}
+					rotateEnabled
+					resizeEnabled
+					rotationSnaps={[0, 90, 180, 270]}
+					rotationSnapTolerance={8}
+				/>
 			</Layer>
 		</Stage>
 	);
