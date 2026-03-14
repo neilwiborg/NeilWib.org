@@ -5,7 +5,6 @@ import { randomID } from "../../util/util";
 import {
 	DEFAULT_DISPLAY_FONT_SIZE,
 	DEFAULT_ROTATION,
-	DEFAULT_SECONDARY_TEXT_COLOR,
 	DEFAULT_TEXT,
 	DEFAULT_X_OFFSET,
 	DEFAULT_Y_OFFSET,
@@ -154,7 +153,8 @@ export const createTextbox = (
 	rotation: DEFAULT_ROTATION,
 	fontSize: textStyle.fontSize,
 	fontFamily: textStyle.fontFamily,
-	fill: textStyle.fill,
+	primaryColor: textStyle.primaryColor,
+	secondaryColor: textStyle.secondaryColor,
 	textAlign: textStyle.textAlign,
 	strokeWidth: textStyle.strokeWidth,
 	shadowBlur: textStyle.shadowBlur,
@@ -198,12 +198,12 @@ export const textboxesToKonvaText = (
 			fontFamily={textbox.fontFamily}
 			fontSize={textbox.fontSize}
 			fontStyle={getTextboxFontStyle(textbox)}
-			fill={textbox.fill}
+			fill={textbox.primaryColor}
 			align={textbox.textAlign}
 			textDecoration={getTextboxTextDecoration(textbox)}
-			stroke={DEFAULT_SECONDARY_TEXT_COLOR}
+			stroke={textbox.secondaryColor}
 			strokeWidth={textbox.strokeWidth}
-			shadowColor={DEFAULT_SECONDARY_TEXT_COLOR}
+			shadowColor={textbox.secondaryColor}
 			shadowBlur={textbox.shadowBlur}
 			draggable
 			onClick={() => handlers.onSelect(textbox.id)}

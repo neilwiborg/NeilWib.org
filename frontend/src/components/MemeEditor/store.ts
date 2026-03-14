@@ -4,6 +4,7 @@ import {
 	DEFAULT_FONT_SIZE,
 	DEFAULT_MEME_FONT,
 	DEFAULT_PRIMARY_TEXT_COLOR,
+	DEFAULT_SECONDARY_TEXT_COLOR,
 	DEFAULT_SHADOW_BLUR,
 	DEFAULT_STROKE_WIDTH,
 	DEFAULT_TEXT_ALIGNMENT,
@@ -87,7 +88,8 @@ const applyTextboxTransform = (
 const toTextStyle = (textbox: Textbox): TextStyle => ({
 	fontFamily: textbox.fontFamily,
 	fontSize: textbox.fontSize,
-	fill: textbox.fill,
+	primaryColor: textbox.primaryColor,
+	secondaryColor: textbox.secondaryColor,
 	textAlign: textbox.textAlign,
 	strokeWidth: textbox.strokeWidth,
 	shadowBlur: textbox.shadowBlur,
@@ -238,7 +240,8 @@ const applySelectedNodeDeletion = (
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	fontFamily: DEFAULT_MEME_FONT.fontFamily,
 	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
-	fill: DEFAULT_PRIMARY_TEXT_COLOR,
+	primaryColor: DEFAULT_PRIMARY_TEXT_COLOR,
+	secondaryColor: DEFAULT_SECONDARY_TEXT_COLOR,
 	textAlign: DEFAULT_TEXT_ALIGNMENT,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	shadowBlur: DEFAULT_SHADOW_BLUR,

@@ -89,7 +89,8 @@ export type TextAlignment = "center" | "left" | "right";
 export type TextStyle = {
 	fontFamily: string;
 	fontSize: number;
-	fill: string;
+	primaryColor: string;
+	secondaryColor: string;
 	textAlign: TextAlignment;
 	strokeWidth: number;
 	shadowBlur: number;
