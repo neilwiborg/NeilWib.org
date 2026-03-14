@@ -10,9 +10,14 @@ export const DEFAULT_ROTATION = 0;
 export const DEFAULT_TEXT_ALIGNMENT: TextAlignment = "center";
 export const DEFAULT_FONT_FAMILY = "Impact";
 export const DEFAULT_FONT_SIZE = 50;
+export const MIN_FONT_SIZE = 8;
+export const MIN_STROKE_WIDTH = 0;
+export const MAX_STROKE_WIDTH = 10;
 export const DEFAULT_STROKE_WIDTH = 3;
 export const DEFAULT_PRIMARY_TEXT_COLOR = "#FFFFFF";
 export const DEFAULT_SECONDARY_TEXT_COLOR = "#000000";
+export const MIN_SHADOW_BLUR = 0;
+export const MAX_SHADOW_BLUR = 50;
 export const DEFAULT_SHADOW_BLUR = 30;
 export const IMAGE_MIME_TYPE = "image/png";
 
