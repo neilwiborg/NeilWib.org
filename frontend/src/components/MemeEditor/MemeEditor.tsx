@@ -283,23 +283,25 @@ const FontFamilyInput = ({ disabledReason }: FontFamilyInputProps) => {
 	);
 };
 
-type TextColorInputProps = {
+type ColorInputProps = {
+	field: "primaryColor" | "secondaryColor";
+	label: string;
 	disabledReason: string;
 };
 
-const TextColorInput = ({ disabledReason }: TextColorInputProps) => {
+const ColorInput = ({ field, label, disabledReason }: ColorInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
-	const value = useMemeEditorStore((state) => state.getTextStyle("fill"));
+	const value = useMemeEditorStore((state) => state.getTextStyle(field));
 	const disabled = disabledReason !== "";
 
 	return (
 		<Tooltip message={disabledReason} active={disabled}>
 			<label>
-				Text color
+				{label}
 				<input
 					type="color"
 					value={value}
-					onChange={(event) => setTextStyle("fill", event.target.value)}
+					onChange={(event) => setTextStyle(field, event.target.value)}
 					disabled={disabled}
 				/>
 			</label>
@@ -641,7 +643,16 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 							/>
 						</div>
 						<div className="grid">
-							<TextColorInput disabledReason={disabledReason} />
+							<ColorInput
+								field="primaryColor"
+								label="Primary color"
+								disabledReason={disabledReason}
+							/>
+							<ColorInput
+								field="secondaryColor"
+								label="Secondary color"
+								disabledReason={disabledReason}
+							/>
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
 						<div className="grid">
