@@ -1,6 +1,9 @@
 .root[data-tooltip]:not(a, button, input) {
-	display: inline-block;
-	width: fit-content;
 	border-bottom: 0;
 	cursor: default;
+}
+
+.inline {
+	display: inline-block;
+	width: fit-content;
 }

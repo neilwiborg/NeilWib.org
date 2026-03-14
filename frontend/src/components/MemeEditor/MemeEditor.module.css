@@ -1,3 +1,7 @@
+.dangerButton {
+	width: auto;
+}
+
 .dangerButton:not(:disabled) {
 	background-color: #c62828;
 	border-color: #c62828;
