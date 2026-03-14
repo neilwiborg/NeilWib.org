@@ -350,6 +350,30 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 	);
 };
 
+type CapsInputProps = {
+	disabledReason: string;
+};
+
+const CapsInput = ({ disabledReason }: CapsInputProps) => {
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const value = useMemeEditorStore((state) => state.getTextStyle("caps"));
+	const disabled = disabledReason !== "";
+
+	return (
+		<Tooltip message={disabledReason} active={disabled}>
+			<label>
+				<input
+					type="checkbox"
+					checked={value}
+					onChange={(event) => setTextStyle("caps", event.target.checked)}
+					disabled={disabled}
+				/>
+				CAPS
+			</label>
+		</Tooltip>
+	);
+};
+
 const DeleteSelectionButton = () => {
 	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
 	const deleteSelectedNode = useMemeEditorStore(
@@ -561,6 +585,9 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 						<div className="grid">
 							<OutlineWidthInput disabledReason={disabledReason} />
 							<ShadowStrengthInput disabledReason={disabledReason} />
+						</div>
+						<div className="grid">
+							<CapsInput disabledReason={disabledReason} />
 						</div>
 						<SelectionActions />
 					</div>
