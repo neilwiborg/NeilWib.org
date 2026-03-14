@@ -379,7 +379,7 @@ const TextPropertyCheckbox = ({
 	const disabled = disabledReason !== "";
 
 	return (
-		<Tooltip message={disabledReason} active={disabled}>
+		<Tooltip message={disabledReason} active={disabled} placement="left">
 			<label>
 				<input
 					type="checkbox"
@@ -404,6 +404,7 @@ const DeleteSelectionButton = () => {
 		<Tooltip
 			message={getDeleteButtonDeactivatedReason(selectedNodeKey)}
 			active={disabled}
+			inline
 		>
 			<button
 				type="button"

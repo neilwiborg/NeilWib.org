@@ -5,15 +5,24 @@ export type TooltipProps = {
 	message: string;
 	active: boolean;
 	children: ReactNode;
+	inline?: boolean;
+	placement?: "top" | "left";
 };
 
-export const Tooltip = ({ message, active, children }: TooltipProps) => {
+export const Tooltip = ({
+	message,
+	active,
+	children,
+	inline = false,
+	placement = "top",
+}: TooltipProps) => {
 	const hasTooltip = active && message !== "";
+	const className = inline ? `${styles.root} ${styles.inline}` : styles.root;
 	return (
 		<div
-			className={styles.root}
+			className={className}
 			data-tooltip={hasTooltip ? message : undefined}
-			data-placement={"top"}
+			data-placement={placement}
 		>
 			{children}
 		</div>
