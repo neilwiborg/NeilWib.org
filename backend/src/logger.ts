@@ -1,17 +1,7 @@
 import pino from "pino";
 
-const isDevelopment = process.env.NODE_ENV !== "production";
-
 export const logger = pino({
-	level: process.env.LOG_LEVEL ?? (isDevelopment ? "debug" : "info"),
-	transport: isDevelopment
-		? {
-				target: "pino-pretty",
-				options: {
-					colorize: true,
-					ignore: "pid,hostname",
-					translateTime: "SYS:standard",
-				},
-			}
-		: undefined,
+	level:
+		process.env.LOG_LEVEL ??
+		(process.env.NODE_ENV !== "production" ? "debug" : "info"),
 });
