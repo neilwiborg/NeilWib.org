@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import type { PhotoResponse } from "../../types/api";
-import type { Loadable } from "../../types/loadable";
+import {
+	createDone,
+	createError,
+	createLoading,
+	type Loadable,
+} from "../../types/loadable";
 import { photosClient } from "../clients/photos.client";
 
 const toErrorMessage = (caughtError: unknown) =>
@@ -9,28 +14,23 @@ const toErrorMessage = (caughtError: unknown) =>
 		: "Failed to load Seattle photo";
 
 export const useSeattlePhoto = (): Loadable<PhotoResponse> => {
-	const [photo, setPhoto] = useState<Loadable<PhotoResponse>>({
-		state: "loading",
-	});
+	const [photo, setPhoto] = useState<Loadable<PhotoResponse>>(createLoading());
 
 	useEffect(() => {
 		let cancelled = false;
 
 		const loadPhoto = async () => {
 			try {
-				setPhoto({ state: "loading" });
+				setPhoto(createLoading());
 
 				const response = await photosClient.getSeattlePhoto();
 
 				if (!cancelled) {
-					setPhoto({ state: "done", value: response });
+					setPhoto(createDone(response));
 				}
 			} catch (caughtError) {
 				if (!cancelled) {
-					setPhoto({
-						state: "error",
-						message: toErrorMessage(caughtError),
-					});
+					setPhoto(createError(toErrorMessage(caughtError)));
 				}
 			}
 		};

@@ -14,6 +14,20 @@ export type Done<T> = {
 
 export type Loadable<T> = Loading | Error | Done<T>;
 
+export const createLoading = (): Loading => ({
+	state: "loading",
+});
+
+export const createError = (message: string): Error => ({
+	state: "error",
+	message,
+});
+
+export const createDone = <T>(value: T): Done<T> => ({
+	state: "done",
+	value,
+});
+
 type LoadableMatchers<T, TResult> = {
 	loading: (loading: Loading) => TResult;
 	error: (error: Error) => TResult;

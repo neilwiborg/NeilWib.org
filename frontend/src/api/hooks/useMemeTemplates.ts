@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Meme } from "../../types/api";
-import type { Loadable } from "../../types/loadable";
+import {
+	createDone,
+	createError,
+	createLoading,
+	type Loadable,
+} from "../../types/loadable";
 import { memeMakerClient } from "../clients/meme-maker.client";
 
 type UseMemeTemplatesResult = {
@@ -14,28 +19,23 @@ const toErrorMessage = (caughtError: unknown) =>
 		: "Failed to load meme templates";
 
 export const useMemeTemplates = (): UseMemeTemplatesResult => {
-	const [memes, setMemes] = useState<Loadable<Meme[]>>({
-		state: "loading",
-	});
+	const [memes, setMemes] = useState<Loadable<Meme[]>>(createLoading());
 
 	useEffect(() => {
 		let cancelled = false;
 
 		const loadTopMemes = async () => {
-			setMemes({ state: "loading" });
+			setMemes(createLoading());
 
 			try {
 				const response = await memeMakerClient.getTop100Memes();
 
 				if (!cancelled) {
-					setMemes({ state: "done", value: response.data.memes });
+					setMemes(createDone(response.data.memes));
 				}
 			} catch (caughtError) {
 				if (!cancelled) {
-					setMemes({
-						state: "error",
-						message: toErrorMessage(caughtError),
-					});
+					setMemes(createError(toErrorMessage(caughtError)));
 				}
 			}
 		};
@@ -49,15 +49,12 @@ export const useMemeTemplates = (): UseMemeTemplatesResult => {
 
 	const searchMemes = async (searchTerm: string) => {
 		try {
-			setMemes({ state: "loading" });
+			setMemes(createLoading());
 
 			const response = await memeMakerClient.searchMemes(searchTerm);
-			setMemes({ state: "done", value: response.data.memes });
+			setMemes(createDone(response.data.memes));
 		} catch (caughtError) {
-			setMemes({
-				state: "error",
-				message: toErrorMessage(caughtError),
-			});
+			setMemes(createError(toErrorMessage(caughtError)));
 		}
 	};
 

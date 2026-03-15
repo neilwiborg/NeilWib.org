@@ -20,10 +20,6 @@ export const MAX_SHADOW_BLUR = 50;
 export const DEFAULT_SHADOW_BLUR = 30;
 export const IMAGE_MIME_TYPE = "image/png";
 
-export type BackgroundSource =
-	| { kind: "file"; file: File }
-	| { kind: "url"; url: string };
-
 export type KeyType = "text" | "image";
 export type NodeKey = `${KeyType}:${string}`;
 
