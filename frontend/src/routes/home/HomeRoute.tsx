@@ -1,21 +1,30 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BACKEND_HOSTNAME } from "../../config";
+import { useSeattlePhoto } from "../../api/hooks/useSeattlePhoto";
 import type { PhotoResponse } from "../../types/api";
+import { matchLoadable } from "../../types/loadable";
 import { Pages } from "../../types/pages";
 
+type ImageProps = {
+	photo: PhotoResponse;
+};
+
+const Image = ({ photo }: ImageProps) => {
+	return (
+		<>
+			<img src={photo.imageURL} alt="Seattle, WA" />
+			<figcaption>
+				Photo by{" "}
+				<a href={photo.author.profileURL}>
+					{`${photo.author.firstName} ${photo.author.lastName}`}
+				</a>{" "}
+				on <a href={photo.sourceURL}>{photo.sourceName}</a>
+			</figcaption>
+		</>
+	);
+};
+
 const HomeRoute = () => {
-	const [seattlePhoto, setSeattlePhoto] = useState<PhotoResponse | null>(null);
-
-	useEffect(() => {
-		const fetchPhoto = async () => {
-			const response = await fetch(`${BACKEND_HOSTNAME}/photos/seattle`);
-			const data = (await response.json()) as PhotoResponse;
-			setSeattlePhoto(data);
-		};
-
-		void fetchPhoto();
-	}, []);
+	const seattlePhoto = useSeattlePhoto();
 
 	return (
 		<>
@@ -28,15 +37,11 @@ const HomeRoute = () => {
 							Visit <Link to={Pages.MEME_MAKER}>Meme Maker here</Link>
 						</p>
 						<figure>
-							<img src={seattlePhoto?.imageURL} alt="Seattle, WA" />
-							<figcaption>
-								Photo by{" "}
-								<a href={seattlePhoto?.author.profileURL}>
-									{`${seattlePhoto?.author.firstName ?? ""} ${seattlePhoto?.author.lastName ?? ""}`}
-								</a>{" "}
-								on{" "}
-								<a href={seattlePhoto?.sourceURL}>{seattlePhoto?.sourceName}</a>
-							</figcaption>
+							{matchLoadable(seattlePhoto, {
+								loading: () => <p aria-busy="true">Loading photo...</p>,
+								error: (error) => <p>{error.message}</p>,
+								done: (done) => <Image photo={done.value} />,
+							})}
 						</figure>
 					</div>
 				</article>

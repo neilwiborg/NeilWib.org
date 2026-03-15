@@ -1,7 +1,9 @@
-import { type SyntheticEvent, useEffect, useMemo, useState } from "react";
+import { type SyntheticEvent, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BACKEND_HOSTNAME } from "../../../config";
-import type { Meme, MemeResponse } from "../../../types/api";
+import { useMemeTemplates } from "../../../api/hooks/useMemeTemplates";
+import type { Meme } from "../../../types/api";
+import { matchLoadable } from "../../../types/loadable";
+import { Pages } from "../../../types/pages";
 
 const MEMES_PER_ROW = 5;
 
@@ -22,38 +24,68 @@ const toRows = (memes: Meme[]): Meme[][] => {
 	return rows;
 };
 
+type TemplateProps = {
+	meme: Meme;
+};
+
+const createTemplateHref = (meme: Meme) => {
+	const path = Pages.MEME_MAKER_TEMPLATE.replace(":templateID", "temp");
+	const params = new URLSearchParams({
+		name: meme.name,
+		templateUrl: encodeURIComponent(meme.url),
+	}).toString();
+
+	return `${path}?${params}`;
+};
+
+const Template = ({ meme }: TemplateProps) => {
+	const href = createTemplateHref(meme);
+
+	return (
+		<article>
+			<Link to={href}>
+				<img
+					src={meme.url}
+					alt={meme.name}
+					style={{
+						maxWidth: "150px",
+						maxHeight: "150px",
+						width: "auto",
+						height: "auto",
+					}}
+				/>
+			</Link>
+			<p>
+				<Link to={href}>{meme.name}</Link>
+			</p>
+		</article>
+	);
+};
+
+const renderRows = (rows: Meme[][]) =>
+	rows.map((row, rowIndex) => (
+		<div className="grid" key={`row-${rowIndex.toString()}`}>
+			{row.map((meme) => (
+				<Template key={meme.id} meme={meme} />
+			))}
+		</div>
+	));
+
 export const TemplateListRoute = () => {
-	const [loading, setLoading] = useState<boolean>(true);
 	const [searchQuery, setSearchQuery] = useState<string>("");
-	const [memeResults, setMemeResults] = useState<Meme[]>([]);
-
-	useEffect(() => {
-		const fetchTopMemes = async () => {
-			const response = await fetch(`${BACKEND_HOSTNAME}/mememaker/top100`);
-			const responseData = (await response.json()) as MemeResponse;
-			setMemeResults(responseData.data.memes);
-			setLoading(false);
-		};
-
-		void fetchTopMemes();
-	}, []);
+	const { memes, searchMemes } = useMemeTemplates();
 
 	const onSearch = async (event: SyntheticEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		setLoading(true);
-
-		const response = await fetch(
-			`${BACKEND_HOSTNAME}/mememaker/searchmemes?${new URLSearchParams({
-				searchterm: searchQuery,
-			}).toString()}`,
-		);
-
-		const responseData = (await response.json()) as MemeResponse;
-		setMemeResults(responseData.data.memes);
-		setLoading(false);
+		await searchMemes(searchQuery);
 	};
 
-	const rows = useMemo(() => toRows(memeResults), [memeResults]);
+	const rows = useMemo(() => {
+		if (memes.state !== "done") {
+			return [];
+		}
+		return toRows(memes.value);
+	}, [memes]);
 
 	return (
 		<>
@@ -70,41 +102,11 @@ export const TemplateListRoute = () => {
 						/>
 						<button type="submit">Search Templates</button>
 					</form>
-					{loading ? (
-						<p aria-busy="true">Loading results...</p>
-					) : (
-						rows.map((row, rowIndex) => (
-							<div className="grid" key={`row-${rowIndex.toString()}`}>
-								{row.map((meme) => {
-									const params = new URLSearchParams({
-										name: meme.name,
-										templateUrl: encodeURIComponent(meme.url),
-									}).toString();
-									const href = `/MemeMaker/template/temp?${params}`;
-
-									return (
-										<article key={meme.id}>
-											<Link to={href}>
-												<img
-													src={meme.url}
-													alt={meme.name}
-													style={{
-														maxWidth: "150px",
-														maxHeight: "150px",
-														width: "auto",
-														height: "auto",
-													}}
-												/>
-											</Link>
-											<p>
-												<Link to={href}>{meme.name}</Link>
-											</p>
-										</article>
-									);
-								})}
-							</div>
-						))
-					)}
+					{matchLoadable(memes, {
+						loading: () => <p aria-busy="true">Loading results...</p>,
+						error: (error) => <p>{error.message}</p>,
+						done: () => <>{renderRows(rows)}</>,
+					})}
 				</article>
 			</main>
 		</>
