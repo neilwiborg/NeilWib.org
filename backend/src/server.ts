@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import http from "http";
-import app from "./app.js";
+import { createApp } from "./app.js";
+import { createDependencies } from "./dependencies.js";
 
 // Load environment variables
 dotenv.config();
@@ -13,6 +14,8 @@ const normalizePort = (val: string) => {
 	return Number.isNaN(port) ? val : port >= 0 ? port : false;
 };
 
+const api = createDependencies();
+const app = createApp({ api });
 const port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
 

@@ -4,38 +4,43 @@ import express, {
 	type NextFunction,
 	type Request,
 	type Response,
+	type Router,
 } from "express";
 import createError from "http-errors";
 import logger from "morgan";
 
-import { routes } from "./routes/index.js";
+type CreateAppParams = {
+	api: Router;
+};
 
-const app = express();
+export const createApp = ({ api }: CreateAppParams) => {
+	const app = express();
 
-app.set("trust proxy", true);
+	app.set("trust proxy", true);
 
-app.use(cors());
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+	app.use(cors());
+	app.use(logger("dev"));
+	app.use(express.json());
+	app.use(express.urlencoded({ extended: false }));
+	app.use(cookieParser());
 
-app.use("/", routes);
+	app.use("/", api);
 
-// catch 404 and forward to error handler
-app.use((req: Request, res: Response, next: NextFunction) => {
-	next(createError(404));
-});
+	// catch 404 and forward to error handler
+	app.use((req: Request, res: Response, next: NextFunction) => {
+		next(createError(404));
+	});
 
-// error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-	// set locals, only providing error in development
-	res.locals.message = err.message;
-	res.locals.error = req.app.get("env") === "development" ? err : {};
+	// error handler
+	app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+		// set locals, only providing error in development
+		res.locals.message = err.message;
+		res.locals.error = req.app.get("env") === "development" ? err : {};
 
-	// render the error page
-	res.status(err.status || 500);
-	res.send("error");
-});
+		// render the error page
+		res.status(err.status || 500);
+		res.send("error");
+	});
 
-export default app;
+	return app;
+};
