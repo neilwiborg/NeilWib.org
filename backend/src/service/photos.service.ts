@@ -58,7 +58,9 @@ export const createPhotosService = ({
 			return {
 				sourceName: "Unsplash",
 				sourceURL: addUTMParams(UNSPLASH_URL).toString(),
-				imageURL: addUTMParams(new URL(sanitizedResponse.urls.regular)).toString(),
+				imageURL: addUTMParams(
+					new URL(sanitizedResponse.urls.regular),
+				).toString(),
 				author: {
 					firstName: sanitizedResponse.user.first_name,
 					lastName: sanitizedResponse.user.last_name ?? "",

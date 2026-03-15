@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import dotenv from "dotenv";
 import { createApi as createUnsplashApi } from "unsplash-js";
 import { createApi } from "./api/index.js";
 import { createImgflipClient } from "./client/imgflip.client.js";

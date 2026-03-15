@@ -5,7 +5,9 @@ type CreateDefaultApiParams = {
 	defaultService: DefaultService;
 };
 
-export const createDefaultApi = ({ defaultService }: CreateDefaultApiParams) => {
+export const createDefaultApi = ({
+	defaultService,
+}: CreateDefaultApiParams) => {
 	const defaultApi = express.Router();
 
 	defaultApi.get("/", (req, res) => {

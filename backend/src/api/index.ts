@@ -1,10 +1,10 @@
 import express from "express";
-import { createDefaultApi } from "./default.api.js";
-import { createMemeMakerApi } from "./meme-maker.api.js";
-import { createPhotosApi } from "./photos.api.js";
 import type { DefaultService } from "../service/default.service.js";
 import type { MemeMakerService } from "../service/meme-maker.service.js";
 import type { PhotosService } from "../service/photos.service.js";
+import { createDefaultApi } from "./default.api.js";
+import { createMemeMakerApi } from "./meme-maker.api.js";
+import { createPhotosApi } from "./photos.api.js";
 
 type CreateApiParams = {
 	defaultService: DefaultService;

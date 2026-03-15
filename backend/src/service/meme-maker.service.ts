@@ -1,14 +1,14 @@
 import { JSDOM } from "jsdom";
 import type {
-	AddMemeResult,
-	MemeTemplateStore,
-} from "../store/meme-template.store.js";
-import type {
 	ImgflipClient,
 	Meme,
 	MemeResponse,
 	ScrapedImgflipData,
 } from "../client/imgflip.client.js";
+import type {
+	AddMemeResult,
+	MemeTemplateStore,
+} from "../store/meme-template.store.js";
 
 export type { AddMemeResult } from "../store/meme-template.store.js";
 
@@ -88,7 +88,8 @@ const scrapeMeme = (pageContents: string): ScrapedImgflipData | null => {
 		}
 	}
 
-	let subtitle = dom.window.document.querySelector("#mtm-subtitle")?.textContent;
+	let subtitle =
+		dom.window.document.querySelector("#mtm-subtitle")?.textContent;
 	const aka: string[] = [];
 	if (subtitle !== null && subtitle !== undefined) {
 		subtitle = subtitle.replace("also called: ", "");

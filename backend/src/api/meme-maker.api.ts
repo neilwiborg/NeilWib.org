@@ -1,7 +1,7 @@
 import express from "express";
 import {
-	type MemeMakerService,
 	InvalidMemeUrlError,
+	type MemeMakerService,
 	MemeScrapeFailedError,
 } from "../service/meme-maker.service.js";
 
