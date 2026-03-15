@@ -5,10 +5,12 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
+	useState,
 } from "react";
 import { loadImage } from "../../util/images";
 import { Tooltip } from "../Tooltip";
 import { Canvas, type CanvasHandle } from "./Canvas";
+import { preloadMemeFonts, TEXT_FONTS } from "./fonts";
 import styles from "./MemeEditor.module.css";
 import { useMemeEditorStore } from "./store";
 import {
@@ -29,7 +31,6 @@ import {
 	IMAGE_MIME_TYPE,
 	MAX_SHADOW_BLUR,
 	MAX_STROKE_WIDTH,
-	MEME_FONTS,
 	MIN_FONT_SIZE,
 	MIN_SHADOW_BLUR,
 	MIN_STROKE_WIDTH,
@@ -244,10 +245,25 @@ type FontFamilyInputProps = {
 const FontFamilyInput = ({ disabledReason }: FontFamilyInputProps) => {
 	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
 	const value = useMemeEditorStore((state) => state.getTextStyle("fontFamily"));
-	const disabled = disabledReason !== "";
+	const [fontsReady, setFontsReady] = useState(false);
+	const disabled = disabledReason !== "" || !fontsReady;
+
+	useEffect(() => {
+		let cancelled = false;
+
+		void preloadMemeFonts().then(() => {
+			if (!cancelled) {
+				setFontsReady(true);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	const options = useMemo(() => {
-		const fontFamilies = MEME_FONTS.map((font) => {
+		const fontFamilies = TEXT_FONTS.map((font) => {
 			return (
 				<option value={font.fontFamily} key={font.label}>
 					{font.label}
@@ -266,7 +282,11 @@ const FontFamilyInput = ({ disabledReason }: FontFamilyInputProps) => {
 					onChange={(event) => setTextStyle("fontFamily", event.target.value)}
 					disabled={disabled}
 				>
-					{options}
+					{fontsReady ? (
+						options
+					) : (
+						<option value={value}>Loading fonts...</option>
+					)}
 				</select>
 			</label>
 		</Tooltip>
@@ -528,7 +548,6 @@ export const MemeEditor = ({ backgroundImage }: MemeEditorProps) => {
 		if (!canvas) {
 			throw new Error("Canvas export is not ready");
 		}
-		await document.fonts.ready;
 		return canvas.exportBlob();
 	}, []);
 

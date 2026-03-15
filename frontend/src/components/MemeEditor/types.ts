@@ -33,51 +33,10 @@ export type EditorNode = Point & {
 	rotation: number;
 };
 
-export type MemeFont = {
+export type TextFont = {
 	label: string;
 	fontFamily: string;
 };
-
-export const MEME_FONTS: MemeFont[] = [
-	{
-		label: "Impact",
-		fontFamily: 'Impact, "Anton", sans-serif',
-	},
-	{
-		label: "Arial",
-		fontFamily: 'Arial, "Arimo", sans-serif',
-	},
-	{
-		label: "Arial Black",
-		fontFamily: '"Arial Black", "Archivo Black", sans-serif',
-	},
-	{
-		label: "Comic Sans MS",
-		fontFamily: '"Comic Sans MS", "Comic Neue", cursive',
-	},
-	{
-		label: "Montserrat",
-		fontFamily: '"Montserrat", sans-serif',
-	},
-	{
-		label: "Bebas Neue",
-		fontFamily: '"Bebas Neue", sans-serif',
-	},
-	{
-		label: "Oswald",
-		fontFamily: '"Oswald", sans-serif',
-	},
-	{
-		label: "Luckiest Guy",
-		fontFamily: '"Luckiest Guy", cursive',
-	},
-	{
-		label: "Bangers",
-		fontFamily: '"Bangers", cursive',
-	},
-];
-
-export const DEFAULT_MEME_FONT = MEME_FONTS[0];
 
 export type TextStyleScope = "global" | "selected";
 export type TextAlignment = "center" | "left" | "right";
