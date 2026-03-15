@@ -5,8 +5,8 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
-	useState,
 } from "react";
+import { loadImage } from "../../util/images";
 import { Tooltip } from "../Tooltip";
 import { Canvas, type CanvasHandle } from "./Canvas";
 import styles from "./MemeEditor.module.css";
@@ -20,7 +20,6 @@ import {
 	parseNodeKey,
 } from "./translation";
 import type {
-	BackgroundSource,
 	NodeKey,
 	TextAlignment,
 	TextStyle,
@@ -37,19 +36,10 @@ import {
 } from "./types";
 
 export type MemeEditorProps = {
-	background: BackgroundSource;
+	backgroundImage: HTMLImageElement;
 };
 
 const textAlignments: TextAlignment[] = ["center", "left", "right"];
-
-const loadImage = (url: string) => {
-	return new Promise<HTMLImageElement>((resolve, reject) => {
-		const image = new window.Image();
-		image.onload = () => resolve(image);
-		image.onerror = () => reject(new Error(`Failed to load image from ${url}`));
-		image.src = url;
-	});
-};
 
 const getTextInputDeactivatedReason = (
 	textStyleScope: TextStyleScope,
@@ -521,7 +511,7 @@ const CopyMemeButton = ({ getMemeBlob }: CopyMemeButtonProps) => {
 	);
 };
 
-export const MemeEditor = ({ background }: MemeEditorProps) => {
+export const MemeEditor = ({ backgroundImage }: MemeEditorProps) => {
 	const globalTextStyle = useMemeEditorStore((state) => state.globalTextStyle);
 	const textStyleScope = useMemeEditorStore((state) => state.textStyleScope);
 	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
@@ -531,8 +521,6 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	const setDefaultFontSize = useMemeEditorStore(
 		(state) => state.setDefaultFontSize,
 	);
-	const [backgroundImage, setBackgroundImage] =
-		useState<HTMLImageElement | null>(null);
 	const canvasRef = useRef<CanvasHandle>(null);
 
 	const downloadBlob = useCallback(async () => {
@@ -545,52 +533,10 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 	}, []);
 
 	useEffect(() => {
-		const controller = new AbortController();
-		let objectUrl = "";
-		setBackgroundImage(null);
 		resetEditor();
-
-		const hydrateBackground = async () => {
-			try {
-				if (background.kind === "file") {
-					objectUrl = URL.createObjectURL(background.file);
-				} else {
-					const response = await fetch(background.url, {
-						signal: controller.signal,
-					});
-					const imageBlob = await response.blob();
-					objectUrl = URL.createObjectURL(imageBlob);
-				}
-
-				const loadedBackgroundImage = await loadImage(objectUrl);
-				if (controller.signal.aborted) {
-					return;
-				}
-
-				setBackgroundImage(loadedBackgroundImage);
-			} catch (error) {
-				if (controller.signal.aborted) {
-					return;
-				}
-
-				console.error("Failed to load background image", error);
-			}
-		};
-
-		void hydrateBackground();
-
-		return () => {
-			controller.abort();
-			if (objectUrl) {
-				URL.revokeObjectURL(objectUrl);
-			}
-		};
-	}, [background, resetEditor]);
+	}, [resetEditor]);
 
 	const previewScale = useMemo(() => {
-		if (!backgroundImage) {
-			return 1;
-		}
 		return getPreviewScale(backgroundImage);
 	}, [backgroundImage]);
 	const disabledReason = getTextInputDeactivatedReason(
@@ -602,10 +548,6 @@ export const MemeEditor = ({ background }: MemeEditorProps) => {
 		const defaultFontSize = getDefaultFontSize(previewScale);
 		setDefaultFontSize(defaultFontSize);
 	}, [previewScale, setDefaultFontSize]);
-
-	if (!backgroundImage) {
-		return <p>Loading canvas...</p>;
-	}
 
 	return (
 		<>
