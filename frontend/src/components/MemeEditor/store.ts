@@ -1,8 +1,8 @@
 import { create } from "zustand";
+import { DEFAULT_TEXT_FONT } from "./fonts";
 import { parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
-	DEFAULT_MEME_FONT,
 	DEFAULT_PRIMARY_TEXT_COLOR,
 	DEFAULT_SECONDARY_TEXT_COLOR,
 	DEFAULT_SHADOW_BLUR,
@@ -238,7 +238,7 @@ const applySelectedNodeDeletion = (
 };
 
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
-	fontFamily: DEFAULT_MEME_FONT.fontFamily,
+	fontFamily: DEFAULT_TEXT_FONT.fontFamily,
 	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
 	primaryColor: DEFAULT_PRIMARY_TEXT_COLOR,
 	secondaryColor: DEFAULT_SECONDARY_TEXT_COLOR,
