@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import http from "http";
 import { createApp } from "./app.js";
 import { createDependencies } from "./dependencies.js";
+import { logger } from "./logger.js";
 
 // Load environment variables
 dotenv.config();
@@ -33,10 +34,10 @@ const onError = (error: NodeJS.ErrnoException) => {
 
 	switch (error.code) {
 		case "EACCES":
-			console.error(`${bind} requires elevated privileges`);
+			logger.fatal({ err: error, bind }, "Server requires elevated privileges");
 			process.exit(1);
 		case "EADDRINUSE":
-			console.error(`${bind} is already in use`);
+			logger.fatal({ err: error, bind }, "Server port is already in use");
 			process.exit(1);
 		default:
 			throw error;
@@ -49,7 +50,7 @@ const onError = (error: NodeJS.ErrnoException) => {
 const onListening = () => {
 	const addr = server.address();
 	const bind = typeof addr === "string" ? "pipe " + addr : "port " + addr?.port;
-	console.log(`Listening on ${bind}`);
+	logger.info({ bind }, "Server listening");
 };
 
 server.listen(port);
