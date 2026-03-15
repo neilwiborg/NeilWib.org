@@ -19,6 +19,7 @@ const createHttpLoggerMiddleware = () =>
 	pinoHttp({
 		customLogLevel: (_req, res, err) =>
 			err || res.statusCode >= 400 ? "error" : "debug",
+		customReceivedMessage: () => "request received",
 		genReqId: (req) => req.headers["x-request-id"]?.toString() ?? randomUUID(),
 		logger,
 	});
