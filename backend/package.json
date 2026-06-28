@@ -7,9 +7,10 @@
 		"dev": "tsx watch ./src/server.ts | pino-pretty",
 		"build": "rm -rf ./build && tsc",
 		"start": "node ./build/server.js",
-		"check": "biome check .",
+		"format": "biome format --write .",
 		"lint": "biome lint .",
-		"format": "biome format --write ."
+		"check": "biome check .",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.1004.0",

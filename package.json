@@ -3,10 +3,15 @@
 	"private": true,
 	"packageManager": "pnpm@10.31.0",
 	"scripts": {
+		"prepare": "lefthook install",
 		"dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
 		"build": "pnpm -r build",
-		"check": "pnpm -r check",
+		"format": "pnpm -r format",
 		"lint": "pnpm -r lint",
-		"format": "pnpm -r format"
+		"check": "pnpm -r check",
+		"typecheck": "pnpm -r typecheck"
+	},
+	"devDependencies": {
+		"lefthook": "^2.1.9"
 	}
 }
