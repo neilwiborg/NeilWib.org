@@ -11,3 +11,4 @@ catalog:
 onlyBuiltDependencies:
   - canvas
   - esbuild
+  - lefthook
