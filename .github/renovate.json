@@ -1,0 +1,36 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended", "customManagers:biomeVersions"],
+	"enabledManagers": ["nvm", "npm", "github-actions", "custom.jsonata"],
+	"labels": ["dependencies"],
+	"dependencyDashboard": true,
+	"timezone": "America/Los_Angeles",
+	"rangeStrategy": "bump",
+	"schedule": ["before 5am on saturday"],
+	"packageRules": [
+		{
+			"groupName": "frontend dependencies",
+			"matchFileNames": ["frontend/package.json"],
+			"groupSingleUpdates": true,
+			"separateMajorMinor": false
+		},
+		{
+			"groupName": "backend dependencies",
+			"matchFileNames": ["backend/package.json"],
+			"groupSingleUpdates": true,
+			"separateMajorMinor": false
+		},
+		{
+			"groupName": "monorepo dependencies",
+			"matchFileNames": [
+				"package.json",
+				"pnpm-workspace.yaml",
+				"biome.json",
+				".nvmrc",
+				".github/workflows/**"
+			],
+			"groupSingleUpdates": true,
+			"separateMajorMinor": false
+		}
+	]
+}
