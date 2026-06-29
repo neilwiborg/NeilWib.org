@@ -6,12 +6,6 @@ settings:
 
 catalogs:
   default:
-    dotenv:
-      specifier: ^17.4.2
-      version: 17.4.2
-    tslib:
-      specifier: ^2.8.1
-      version: 2.8.1
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
@@ -39,14 +33,11 @@ importers:
         specifier: ^2.8.6
         version: 2.8.6
       dotenv:
-        specifier: 'catalog:'
+        specifier: ^17.4.2
         version: 17.4.2
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      http-errors:
-        specifier: ^2.0.1
-        version: 2.0.1
       jsdom:
         specifier: ^28.1.0
         version: 28.1.0(canvas@3.2.1)
@@ -69,9 +60,6 @@ importers:
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
-      '@types/http-errors':
-        specifier: ^2.0.5
-        version: 2.0.5
       '@types/jsdom':
         specifier: ^28.0.0
         version: 28.0.0
@@ -81,9 +69,6 @@ importers:
       pino-pretty:
         specifier: ^13.1.3
         version: 13.1.3
-      tslib:
-        specifier: 'catalog:'
-        version: 2.8.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -93,9 +78,6 @@ importers:
 
   frontend:
     dependencies:
-      dotenv:
-        specifier: 'catalog:'
-        version: 17.4.2
       konva:
         specifier: ^10.3.0
         version: 10.3.0
@@ -124,9 +106,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.3
         version: 6.0.3(vite@8.1.0(@types/node@25.3.5)(esbuild@0.27.7)(tsx@4.21.0))
-      tslib:
-        specifier: 'catalog:'
-        version: 2.8.1
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
