@@ -45,15 +45,19 @@ export const createPhotosService = ({
 }: CreatePhotosServiceParams): PhotosService => {
 	return {
 		getSeattlePhoto: async (): Promise<PhotoResponse> => {
-			const unsplashResponse = await unsplash.photos.get({
-				photoId: "JEicDFy5Cd8",
+			const unsplashResponse = await unsplash.GET("/photos/{assetSlug}", {
+				params: {
+					path: {
+						assetSlug: "JEicDFy5Cd8",
+					},
+				},
 			});
 
-			if (unsplashResponse.errors || !unsplashResponse.response) {
+			if (unsplashResponse.error || !unsplashResponse.data) {
 				throw new UnsplashResponseError();
 			}
 
-			const sanitizedResponse = unsplashResponse.response;
+			const sanitizedResponse = unsplashResponse.data;
 
 			return {
 				sourceName: "Unsplash",
