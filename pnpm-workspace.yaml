@@ -3,7 +3,7 @@ packages:
   - frontend
 
 catalog:
-  typescript: ^6.0.3
+  typescript: ^7.0.2
 
 minimumReleaseAge: 1440 # one day
 minimumReleaseAgeStrict: false
