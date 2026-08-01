@@ -6,6 +6,8 @@
 	"dependencyDashboard": true,
 	"timezone": "America/Los_Angeles",
 	"rangeStrategy": "bump",
+	"minimumReleaseAge": "1 day",
+	"internalChecksFilter": "strict",
 	"schedule": ["before 5am on saturday"],
 	"packageRules": [
 		{
