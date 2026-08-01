@@ -5,6 +5,9 @@ packages:
 catalog:
   typescript: ^6.0.3
 
+minimumReleaseAge: 1440 # one day
+minimumReleaseAgeStrict: false
+
 allowBuilds:
   canvas: true
   esbuild: true
