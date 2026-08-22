@@ -13,7 +13,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"konva": "^10.3.0",
+		"konva": "^10.3.1",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
 		"react-konva": "^19.2.5",
@@ -23,8 +23,8 @@
 	"devDependencies": {
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.4",
-		"@vitejs/plugin-react": "^6.0.5",
+		"@vitejs/plugin-react": "^6.1.0",
 		"typescript": "catalog:",
-		"vite": "^8.2.1"
+		"vite": "^8.2.2"
 	}
 }
