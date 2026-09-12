@@ -1,7 +1,7 @@
 {
 	"name": "root",
 	"private": true,
-	"packageManager": "pnpm@12.3.4",
+	"packageManager": "pnpm@12.4.1",
 	"scripts": {
 		"prepare": "lefthook install",
 		"dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
@@ -12,7 +12,7 @@
 		"typecheck": "pnpm -r typecheck"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.5.12",
+		"@biomejs/biome": "^2.5.13",
 		"lefthook": "^2.1.12"
 	}
 }
