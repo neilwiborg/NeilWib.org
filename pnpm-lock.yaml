@@ -165,7 +165,7 @@ settings:
 catalogs:
   default:
     typescript:
-      specifier: ^7.0.2
+      specifier: 7.0.2
       version: 7.0.2
 
 importers:
@@ -173,7 +173,7 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: ^2.5.15
+        specifier: 2.5.15
         version: 2.5.15
       lefthook:
         specifier: ^2.2.1
