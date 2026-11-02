@@ -6,9 +6,9 @@
 		"prepare": "lefthook install",
 		"dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
 		"build": "pnpm -r build",
-		"format": "pnpm -r format",
-		"lint": "pnpm -r lint",
-		"check": "pnpm -r check",
+		"format": "biome format --write .",
+		"lint": "biome lint .",
+		"check": "biome check .",
 		"typecheck": "pnpm -r typecheck"
 	},
 	"devDependencies": {
