@@ -8,15 +8,18 @@ TypeScript monorepo with:
 ## New Machine Setup
 
 1. Install and use the Node version pinned by this repo:
+
    ```bash
    nvm install
    nvm use
    ```
 2. Enable Corepack and activate the pinned pnpm version:
+
    ```bash
    ./scripts/setup-corepack.sh
    ```
 3. Install dependencies:
+
    ```bash
    pnpm install
    ```
