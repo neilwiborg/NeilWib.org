@@ -3,6 +3,7 @@
 	"private": true,
 	"packageManager": "pnpm@12.18.0",
 	"scripts": {
+		"setup:pnpm": "bash scripts/setup-corepack.sh",
 		"prepare": "lefthook install",
 		"dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
 		"build": "pnpm -r build",

@@ -13,10 +13,10 @@ TypeScript monorepo with:
    nvm install
    nvm use
    ```
-2. Enable Corepack and activate the pinned pnpm version:
+2. Install/enable Corepack and set up the pinned pnpm version:
 
    ```bash
-   ./scripts/setup-corepack.sh
+   npm run setup:pnpm
    ```
 3. Install dependencies:
 
