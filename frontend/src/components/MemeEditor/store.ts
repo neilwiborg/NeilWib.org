@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { DEFAULT_TEXT_FONT } from "./fonts";
-import { parseNodeKey, updateTextbox } from "./translation";
+import { createRandomSeed, parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
 	DEFAULT_PRIMARY_TEXT_COLOR,
@@ -31,6 +31,7 @@ type MemeEditorStore = MemeEditorState & {
 	addTextbox: (textbox: Textbox) => void;
 	addImage: (image: EditorImage) => void;
 	setTextboxText: (id: string, text: string) => void;
+	rerollMocking: () => void;
 	setTextboxTransform: (id: string, transform: TextboxTransform) => void;
 	setImageTransform: (id: string, transform: ImageTransform) => void;
 	setTextStyleScope: (scope: TextStyleScope) => void;
@@ -93,7 +94,7 @@ const toTextStyle = (textbox: Textbox): TextStyle => ({
 	textAlign: textbox.textAlign,
 	strokeWidth: textbox.strokeWidth,
 	shadowBlur: textbox.shadowBlur,
-	caps: textbox.caps,
+	caseMode: textbox.caseMode,
 	bold: textbox.bold,
 	italic: textbox.italic,
 	underline: textbox.underline,
@@ -245,7 +246,7 @@ const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	textAlign: DEFAULT_TEXT_ALIGNMENT,
 	strokeWidth: DEFAULT_STROKE_WIDTH,
 	shadowBlur: DEFAULT_SHADOW_BLUR,
-	caps: true,
+	caseMode: "uppercase",
 	bold: false,
 	italic: false,
 	underline: false,
@@ -281,6 +282,19 @@ export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 		set((state) => ({
 			textboxes: updateTextbox(state.textboxes, id, { text }),
 		})),
+	rerollMocking: () =>
+		set((state) => {
+			const textbox = getSelectedTextbox(state);
+			if (!textbox) {
+				return state;
+			}
+
+			return {
+				textboxes: updateTextbox(state.textboxes, textbox.id, {
+					mockSeed: createRandomSeed(),
+				}),
+			};
+		}),
 	setTextboxTransform: (id, transform) =>
 		set((state) => {
 			return applyTextboxTransform(state, id, transform);

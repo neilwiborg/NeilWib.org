@@ -40,6 +40,7 @@ export type TextFont = {
 
 export type TextStyleScope = "global" | "selected";
 export type TextAlignment = "center" | "left" | "right";
+export type TextCaseMode = "original" | "uppercase" | "mocking";
 
 export type TextStyle = {
 	fontFamily: string;
@@ -49,7 +50,7 @@ export type TextStyle = {
 	textAlign: TextAlignment;
 	strokeWidth: number;
 	shadowBlur: number;
-	caps: boolean;
+	caseMode: TextCaseMode;
 	bold: boolean;
 	italic: boolean;
 	underline: boolean;
@@ -59,6 +60,7 @@ export type TextStyle = {
 export type Textbox = EditorNode &
 	TextStyle & {
 		text: string;
+		mockSeed: number;
 		width?: number;
 	};
 
