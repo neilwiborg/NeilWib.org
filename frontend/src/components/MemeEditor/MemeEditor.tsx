@@ -24,6 +24,7 @@ import {
 	randomizeTextCase,
 } from "./translation";
 import type {
+	FlipAxis,
 	NodeKey,
 	TextAlignment,
 	TextCaseMode,
@@ -537,13 +538,40 @@ const DeleteSelectionButton = () => {
 	);
 };
 
+const FlipSelectionButton = ({ axis }: { axis: FlipAxis }) => {
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
+	const flipSelectedNode = useMemeEditorStore(
+		(state) => state.flipSelectedNode,
+	);
+	const hasSelection = selectedNodeKey !== null;
+	const disabledReason = hasSelection ? "" : "No selection";
+
+	return (
+		<Tooltip message={disabledReason} active={!hasSelection} inline>
+			<button
+				type="button"
+				onClick={() => flipSelectedNode(axis)}
+				disabled={!hasSelection}
+			>
+				Flip {axis === "horizontal" ? "Horizontally" : "Vertically"}
+			</button>
+		</Tooltip>
+	);
+};
+
 const SelectionActions = () => {
 	return (
 		<fieldset>
 			<legend>Selection Actions</legend>
-			<div className="grid">
-				<RerollMockingButton />
-				<DeleteSelectionButton />
+			<div>
+				<div className="grid">
+					<RerollMockingButton />
+					<DeleteSelectionButton />
+				</div>
+				<div className="grid">
+					<FlipSelectionButton axis="horizontal" />
+					<FlipSelectionButton axis="vertical" />
+				</div>
 			</div>
 		</fieldset>
 	);

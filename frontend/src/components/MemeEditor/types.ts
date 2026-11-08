@@ -22,6 +22,8 @@ export const IMAGE_MIME_TYPE = "image/png";
 
 export type KeyType = "text" | "image";
 export type NodeKey = `${KeyType}:${string}`;
+export type FlipAxis = "horizontal" | "vertical";
+export type FlipMode = "none" | FlipAxis | "both";
 
 export type Point = {
 	x: number;
@@ -31,6 +33,7 @@ export type Point = {
 export type EditorNode = Point & {
 	id: string;
 	rotation: number;
+	flipMode: FlipMode;
 };
 
 export type TextFont = {
@@ -74,6 +77,7 @@ export type EditorNodeTransform = Partial<{
 	x: EditorNode["x"];
 	y: EditorNode["y"];
 	rotation: EditorNode["rotation"];
+	flipMode: EditorNode["flipMode"];
 }>;
 
 export type TextboxTransform = EditorNodeTransform &
