@@ -1,4 +1,6 @@
 import type Konva from "konva";
+import { uniformInt } from "pure-rand/distribution/uniformInt";
+import { xoroshiro128plus } from "pure-rand/generator/xoroshiro128plus";
 import type { JSX } from "react";
 import { Image as KonvaImage, Text } from "react-konva";
 import { randomID } from "../../util/util";
@@ -25,6 +27,9 @@ const MIN_TEXTBOX_WIDTH = 30;
 const MIN_IMAGE_WIDTH = 20;
 const MIN_IMAGE_HEIGHT = 20;
 const DEFAULT_IMAGE_SCALE = 0.25;
+const UINT32_RANGE = 2 ** 32;
+// Match letters from any writing system, while leaving punctuation and symbols alone.
+const UNICODE_LETTER_PATTERN = /\p{L}/u;
 
 export const getPreviewScale = (backgroundImage: HTMLImageElement) => {
 	const widthScale = EDITOR_PREVIEW_MAX_WIDTH / backgroundImage.naturalWidth;
@@ -103,8 +108,32 @@ const onTransformImageEnd =
 		});
 	};
 
+export const createRandomSeed = () => Math.floor(Math.random() * UINT32_RANGE);
+
+export const randomizeTextCase = (text: string, seed: number) => {
+	// A seeded generator keeps the same casing pattern between editor renders.
+	const random = xoroshiro128plus(seed);
+
+	return Array.from(text, (character) => {
+		if (!UNICODE_LETTER_PATTERN.test(character)) {
+			return character;
+		}
+
+		return uniformInt(random, 0, 1) === 0
+			? character.toLowerCase()
+			: character.toUpperCase();
+	}).join("");
+};
+
 const getTextboxDisplayText = (textbox: Textbox) => {
-	return textbox.caps ? textbox.text.toUpperCase() : textbox.text;
+	switch (textbox.caseMode) {
+		case "uppercase":
+			return textbox.text.toUpperCase();
+		case "mocking":
+			return randomizeTextCase(textbox.text, textbox.mockSeed);
+		default:
+			return textbox.text;
+	}
 };
 
 const getTextboxFontStyle = (textbox: Textbox) => {
@@ -148,6 +177,7 @@ export const createTextbox = (
 ): Textbox => ({
 	id: randomID(),
 	text: DEFAULT_TEXT,
+	mockSeed: createRandomSeed(),
 	x: initialPosition.x,
 	y: initialPosition.y,
 	rotation: DEFAULT_ROTATION,
@@ -158,7 +188,7 @@ export const createTextbox = (
 	textAlign: textStyle.textAlign,
 	strokeWidth: textStyle.strokeWidth,
 	shadowBlur: textStyle.shadowBlur,
-	caps: textStyle.caps,
+	caseMode: textStyle.caseMode,
 	bold: textStyle.bold,
 	italic: textStyle.italic,
 	underline: textStyle.underline,

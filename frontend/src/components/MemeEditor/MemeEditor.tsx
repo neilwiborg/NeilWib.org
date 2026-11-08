@@ -15,15 +15,18 @@ import styles from "./MemeEditor.module.css";
 import { useMemeEditorStore } from "./store";
 import {
 	createEditorImage,
+	createRandomSeed,
 	createTextbox,
 	getCanvasMiddlePosition,
 	getDefaultFontSize,
 	getPreviewScale,
 	parseNodeKey,
+	randomizeTextCase,
 } from "./translation";
 import type {
 	NodeKey,
 	TextAlignment,
+	TextCaseMode,
 	TextStyle,
 	TextStyleScope,
 } from "./types";
@@ -42,29 +45,41 @@ export type MemeEditorProps = {
 
 const textAlignments: TextAlignment[] = ["center", "left", "right"];
 
-const getTextInputDeactivatedReason = (
-	textStyleScope: TextStyleScope,
-	selectedNodeKey: NodeKey | null,
-) => {
-	if (textStyleScope !== "selected") {
-		return "";
-	}
-
+const hasSelectedTextbox = (selectedNodeKey: NodeKey | null) => {
 	if (selectedNodeKey == null) {
-		return "No textbox selected";
+		return false;
 	}
 
 	const { keyType } = parseNodeKey(selectedNodeKey);
-	if (keyType !== "text") {
-		return "No textbox selected";
+	return keyType === "text";
+};
+
+const getTextInputDeactivatedReason = (
+	textStyleScope: TextStyleScope,
+	selectedNodeKey: NodeKey | null,
+) =>
+	textStyleScope === "selected" && !hasSelectedTextbox(selectedNodeKey)
+		? "No textbox selected"
+		: "";
+
+const getDeleteButtonDeactivatedReason = (selectedNodeKey: NodeKey | null) => {
+	if (selectedNodeKey == null) {
+		return "No selection";
 	}
 
 	return "";
 };
 
-const getDeleteButtonDeactivatedReason = (selectedNodeKey: NodeKey | null) => {
-	if (selectedNodeKey == null) {
-		return "No selection";
+const getRerollMockingDisabledReason = (
+	caseMode: TextCaseMode,
+	selectedNodeKey: NodeKey | null,
+) => {
+	if (!hasSelectedTextbox(selectedNodeKey)) {
+		return "Textbox is not selected";
+	}
+
+	if (caseMode !== "mocking") {
+		return "Text casing is not set to mocking";
 	}
 
 	return "";
@@ -411,7 +426,7 @@ const ShadowStrengthInput = ({ disabledReason }: ShadowStrengthInputProps) => {
 };
 
 type TextPropertyCheckboxProps = {
-	field: "caps" | "bold" | "italic" | "underline" | "strikethrough";
+	field: "bold" | "italic" | "underline" | "strikethrough";
 	label: string;
 	labelClassName: string;
 	disabledReason: string;
@@ -438,6 +453,61 @@ const TextPropertyCheckbox = ({
 				/>
 				<span className={labelClassName}>{label}</span>
 			</label>
+		</Tooltip>
+	);
+};
+
+const TextCaseModeInput = ({ disabledReason }: { disabledReason: string }) => {
+	const caseMode = useMemeEditorStore((state) =>
+		state.getTextStyle("caseMode"),
+	);
+	const setTextStyle = useMemeEditorStore((state) => state.setTextStyle);
+	const [mockingLabel] = useState(() =>
+		randomizeTextCase("Mocking", createRandomSeed()),
+	);
+	const options: { value: TextCaseMode; label: string }[] = [
+		{ value: "original", label: "As typed" },
+		{ value: "uppercase", label: "CAPS" },
+		{ value: "mocking", label: mockingLabel },
+	];
+
+	return (
+		<fieldset>
+			<legend>Text Case</legend>
+			{options.map((option) => (
+				<label key={option.value}>
+					<input
+						type="radio"
+						name="text-case-mode"
+						value={option.value}
+						checked={caseMode === option.value}
+						onChange={() => setTextStyle("caseMode", option.value)}
+						disabled={disabledReason !== ""}
+					/>
+					{option.label}
+				</label>
+			))}
+		</fieldset>
+	);
+};
+
+const RerollMockingButton = () => {
+	const caseMode = useMemeEditorStore((state) =>
+		state.getTextStyle("caseMode"),
+	);
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
+	const rerollMocking = useMemeEditorStore((state) => state.rerollMocking);
+	const disabledReason = getRerollMockingDisabledReason(
+		caseMode,
+		selectedNodeKey,
+	);
+	const disabled = disabledReason !== "";
+
+	return (
+		<Tooltip message={disabledReason} active={disabled} inline>
+			<button type="button" onClick={rerollMocking} disabled={disabled}>
+				↻ Reroll Mocking Text
+			</button>
 		</Tooltip>
 	);
 };
@@ -471,7 +541,10 @@ const SelectionActions = () => {
 	return (
 		<fieldset>
 			<legend>Selection Actions</legend>
-			<DeleteSelectionButton />
+			<div className="grid">
+				<RerollMockingButton />
+				<DeleteSelectionButton />
+			</div>
 		</fieldset>
 	);
 };
@@ -617,13 +690,9 @@ export const MemeEditor = ({ backgroundImage }: MemeEditorProps) => {
 							<TextAlignmentInput disabledReason={disabledReason} />
 						</div>
 						<div className="grid">
-							<div>
-								<TextPropertyCheckbox
-									disabledReason={disabledReason}
-									field="caps"
-									label="CAPS"
-									labelClassName=""
-								/>
+							<TextCaseModeInput disabledReason={disabledReason} />
+							<fieldset>
+								<legend>Text Formatting</legend>
 								<TextPropertyCheckbox
 									disabledReason={disabledReason}
 									field="bold"
@@ -648,11 +717,11 @@ export const MemeEditor = ({ backgroundImage }: MemeEditorProps) => {
 									label="Strikethrough"
 									labelClassName={styles.strikethroughLabel}
 								/>
-							</div>
-							<div>
-								<OutlineWidthInput disabledReason={disabledReason} />
-								<ShadowStrengthInput disabledReason={disabledReason} />
-							</div>
+							</fieldset>
+						</div>
+						<div className="grid">
+							<OutlineWidthInput disabledReason={disabledReason} />
+							<ShadowStrengthInput disabledReason={disabledReason} />
 						</div>
 					</fieldset>
 					<SelectionActions />
