@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { DEFAULT_TEXT_FONT } from "./fonts";
+import { toggleFlipMode } from "./transforms";
 import { createRandomSeed, parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
@@ -9,6 +10,7 @@ import {
 	DEFAULT_STROKE_WIDTH,
 	DEFAULT_TEXT_ALIGNMENT,
 	type EditorImage,
+	type FlipAxis,
 	type ImageTransform,
 	type NodeKey,
 	type Textbox,
@@ -34,6 +36,7 @@ type MemeEditorStore = MemeEditorState & {
 	rerollMocking: () => void;
 	setTextboxTransform: (id: string, transform: TextboxTransform) => void;
 	setImageTransform: (id: string, transform: ImageTransform) => void;
+	flipSelectedNode: (axis: FlipAxis) => void;
 	setTextStyleScope: (scope: TextStyleScope) => void;
 	setSelectedNodeKey: (nodeKey: NodeKey | null) => void;
 	deleteSelectedNode: () => void;
@@ -238,6 +241,42 @@ const applySelectedNodeDeletion = (
 	};
 };
 
+const applySelectedNodeFlip = (
+	state: MemeEditorState,
+	axis: FlipAxis,
+): Partial<MemeEditorState> => {
+	if (!state.selectedNodeKey) {
+		return state;
+	}
+
+	const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+	if (keyType === "text") {
+		const textbox = state.textboxes.find((item) => item.id === id);
+		if (!textbox) {
+			return state;
+		}
+
+		return {
+			textboxes: updateTextbox(state.textboxes, id, {
+				flipMode: toggleFlipMode(textbox.flipMode, axis),
+			}),
+		};
+	}
+
+	const image = state.images.find((item) => item.id === id);
+	if (!image) {
+		return state;
+	}
+
+	return {
+		images: state.images.map((item) =>
+			item.id === id
+				? { ...item, flipMode: toggleFlipMode(image.flipMode, axis) }
+				: item,
+		),
+	};
+};
+
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
 	fontFamily: DEFAULT_TEXT_FONT.fontFamily,
 	fontSize: fontSize ?? DEFAULT_FONT_SIZE,
@@ -310,6 +349,8 @@ export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 					: image,
 			),
 		})),
+	flipSelectedNode: (axis) =>
+		set((state) => applySelectedNodeFlip(state, axis)),
 	setTextStyleScope: (scope) =>
 		set((state) => applyTextStyleScopeChange(state, scope)),
 	setSelectedNodeKey: (nodeKey) =>

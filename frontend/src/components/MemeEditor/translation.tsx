@@ -1,9 +1,15 @@
-import type Konva from "konva";
+import Konva from "konva";
 import { uniformInt } from "pure-rand/distribution/uniformInt";
 import { xoroshiro128plus } from "pure-rand/generator/xoroshiro128plus";
-import type { JSX } from "react";
-import { Image as KonvaImage, Text } from "react-konva";
+import { type JSX, useLayoutEffect, useRef } from "react";
+import { Group, Image as KonvaImage, Text } from "react-konva";
 import { randomID } from "../../util/util";
+import {
+	getFlipAdjustedPosition,
+	getFlipModeAfterScale,
+	getFlipOffsets,
+	getFlipScale,
+} from "./transforms";
 import {
 	DEFAULT_DISPLAY_FONT_SIZE,
 	DEFAULT_ROTATION,
@@ -71,40 +77,101 @@ const onDragEditorNodeEnd =
 	};
 
 const onTransformTextboxEnd =
-	(textbox: Textbox, handlers: TextboxHandlers) =>
+	(
+		textbox: Textbox,
+		handlers: TextboxHandlers,
+		getTextNode: () => Konva.Text | null,
+	) =>
 	(event: Konva.KonvaEventObject<Event>) => {
-		const node = event.target as Konva.Text;
-		const scaleX = node.scaleX();
-		const scaleY = node.scaleY();
+		const node = event.target;
+		if (!(node instanceof Konva.Group)) {
+			return;
+		}
+
+		const textNode = getTextNode();
+		if (!textNode) {
+			return;
+		}
+
+		const signedScaleX = node.scaleX();
+		const signedScaleY = node.scaleY();
+		const scaleX = Math.abs(signedScaleX);
+		const scaleY = Math.abs(signedScaleY);
+		// Konva may decompose a handle crossing into a flip and a 180° rotation.
+		// Keep the model rotation stable; the flip is stored separately in flipMode.
+		const rotation =
+			signedScaleX < 0 || signedScaleY < 0 ? textbox.rotation : node.rotation();
+		const width = Math.max(MIN_TEXTBOX_WIDTH, textNode.width() * scaleX);
+		const fontSize = Math.round(
+			Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY),
+		);
+		const height = textNode.clone({ width, fontSize }).height();
+		const position = getFlipAdjustedPosition(
+			{ x: node.x(), y: node.y() },
+			rotation,
+			width,
+			height,
+			signedScaleX,
+			signedScaleY,
+		);
+		const flipMode = getFlipModeAfterScale(
+			textbox.flipMode,
+			signedScaleX,
+			signedScaleY,
+		);
 
 		node.scaleX(1);
 		node.scaleY(1);
 
 		handlers.onTransformTextbox(textbox.id, {
-			x: node.x(),
-			y: node.y(),
-			rotation: node.rotation(),
-			width: Math.max(MIN_TEXTBOX_WIDTH, node.width() * scaleX),
-			fontSize: Math.round(Math.max(MIN_FONT_SIZE, textbox.fontSize * scaleY)),
+			...position,
+			rotation,
+			width,
+			fontSize,
+			flipMode,
 		});
 	};
 
 const onTransformImageEnd =
 	(image: EditorImage, handlers: ImageHandlers) =>
 	(event: Konva.KonvaEventObject<Event>) => {
-		const node = event.target as Konva.Image;
-		const scaleX = node.scaleX();
-		const scaleY = node.scaleY();
+		const node = event.target;
+		if (!(node instanceof Konva.Group)) {
+			return;
+		}
+
+		const signedScaleX = node.scaleX();
+		const signedScaleY = node.scaleY();
+		const scaleX = Math.abs(signedScaleX);
+		const scaleY = Math.abs(signedScaleY);
+		// Keep rotation stable when Konva represents a handle crossing as a flip.
+		const rotation =
+			signedScaleX < 0 || signedScaleY < 0 ? image.rotation : node.rotation();
+		const width = Math.max(MIN_IMAGE_WIDTH, image.width * scaleX);
+		const height = Math.max(MIN_IMAGE_HEIGHT, image.height * scaleY);
+		const position = getFlipAdjustedPosition(
+			{ x: node.x(), y: node.y() },
+			rotation,
+			width,
+			height,
+			signedScaleX,
+			signedScaleY,
+		);
+		const flipMode = getFlipModeAfterScale(
+			image.flipMode,
+			signedScaleX,
+			signedScaleY,
+		);
 
 		node.scaleX(1);
 		node.scaleY(1);
 
 		handlers.onTransformImage(image.id, {
-			x: node.x(),
-			y: node.y(),
-			rotation: node.rotation(),
-			width: Math.max(MIN_IMAGE_WIDTH, image.width * scaleX),
-			height: Math.max(MIN_IMAGE_HEIGHT, image.height * scaleY),
+			...position,
+			rotation,
+			width,
+			height,
+			flipMode,
 		});
 	};
 
@@ -193,6 +260,7 @@ export const createTextbox = (
 	italic: textStyle.italic,
 	underline: textStyle.underline,
 	strikethrough: textStyle.strikethrough,
+	flipMode: "none",
 });
 
 export const createEditorImage = (
@@ -209,7 +277,72 @@ export const createEditorImage = (
 		rotation: DEFAULT_ROTATION,
 		width,
 		height,
+		flipMode: "none",
 	};
+};
+
+const TextboxKonvaNode = ({
+	textbox,
+	handlers,
+}: {
+	textbox: Textbox;
+	handlers: TextboxHandlers;
+}): JSX.Element => {
+	const textNodeRef = useRef<Konva.Text | null>(null);
+
+	// Use Konva's measured text bounds to keep flips in place before the canvas paints.
+	useLayoutEffect(() => {
+		const node = textNodeRef.current;
+		if (!node) {
+			return;
+		}
+
+		const { offsetX, offsetY } = getFlipOffsets(
+			textbox.flipMode,
+			node.width(),
+			node.height(),
+		);
+		node.offsetX(offsetX);
+		node.offsetY(offsetY);
+	}, [textbox]);
+	const flipScale = getFlipScale(textbox.flipMode);
+
+	return (
+		<Group
+			ref={(node) => handlers.setNodeRef(textbox.id, node)}
+			x={textbox.x}
+			y={textbox.y}
+			rotation={textbox.rotation}
+			draggable
+			onClick={() => handlers.onSelect(textbox.id)}
+			onTap={() => handlers.onSelect(textbox.id)}
+			onDblClick={() => handlers.onEditTextbox(textbox.id)}
+			onDblTap={() => handlers.onEditTextbox(textbox.id)}
+			onDragEnd={onDragEditorNodeEnd(textbox, handlers.onDrag)}
+			onTransformEnd={onTransformTextboxEnd(
+				textbox,
+				handlers,
+				() => textNodeRef.current,
+			)}
+		>
+			<Text
+				ref={textNodeRef}
+				{...flipScale}
+				width={textbox.width}
+				text={getTextboxDisplayText(textbox)}
+				fontFamily={textbox.fontFamily}
+				fontSize={textbox.fontSize}
+				fontStyle={getTextboxFontStyle(textbox)}
+				fill={textbox.primaryColor}
+				align={textbox.textAlign}
+				textDecoration={getTextboxTextDecoration(textbox)}
+				stroke={textbox.secondaryColor}
+				strokeWidth={textbox.strokeWidth}
+				shadowColor={textbox.secondaryColor}
+				shadowBlur={textbox.shadowBlur}
+			/>
+		</Group>
+	);
 };
 
 export const textboxesToKonvaText = (
@@ -217,54 +350,47 @@ export const textboxesToKonvaText = (
 	handlers: TextboxHandlers,
 ): JSX.Element[] =>
 	textboxes.map((textbox) => (
-		<Text
-			key={textbox.id}
-			ref={(node) => handlers.setNodeRef(textbox.id, node)}
-			x={textbox.x}
-			y={textbox.y}
-			rotation={textbox.rotation}
-			width={textbox.width}
-			text={getTextboxDisplayText(textbox)}
-			fontFamily={textbox.fontFamily}
-			fontSize={textbox.fontSize}
-			fontStyle={getTextboxFontStyle(textbox)}
-			fill={textbox.primaryColor}
-			align={textbox.textAlign}
-			textDecoration={getTextboxTextDecoration(textbox)}
-			stroke={textbox.secondaryColor}
-			strokeWidth={textbox.strokeWidth}
-			shadowColor={textbox.secondaryColor}
-			shadowBlur={textbox.shadowBlur}
-			draggable
-			onClick={() => handlers.onSelect(textbox.id)}
-			onTap={() => handlers.onSelect(textbox.id)}
-			onDblClick={() => handlers.onEditTextbox(textbox.id)}
-			onDblTap={() => handlers.onEditTextbox(textbox.id)}
-			onDragEnd={onDragEditorNodeEnd(textbox, handlers.onDrag)}
-			onTransformEnd={onTransformTextboxEnd(textbox, handlers)}
-		/>
+		<TextboxKonvaNode key={textbox.id} textbox={textbox} handlers={handlers} />
 	));
+const ImageKonvaNode = ({
+	image,
+	handlers,
+}: {
+	image: EditorImage;
+	handlers: ImageHandlers;
+}): JSX.Element => {
+	const flipScale = getFlipScale(image.flipMode);
+	const flipOffsets = getFlipOffsets(image.flipMode, image.width, image.height);
 
-export const imagesToKonvaImages = (
-	images: EditorImage[],
-	handlers: ImageHandlers,
-): JSX.Element[] =>
-	images.map((image) => (
-		<KonvaImage
-			key={image.id}
+	return (
+		<Group
 			ref={(node) => handlers.setNodeRef(image.id, node)}
-			image={image.image}
 			x={image.x}
 			y={image.y}
-			width={image.width}
-			height={image.height}
 			rotation={image.rotation}
 			draggable
 			onClick={() => handlers.onSelect(image.id)}
 			onTap={() => handlers.onSelect(image.id)}
 			onDragEnd={onDragEditorNodeEnd(image, handlers.onDrag)}
 			onTransformEnd={onTransformImageEnd(image, handlers)}
-		/>
+		>
+			<KonvaImage
+				image={image.image}
+				width={image.width}
+				height={image.height}
+				{...flipScale}
+				{...flipOffsets}
+			/>
+		</Group>
+	);
+};
+
+export const imagesToKonvaImages = (
+	images: EditorImage[],
+	handlers: ImageHandlers,
+): JSX.Element[] =>
+	images.map((image) => (
+		<ImageKonvaNode key={image.id} image={image} handlers={handlers} />
 	));
 
 export const updateTextbox = (
