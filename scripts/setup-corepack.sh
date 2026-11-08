@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if ! command -v corepack >/dev/null 2>&1; then
-  echo "corepack not found. Install Node.js (v16.13+; recommended: nvm install && nvm use) and retry."
-  exit 1
+  echo "Corepack is not bundled with Node.js 25 and newer; installing it with npm..."
+  npm install --global corepack@latest
 fi
 
 PACKAGE_MANAGER="$(node -p "require('./package.json').packageManager || ''")"
@@ -12,10 +12,10 @@ if [[ -z "${PACKAGE_MANAGER}" ]]; then
   exit 1
 fi
 
-echo "Enabling Corepack..."
-corepack enable
+echo "Enabling the pnpm command..."
+corepack enable pnpm
 
-echo "Activating ${PACKAGE_MANAGER}..."
-corepack prepare "${PACKAGE_MANAGER}" --activate
+echo "Installing the project-pinned package manager (${PACKAGE_MANAGER})..."
+corepack install
 
 echo "Done. Next step: pnpm install"
