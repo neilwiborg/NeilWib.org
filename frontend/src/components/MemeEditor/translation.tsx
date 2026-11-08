@@ -248,6 +248,7 @@ export const createTextbox = (
 	x: initialPosition.x,
 	y: initialPosition.y,
 	rotation: DEFAULT_ROTATION,
+	opacity: 1,
 	fontSize: textStyle.fontSize,
 	fontFamily: textStyle.fontFamily,
 	primaryColor: textStyle.primaryColor,
@@ -275,6 +276,7 @@ export const createEditorImage = (
 		x: initialPosition.x - width / 2,
 		y: initialPosition.y - height / 2,
 		rotation: DEFAULT_ROTATION,
+		opacity: 1,
 		width,
 		height,
 		flipMode: "none",
@@ -313,6 +315,7 @@ const TextboxKonvaNode = ({
 			x={textbox.x}
 			y={textbox.y}
 			rotation={textbox.rotation}
+			opacity={textbox.opacity}
 			draggable
 			onClick={() => handlers.onSelect(textbox.id)}
 			onTap={() => handlers.onSelect(textbox.id)}
@@ -368,6 +371,7 @@ const ImageKonvaNode = ({
 			x={image.x}
 			y={image.y}
 			rotation={image.rotation}
+			opacity={image.opacity}
 			draggable
 			onClick={() => handlers.onSelect(image.id)}
 			onTap={() => handlers.onSelect(image.id)}
