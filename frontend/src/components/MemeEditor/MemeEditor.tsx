@@ -13,6 +13,7 @@ import { Canvas, type CanvasHandle } from "./Canvas";
 import { preloadMemeFonts, TEXT_FONTS } from "./fonts";
 import styles from "./MemeEditor.module.css";
 import { useMemeEditorStore } from "./store";
+import { toggleFlipMode } from "./transforms";
 import {
 	createEditorImage,
 	createRandomSeed,
@@ -540,22 +541,55 @@ const DeleteSelectionButton = () => {
 
 const FlipSelectionButton = ({ axis }: { axis: FlipAxis }) => {
 	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
-	const flipSelectedNode = useMemeEditorStore(
-		(state) => state.flipSelectedNode,
+	const flipMode = useMemeEditorStore((state) =>
+		state.getNodeProperty("flipMode"),
 	);
+	const setNodeProperty = useMemeEditorStore((state) => state.setNodeProperty);
+	const hasSelection = selectedNodeKey !== null;
+	const disabledReason = hasSelection ? "" : "No selection";
+	const flipSelection = () => {
+		if (flipMode !== null) {
+			setNodeProperty("flipMode", toggleFlipMode(flipMode, axis));
+		}
+	};
+
+	return (
+		<Tooltip message={disabledReason} active={!hasSelection} inline>
+			<button type="button" onClick={flipSelection} disabled={!hasSelection}>
+				Flip {axis === "horizontal" ? "Horizontally" : "Vertically"}
+			</button>
+		</Tooltip>
+	);
+};
+
+const OpacityInput = () => {
+	const selectedNodeKey = useMemeEditorStore((state) => state.selectedNodeKey);
+	const opacity = useMemeEditorStore((state) =>
+		state.getNodeProperty("opacity"),
+	);
+	const setNodeProperty = useMemeEditorStore((state) => state.setNodeProperty);
+	const handleOpacityChange = (event: ChangeEvent<HTMLInputElement>) => {
+		setNodeProperty("opacity", Number(event.target.value) / 100);
+	};
+	const opacityPercent = Math.round((opacity ?? 1) * 100);
 	const hasSelection = selectedNodeKey !== null;
 	const disabledReason = hasSelection ? "" : "No selection";
 
 	return (
-		<Tooltip message={disabledReason} active={!hasSelection} inline>
-			<button
-				type="button"
-				onClick={() => flipSelectedNode(axis)}
-				disabled={!hasSelection}
-			>
-				Flip {axis === "horizontal" ? "Horizontally" : "Vertically"}
-			</button>
-		</Tooltip>
+		<label>
+			Opacity: {opacityPercent}%
+			<Tooltip message={disabledReason} active={!hasSelection}>
+				<input
+					type="range"
+					min={0}
+					max={100}
+					step={1}
+					value={opacityPercent}
+					onChange={handleOpacityChange}
+					disabled={selectedNodeKey === null}
+				/>
+			</Tooltip>
+		</label>
 	);
 };
 
@@ -572,6 +606,7 @@ const SelectionActions = () => {
 					<FlipSelectionButton axis="horizontal" />
 					<FlipSelectionButton axis="vertical" />
 				</div>
+				<OpacityInput />
 			</div>
 		</fieldset>
 	);

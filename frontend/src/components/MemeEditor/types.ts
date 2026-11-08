@@ -30,11 +30,16 @@ export type Point = {
 	y: number;
 };
 
-export type EditorNode = Point & {
-	id: string;
-	rotation: number;
+export type EditorNodeProperties = {
+	opacity: number;
 	flipMode: FlipMode;
 };
+
+export type EditorNode = Point &
+	EditorNodeProperties & {
+		id: string;
+		rotation: number;
+	};
 
 export type TextFont = {
 	label: string;

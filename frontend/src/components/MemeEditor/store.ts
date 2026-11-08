@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { DEFAULT_TEXT_FONT } from "./fonts";
-import { toggleFlipMode } from "./transforms";
 import { createRandomSeed, parseNodeKey, updateTextbox } from "./translation";
 import {
 	DEFAULT_FONT_SIZE,
@@ -10,7 +9,7 @@ import {
 	DEFAULT_STROKE_WIDTH,
 	DEFAULT_TEXT_ALIGNMENT,
 	type EditorImage,
-	type FlipAxis,
+	type EditorNodeProperties,
 	type ImageTransform,
 	type NodeKey,
 	type Textbox,
@@ -36,7 +35,13 @@ type MemeEditorStore = MemeEditorState & {
 	rerollMocking: () => void;
 	setTextboxTransform: (id: string, transform: TextboxTransform) => void;
 	setImageTransform: (id: string, transform: ImageTransform) => void;
-	flipSelectedNode: (axis: FlipAxis) => void;
+	setNodeProperty: <K extends keyof EditorNodeProperties>(
+		field: K,
+		value: EditorNodeProperties[K],
+	) => void;
+	getNodeProperty: <K extends keyof EditorNodeProperties>(
+		field: K,
+	) => EditorNodeProperties[K] | null;
 	setTextStyleScope: (scope: TextStyleScope) => void;
 	setSelectedNodeKey: (nodeKey: NodeKey | null) => void;
 	deleteSelectedNode: () => void;
@@ -241,40 +246,46 @@ const applySelectedNodeDeletion = (
 	};
 };
 
-const applySelectedNodeFlip = (
+const applyNodeProperty = <K extends keyof EditorNodeProperties>(
 	state: MemeEditorState,
-	axis: FlipAxis,
+	field: K,
+	value: EditorNodeProperties[K],
 ): Partial<MemeEditorState> => {
 	if (!state.selectedNodeKey) {
 		return state;
 	}
 
 	const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+	const properties = { [field]: value };
 	if (keyType === "text") {
-		const textbox = state.textboxes.find((item) => item.id === id);
-		if (!textbox) {
-			return state;
-		}
-
 		return {
-			textboxes: updateTextbox(state.textboxes, id, {
-				flipMode: toggleFlipMode(textbox.flipMode, axis),
-			}),
+			textboxes: updateTextbox(state.textboxes, id, properties),
 		};
-	}
-
-	const image = state.images.find((item) => item.id === id);
-	if (!image) {
-		return state;
 	}
 
 	return {
 		images: state.images.map((item) =>
-			item.id === id
-				? { ...item, flipMode: toggleFlipMode(image.flipMode, axis) }
-				: item,
+			item.id === id ? { ...item, ...properties } : item,
 		),
 	};
+};
+
+const getNodeProperty = <K extends keyof EditorNodeProperties>(
+	state: MemeEditorState,
+	field: K,
+): EditorNodeProperties[K] | null => {
+	if (!state.selectedNodeKey) {
+		return null;
+	}
+
+	const { keyType, id } = parseNodeKey(state.selectedNodeKey);
+	if (keyType === "text") {
+		const textbox = state.textboxes.find((item) => item.id === id);
+		return textbox?.[field] ?? null;
+	}
+
+	const image = state.images.find((item) => item.id === id);
+	return image?.[field] ?? null;
 };
 
 const createDefaultTextStyle = (fontSize: number | null): TextStyle => ({
@@ -349,8 +360,9 @@ export const useMemeEditorStore = create<MemeEditorStore>((set, get) => ({
 					: image,
 			),
 		})),
-	flipSelectedNode: (axis) =>
-		set((state) => applySelectedNodeFlip(state, axis)),
+	setNodeProperty: (field, value) =>
+		set((state) => applyNodeProperty(state, field, value)),
+	getNodeProperty: (field) => getNodeProperty(get(), field),
 	setTextStyleScope: (scope) =>
 		set((state) => applyTextStyleScopeChange(state, scope)),
 	setSelectedNodeKey: (nodeKey) =>
