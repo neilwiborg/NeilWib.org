@@ -1,4 +1,5 @@
 import { JSDOM } from "jsdom";
+import type { BackendUrlBuilder } from "../api/backend-url.js";
 import type {
 	ImgflipClient,
 	Meme,
@@ -24,7 +25,7 @@ export type MemeMakerService = {
 type CreateMemeMakerServiceParams = {
 	memeTemplateStore: MemeTemplateStore;
 	imgflipClient: ImgflipClient;
-	apiBaseUrl: string;
+	createBackendUrl: BackendUrlBuilder;
 };
 
 export class InvalidMemeUrlError extends Error {
@@ -50,19 +51,6 @@ const sanitizeInputURL = (imgflipUrl: string) => {
 	}
 
 	return "https://imgflip.com/memetemplate/" + regexMatches[1];
-};
-
-const toProxyUrl = (apiBaseUrl: string, imageUrl: string) => {
-	const proxyUrl = new URL("/mememaker/meme", apiBaseUrl);
-	proxyUrl.searchParams.set("url", imageUrl);
-	return proxyUrl.toString();
-};
-
-const withProxyUrls = (apiBaseUrl: string, memes: Meme[]): Meme[] => {
-	return memes.map((meme) => ({
-		...meme,
-		url: toProxyUrl(apiBaseUrl, meme.url),
-	}));
 };
 
 const scrapeMeme = (pageContents: string): ScrapedImgflipData | null => {
@@ -139,8 +127,19 @@ const scrapeMeme = (pageContents: string): ScrapedImgflipData | null => {
 export const createMemeMakerService = ({
 	memeTemplateStore,
 	imgflipClient,
-	apiBaseUrl,
+	createBackendUrl,
 }: CreateMemeMakerServiceParams): MemeMakerService => {
+	const toProxyUrl = (imageUrl: string) => {
+		const query = new URLSearchParams({ url: imageUrl });
+		return `${createBackendUrl("/mememaker/meme")}?${query.toString()}`;
+	};
+
+	const withProxyUrls = (memes: Meme[]): Meme[] =>
+		memes.map((meme) => ({
+			...meme,
+			url: toProxyUrl(meme.url),
+		}));
+
 	return {
 		getMemeImage: async (url: string) => {
 			return imgflipClient.getMemeImage(url);
@@ -150,7 +149,7 @@ export const createMemeMakerService = ({
 			const topMemes = await imgflipClient.getTop100Memes();
 			return {
 				data: {
-					memes: withProxyUrls(apiBaseUrl, topMemes.data.memes),
+					memes: withProxyUrls(topMemes.data.memes),
 				},
 			};
 		},
@@ -163,7 +162,7 @@ export const createMemeMakerService = ({
 
 			return {
 				data: {
-					memes: withProxyUrls(apiBaseUrl, matchingMemes),
+					memes: withProxyUrls(matchingMemes),
 				},
 			};
 		},

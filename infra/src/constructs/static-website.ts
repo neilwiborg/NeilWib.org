@@ -1,9 +1,13 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
+
+const API_PREFIX = "/api";
 
 function createSpaRewriteFunction(scope: Construct): cloudfront.Function {
 	return new cloudfront.Function(scope, "SpaRouteRewrite", {
@@ -16,6 +20,39 @@ function createSpaRewriteFunction(scope: Construct): cloudfront.Function {
 	});
 }
 
+function createApiPrefixRewriteFunction(scope: Construct): cloudfront.Function {
+	const functionCode = readFileSync(
+		fileURLToPath(
+			new URL("../cloudfront/api-prefix-rewrite.js", import.meta.url),
+		),
+		"utf-8",
+	).replace('"__API_PREFIX__"', JSON.stringify(API_PREFIX));
+
+	return new cloudfront.Function(scope, "ApiPrefixRewrite", {
+		code: cloudfront.FunctionCode.fromInline(functionCode),
+		runtime: cloudfront.FunctionRuntime.JS_2_0,
+	});
+}
+
+function createApiBehavior(apiPrefixRewrite: cloudfront.Function) {
+	return {
+		origin: new origins.HttpOrigin("api.neilwib.org", {
+			protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+		}),
+		allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+		cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+		originRequestPolicy:
+			cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+		viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+		functionAssociations: [
+			{
+				function: apiPrefixRewrite,
+				eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+			},
+		],
+	};
+}
+
 export class StaticWebsite extends Construct {
 	readonly distribution: cloudfront.Distribution;
 	readonly bucket: s3.IBucket;
@@ -24,6 +61,7 @@ export class StaticWebsite extends Construct {
 		super(scope, id);
 
 		const spaRewrite = createSpaRewriteFunction(this);
+		const apiPrefixRewrite = createApiPrefixRewriteFunction(this);
 		const site = new CloudFrontToS3(this, "Frontend", {
 			// Avoid extra log buckets and the construct's restrictive default CSP.
 			logS3AccessLogs: false,
@@ -52,6 +90,10 @@ export class StaticWebsite extends Construct {
 							eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
 						},
 					],
+				},
+				additionalBehaviors: {
+					[API_PREFIX]: createApiBehavior(apiPrefixRewrite),
+					[`${API_PREFIX}/*`]: createApiBehavior(apiPrefixRewrite),
 				},
 			},
 		});

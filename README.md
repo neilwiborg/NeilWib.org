@@ -26,31 +26,33 @@ TypeScript monorepo with:
 
 ## Environment Variables (Testing)
 
-Before running local testing/smoke checks, create these files:
+The repo includes a committed root `.env.development` with non-secret settings
+shared by the frontend and backend. Backend development sets
+`NODE_ENV=development`, and dotenv-flow uses it to load the root
+`.env.development` and optional, gitignored `.env.development.local` overrides.
+Both apps read env files from the monorepo root; don't create app-level `.env`
+files. Put local secrets such as the Unsplash access key in the root
+`.env.development.local`. Production deployments should set `NODE_ENV` in the
+runtime environment; for Lambda, set it in the function's environment
+variables. The backend TypeScript build does not set it.
 
-1. `backend/.env`
-2. `frontend/.env`
+Before running local testing/smoke checks, create the root file:
 
-Use the following variables:
-
-`backend/.env`
+`.env.development.local`
 
 ```bash
-# Optional: backend port (default is 3000 if omitted)
-PORT=3000
-
-# Backend base URL
-API_BASE_URL=http://localhost:3000
-
 UNSPLASH_ACCESS_KEY=your_unsplash_access_key
 ```
 
-`frontend/.env`
+The infrastructure routes `/api` through CloudFront. The frontend reads its
+prefix from `VITE_API_PREFIX`, and the backend reads `PUBLIC_API_PREFIX` at
+startup to build URLs it returns to clients. If you change the prefix, update
+the infrastructure constant and both app environment values together.
 
-```bash
-# Backend base URL used by frontend fetch calls
-VITE_BACKEND_HOSTNAME=http://localhost:3000
-```
+During development, Vite listens on `FRONTEND_PORT` and proxies `/api` requests
+to the backend using `API_PORT`; both values are in the root
+`.env.development`. `FRONTEND_PORT` is read only by Vite's config and is not
+exposed to browser code.
 
 ## Common Commands
 
