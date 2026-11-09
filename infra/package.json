@@ -1,0 +1,27 @@
+{
+	"name": "infrastructure",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"synth": "pnpm typecheck && cdk synth",
+		"diff": "pnpm typecheck && cdk diff",
+		"deploy": "pnpm typecheck && cdk deploy",
+		"deploy:ci": "pnpm typecheck && cdk deploy --require-approval never",
+		"format": "biome format --write .",
+		"lint": "biome lint .",
+		"check": "biome check .",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@aws-solutions-constructs/aws-cloudfront-s3": "^2.106.0",
+		"aws-cdk-lib": "^2.275.0",
+		"constructs": "^10.8.1"
+	},
+	"devDependencies": {
+		"@types/aws-cloudfront-function": "^1.0.8",
+		"@types/node": "catalog:",
+		"aws-cdk": "^2.1148.0",
+		"tsx": "catalog:",
+		"typescript": "catalog:"
+	}
+}

@@ -144,4 +144,8 @@ build/
 
 # End of https://www.toptal.com/developers/gitignore/api/node
 
+### AWS CDK ###
+.cdk.staging/
+cdk.out/
+
 .vscode/settings.json

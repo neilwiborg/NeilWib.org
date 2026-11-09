@@ -39,6 +39,9 @@ Use the following variables:
 # Optional: backend port (default is 3000 if omitted)
 PORT=3000
 
+# Backend base URL
+API_BASE_URL=http://localhost:3000
+
 UNSPLASH_ACCESS_KEY=your_unsplash_access_key
 ```
 
