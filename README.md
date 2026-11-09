@@ -54,6 +54,11 @@ to the backend using `API_PORT`; both values are in the root
 `.env.development`. `FRONTEND_PORT` is read only by Vite's config and is not
 exposed to browser code.
 
+The backend also has a Lambda Web Function entry point. Configure Web Function
+deployments to use `build/lambda.js` as the Node.js entry point. Lambda supplies
+`AWS_LAMBDA_HTTP_ENDPOINT` at runtime, and the entry point listens on that
+address.
+
 ## Common Commands
 
 Run frontend + backend together:
@@ -62,12 +67,15 @@ Run frontend + backend together:
 pnpm run dev
 ```
 
-Run only one app:
+Build the backend Lambda Web Function package:
 
 ```bash
-pnpm run dev:frontend
-pnpm run dev:backend
+pnpm run backend:package:lambda
 ```
+
+This builds the backend and writes the deployable package to
+`backend/lambda-package`. Configure the Web Function entry point as
+`build/lambda.js`.
 
 Workspace-wide checks:
 

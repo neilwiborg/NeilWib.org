@@ -142,6 +142,8 @@ build/
 
 # End of https://www.toptal.com/developers/gitignore/api/node
 
+backend/lambda-package/
+
 ### AWS CDK ###
 .cdk.staging/
 cdk.out/
