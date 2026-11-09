@@ -7,6 +7,7 @@
 		"prepare": "lefthook install",
 		"dev": "pnpm -r --parallel --stream --filter backend --filter frontend dev",
 		"build": "pnpm -r build",
+		"backend:package:lambda": "pnpm --filter backend package:lambda",
 		"format": "biome format --write .",
 		"lint": "biome lint .",
 		"check": "biome check .",
