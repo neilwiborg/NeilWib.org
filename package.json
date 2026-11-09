@@ -10,7 +10,11 @@
 		"format": "biome format --write .",
 		"lint": "biome lint .",
 		"check": "biome check .",
-		"typecheck": "pnpm -r typecheck"
+		"typecheck": "pnpm -r typecheck",
+		"infra:synth": "pnpm --filter infrastructure synth",
+		"infra:diff": "pnpm --filter infrastructure diff",
+		"infra:deploy": "pnpm --filter infrastructure deploy",
+		"infra:deploy:ci": "pnpm --filter infrastructure deploy:ci"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.6.6",
