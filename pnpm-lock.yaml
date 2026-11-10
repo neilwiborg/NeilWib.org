@@ -288,6 +288,9 @@ importers:
       aws-cdk-lib:
         specifier: ^2.275.0
         version: 2.275.0(constructs@10.8.1)
+      cdk-iam-floyd:
+        specifier: 0.851.0
+        version: 0.851.0(aws-cdk-lib@2.275.0(constructs@10.8.1))(constructs@10.8.1)
       constructs:
         specifier: ^10.8.1
         version: 10.8.1
@@ -1112,6 +1115,12 @@ packages:
   call-bound@1.0.4:
     resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
+
+  cdk-iam-floyd@0.851.0:
+    resolution: {integrity: sha512-JemUwyPwm09EVvKSkl8Eb624TmMI3csBx4X7f4dItFi+OgjGeYcyEqatw9N4+0X63pm02A0Nf6L1OLb1T1Ufow==}
+    peerDependencies:
+      aws-cdk-lib: ^2.273.0
+      constructs: ^10.5.0
 
   colorette@2.0.20:
     resolution: {integrity: sha512-IfEDxwoWIjkeXL1eXcDiow4UbKjhLdq6/EuSVR9GMN7KVH3r9gQ83e73hsz1Nd1T3ijd5xv1wcWRYO+D6kCI2w==}
@@ -2564,6 +2573,11 @@ snapshots:
     dependencies:
       call-bind-apply-helpers: 1.0.2
       get-intrinsic: 1.3.0
+
+  cdk-iam-floyd@0.851.0(aws-cdk-lib@2.275.0(constructs@10.8.1))(constructs@10.8.1):
+    dependencies:
+      aws-cdk-lib: 2.275.0(constructs@10.8.1)
+      constructs: 10.8.1
 
   colorette@2.0.20: {}
 

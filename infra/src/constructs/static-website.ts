@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { CloudFrontToS3 } from "@aws-solutions-constructs/aws-cloudfront-s3";
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import type { IOrigin } from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 
@@ -34,11 +34,12 @@ function createApiPrefixRewriteFunction(scope: Construct): cloudfront.Function {
 	});
 }
 
-function createApiBehavior(apiPrefixRewrite: cloudfront.Function) {
+function createApiBehavior(
+	apiPrefixRewrite: cloudfront.Function,
+	backendOrigin: IOrigin,
+) {
 	return {
-		origin: new origins.HttpOrigin("api.neilwib.org", {
-			protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-		}),
+		origin: backendOrigin,
 		allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
 		cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
 		originRequestPolicy:
@@ -57,7 +58,7 @@ export class StaticWebsite extends Construct {
 	readonly distribution: cloudfront.Distribution;
 	readonly bucket: s3.IBucket;
 
-	constructor(scope: Construct, id: string) {
+	constructor(scope: Construct, id: string, backendOrigin: IOrigin) {
 		super(scope, id);
 
 		const spaRewrite = createSpaRewriteFunction(this);
@@ -92,8 +93,11 @@ export class StaticWebsite extends Construct {
 					],
 				},
 				additionalBehaviors: {
-					[API_PREFIX]: createApiBehavior(apiPrefixRewrite),
-					[`${API_PREFIX}/*`]: createApiBehavior(apiPrefixRewrite),
+					[API_PREFIX]: createApiBehavior(apiPrefixRewrite, backendOrigin),
+					[`${API_PREFIX}/*`]: createApiBehavior(
+						apiPrefixRewrite,
+						backendOrigin,
+					),
 				},
 			},
 		});
