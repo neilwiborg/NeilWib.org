@@ -2,7 +2,7 @@ pre-commit:
   parallel: true
   commands:
     check:
-      glob: "*.{ts,tsx,css,html,json,yaml,yml}"
+      glob: "*.{ts,tsx,css,html,json,yaml,yml,md}"
       run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
     typecheck:
