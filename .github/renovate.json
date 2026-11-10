@@ -33,6 +33,16 @@
 			],
 			"groupSingleUpdates": true,
 			"separateMajorMinor": false
+		},
+		{
+			"groupName": "Node.js runtime",
+			"matchManagers": ["nvm", "npm"],
+			"matchDepNames": ["node", "@types/node"],
+			"matchUpdateTypes": ["major"],
+			"dependencyDashboardApproval": true,
+			"prBodyNotes": [
+				"Before merging, verify this Node.js version is supported by AWS Lambda and that the Lambda function will be created with the specified runtime: [AWS Lambda runtimes](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html)."
+			]
 		}
 	]
 }
