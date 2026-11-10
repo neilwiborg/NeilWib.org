@@ -1,6 +1,7 @@
 import { createApp } from "./app.js";
 import { createDependencies } from "./dependencies.js";
 import { listen } from "./http-server.js";
+import { SecretSourceType } from "./secret-source.js";
 
 const getListenAddress = () => {
 	const endpoint = process.env.AWS_LAMBDA_HTTP_ENDPOINT;
@@ -23,4 +24,10 @@ const getListenAddress = () => {
 	return { host, port };
 };
 
-listen(createApp({ api: createDependencies() }), getListenAddress());
+const start = async () => {
+	const address = getListenAddress();
+	const api = await createDependencies(SecretSourceType.SecretsManager);
+	listen(createApp({ api }), address);
+};
+
+await start();

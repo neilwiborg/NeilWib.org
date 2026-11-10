@@ -66,9 +66,9 @@ continue to use their deployment packages. The execution role has CloudWatch
 Logs access, `Scan` and `PutItem` access to the existing
 `mememaker-templates` DynamoDB table, and `GetSecretValue` access to the
 Unsplash secret. The backend stack does not create the DynamoDB table. The
-current backend still reads `UNSPLASH_ACCESS_KEY` from its environment; it does
-not yet retrieve the secret. Wire runtime secret retrieval before relying on
-this secret or remove the unused secret and grant.
+Lambda entry point retrieves the Unsplash key from Secrets Manager at startup.
+Set `UNSPLASH_ACCESS_KEY_SECRET_ID` in the function environment to override the
+default secret name `neilwiborg/unsplash-access-key`.
 
 CDK owns the backend function, endpoint identity, code bucket, and role. The
 backend deployment process owns code revisions and production revision
@@ -148,6 +148,11 @@ EXECUTION_ROLE_ARN=$(aws cloudformation describe-stacks \
   --region "$REGION" \
   --query "Stacks[0].Outputs[?OutputKey=='BackendExecutionRoleArn'].OutputValue | [0]" \
   --output text)
+UNSPLASH_ACCESS_KEY_SECRET_ID=$(aws cloudformation describe-stacks \
+  --stack-name "$BACKEND_STACK_NAME" \
+  --region "$REGION" \
+  --query "Stacks[0].Outputs[?OutputKey=='UnsplashAccessKeySecretName'].OutputValue | [0]" \
+  --output text)
 ```
 
 Build and zip the deployable package. The archive must contain `build/` at its
@@ -177,7 +182,7 @@ match the CloudFront API prefix. Lambda Web Function revisions use Node.js
 REVISION_ID=$(aws lambda-web create-web-function-revision \
   --function-name "$FUNCTION_NAME" \
   --build-config "{\"codeConfig\":{\"s3Object\":{\"bucket\":\"$CODE_BUCKET\",\"key\":\"$OBJECT_KEY\",\"versionId\":\"$OBJECT_VERSION\"}},\"runtimeConfig\":{\"runtime\":\"nodejs24.x\"}}" \
-  --service-config "{\"executionRoleArn\":\"$EXECUTION_ROLE_ARN\",\"environmentVariables\":{\"PUBLIC_API_PREFIX\":\"/api\",\"NODE_ENV\":\"production\",\"AWS_LAMBDA_NODEJS_ENTRYPOINT\":\"build/lambda.js\"}}" \
+  --service-config "{\"executionRoleArn\":\"$EXECUTION_ROLE_ARN\",\"environmentVariables\":{\"PUBLIC_API_PREFIX\":\"/api\",\"NODE_ENV\":\"production\",\"UNSPLASH_ACCESS_KEY_SECRET_ID\":\"$UNSPLASH_ACCESS_KEY_SECRET_ID\",\"AWS_LAMBDA_NODEJS_ENTRYPOINT\":\"build/lambda.js\"}}" \
   --region "$REGION" \
   --query revisionId \
   --output text)
@@ -203,12 +208,12 @@ aws lambda-web wait web-function-endpoint-updated \
   --region "$REGION"
 ```
 
-The current backend still reads `UNSPLASH_ACCESS_KEY` from its environment; it
-does not yet retrieve the value from the Secrets Manager secret created by the
-stack. The commands above do not inject that secret, so Unsplash-backed
-functionality will not authenticate until runtime secret retrieval is wired
-into the backend. Do not put the key in this README or commit it in deployment
-configuration.
+The revision configuration passes the secret name from the
+`UnsplashAccessKeySecretName` stack output to Lambda as
+`UNSPLASH_ACCESS_KEY_SECRET_ID`. Lambda uses that value to retrieve the
+Unsplash key from Secrets Manager at startup. Set the secret's value in Secrets
+Manager before publishing a revision. Do not put the key in this README or
+commit it in deployment configuration.
 
 See AWS's guides for [deploying Web Function code from S3](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-code-s3.html), [creating revisions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-revisions.html), and [routing traffic to revisions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-deployment.html).
 
