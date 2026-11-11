@@ -23,6 +23,12 @@
 			"separateMajorMinor": false
 		},
 		{
+			"groupName": "infra dependencies",
+			"matchFileNames": ["infra/package.json"],
+			"groupSingleUpdates": true,
+			"separateMajorMinor": false
+		},
+		{
 			"groupName": "monorepo dependencies",
 			"matchFileNames": [
 				"package.json",
