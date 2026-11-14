@@ -14,14 +14,14 @@
 	},
 	"dependencies": {
 		"@aws-solutions-constructs/aws-cloudfront-s3": "^2.106.0",
-		"aws-cdk-lib": "^2.275.0",
-		"cdk-iam-floyd": "0.851.0",
+		"aws-cdk-lib": "^2.276.0",
+		"cdk-iam-floyd": "0.853.0",
 		"constructs": "^10.8.1"
 	},
 	"devDependencies": {
 		"@types/aws-cloudfront-function": "^1.0.8",
 		"@types/node": "catalog:",
-		"aws-cdk": "^2.1148.0",
+		"aws-cdk": "^2.1148.1",
 		"tsx": "catalog:",
 		"typescript": "catalog:"
 	}
