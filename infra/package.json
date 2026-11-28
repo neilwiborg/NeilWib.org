@@ -13,15 +13,15 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-solutions-constructs/aws-cloudfront-s3": "^2.106.0",
-		"aws-cdk-lib": "^2.277.0",
-		"cdk-iam-floyd": "0.853.0",
+		"@aws-solutions-constructs/aws-cloudfront-s3": "^2.107.0",
+		"aws-cdk-lib": "^2.278.0",
+		"cdk-iam-floyd": "0.855.0",
 		"constructs": "^10.8.1"
 	},
 	"devDependencies": {
-		"@types/aws-cloudfront-function": "^1.0.8",
+		"@types/aws-cloudfront-function": "^1.0.9",
 		"@types/node": "catalog:",
-		"aws-cdk": "^2.1148.1",
+		"aws-cdk": "^2.1149.0",
 		"tsx": "catalog:",
 		"typescript": "catalog:"
 	}
